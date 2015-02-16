@@ -1,0 +1,57 @@
+rgfunction() { egrep -rso ".{0,40}$1.{0,40}" --color=auto --include="*.$2" *; }
+findfunction() { find . -name $1; }
+unix2dos() { 
+    sed "s/$/`echo -e \\\r`/" "$1" > "$1.new";
+    rm "$1";
+    mv "$1.new" "$1";
+}
+
+alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
+alias ls='ls -G'
+alias ll='ls -la'
+alias l.='ls -dG .*'
+alias cd..='cd ..'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias .3='cd ../../..'
+alias .4='cd ../../../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias grep='grep --color=auto'
+alias eg='egrep --color=auto'
+alias fg='fgrep --color=auto'
+alias rg=rgfunction
+alias sha1='openssl sha1'
+alias bc='bc -l'
+alias mkdir='mkdir -pv'
+alias mount='mount |column -t'
+alias h='history'
+alias j='jobs -l'
+alias path='echo -e ${PATH//:/\\n}'
+alias now='date +"%T"'
+alias nowtime=now
+alias nowdate='date +"%d-%m-%Y"'
+alias vi=gvim
+alias svi='sudo gvim'
+alias vis='gvim "+set si"'
+alias edit='gvim'
+alias ping='ping -c 5'
+alias fastping='ping -c 100 -s.2'
+alias ports='netstat -tulanp'
+alias mv='mv -i'
+alias cp='cp -i'
+alias ln='ln -i'
+alias k='kill -s KILL'
+alias kg='kill -s KILL $(pgrep grunt)'
+alias ks='kill -s KILL $(pgrep Safari)'
+alias pull='git pull'
+alias push='git push'
+alias mm='git merge master'
+alias cm='git checkout master'
+alias s='source ~/.bash_profile'
+alias ea='gvim ~/.bash_profile'
+alias e='gvim'
+alias u2d=unix2dos
+alias f=findfunction
+export PATH=$PATH
+export PS1='\u@\h:\w (\t)\n\$'
