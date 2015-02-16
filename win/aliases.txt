@@ -1,0 +1,40 @@
+gvim=%ProgramFiles(x86)%\Vim\vim74\gvim.exe
+ls=ls -G
+ll=ls -la
+l.=ls -dG .*
+cd..=cd ..
+..=cd ..
+...=cd ..\..
+.3=cd ..\..\..
+.4=cd ..\..\..\..
+....=cd ..\..\..
+.....=cd ..\..\..\..
+grep=grep --color=auto
+eg=egrep --color=auto
+fg=fgrep --color=auto
+rg=grep -r --color=auto
+sha1=openssl sha1
+bc=bc -l
+mkdir=mkdir -pv
+mount=mount |column -t
+h=history
+j=jobs -l
+now=date +%T
+nowtime=now
+nowdate=date +%d-%m-%Y
+vi=gvim
+svi=sudo gvim
+vis=gvim +set si
+edit=gvim
+ping=ping -c 5
+fastping=ping -c 100 -s.2
+ports=netstat -tulanp
+mv=mv -i
+cp=cp -i
+ln=ln -i
+k=kill -s KILL
+kg=kill -s KILL $(pgrep grunt)
+pull=git pull
+push=git push
+mm=git merge master
+cm=git checkout master
