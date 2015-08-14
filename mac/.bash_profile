@@ -5,6 +5,9 @@ unix2dos() {
     rm "$1";
     mv "$1.new" "$1";
 }
+parse_git_branch() {
+    git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
 
 alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
 alias ls='ls -G'
@@ -15,8 +18,12 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias .3='cd ../../..'
 alias .4='cd ../../../..'
+alias .5='cd ../../../../..'
+alias .6='cd ../../../../../..'
 alias ....='cd ../../..'
 alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+alias .......='cd ../../../../../..'
 alias grep='grep --color=auto'
 alias eg='egrep --color=auto'
 alias fg='fgrep --color=auto'
@@ -44,14 +51,15 @@ alias ln='ln -i'
 alias k='kill -s KILL'
 alias kg='kill -s KILL $(pgrep grunt)'
 alias ks='kill -s KILL $(pgrep Safari)'
-alias pull='git pull'
+alias pull='git pull --rebase'
 alias push='git push'
-alias mm='git merge master'
 alias cm='git checkout master'
+alias rm='git pull --rebase origin master'
 alias s='source ~/.bash_profile'
 alias ea='gvim ~/.bash_profile'
 alias e='gvim'
 alias u2d=unix2dos
 alias f=findfunction
-export PATH=$PATH
-export PS1='\u@\h:\w (\t)\n\$'
+export PS1='\u@\h:\w ($(parse_git_branch)) \t\n\$'
+
+set -o vi
