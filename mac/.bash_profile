@@ -61,9 +61,13 @@ alias pushs='git push --set-upstream origin $(parse_git_branch)'
 alias cm='git checkout master'
 alias s='source ~/.bash_profile'
 alias ea='vim ~/.bash_profile'
+alias eaa='vim ~/repo/devenv/mac/.bash_profile'
 alias e='vim'
 alias u2d=unix2dos
 alias f=findfunction
+
+export PATH="/Applications/CMake.app/Contents/bin":"$PATH"
+
 export PS1='\u@\h:\w ($(parse_git_branch)) \t\n\$'
 
 set -o vi
