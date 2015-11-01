@@ -65,7 +65,7 @@ alias eaa='vim ~/repo/devenv/mac/.bash_profile'
 alias e='vim'
 alias u2d=unix2dos
 alias f=findfunction
-alias initem='source ./emsdk_portable/emsdk_env.sh'
+alias initem='source ~/emsdk_portable/emsdk_env.sh'
 
 export PATH="/Applications/CMake.app/Contents/bin":"$PATH"
 
