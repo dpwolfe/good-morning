@@ -1,0 +1,21 @@
+{
+	"color_scheme": "Packages/Colorsublime - Themes/Monokai-Midnight.tmTheme",
+	"font_face": "Monaco",
+	"font_options":
+	[
+		"no_bold",
+		"no_italic",
+		"no_antialias"
+	],
+	"font_size": 9,
+	"ignored_packages":
+	[
+		"Vintage"
+	],
+	"rulers":
+	[
+		120
+	],
+	"word_wrap": true,
+	"wrap_width": 120
+}
