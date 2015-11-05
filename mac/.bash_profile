@@ -67,8 +67,9 @@ alias e='vim'
 alias u2d=unix2dos
 alias f=findfunction
 alias initem='source ~/emsdk_portable/emsdk_env.sh'
+alias xs='sudo xcode-select --switch "/Applications/Xcode.app/Contents/Developer/"'
 
-export PATH="/Applications/CMake.app/Contents/bin":"$PATH"
+export PATH="/Library/Developer/CommandLineTools/usr/bin":"/Applications/CMake.app/Contents/bin":"$PATH"
 
 export PS1='\u@\h:\w ($(parse_git_branch)) \t\n\$'
 
