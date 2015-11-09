@@ -68,6 +68,9 @@ alias u2d=unix2dos
 alias f=findfunction
 alias initem='source ~/emsdk_portable/emsdk_env.sh'
 alias xs='sudo xcode-select --switch "/Applications/Xcode.app/Contents/Developer/"'
+alias dn='debug-node --web-port 8081'
+alias gc='git commit -m'
+alias gca='git commit -a -m'
 
 export PATH="/Library/Developer/CommandLineTools/usr/bin":"/Applications/CMake.app/Contents/bin":"$PATH"
 
