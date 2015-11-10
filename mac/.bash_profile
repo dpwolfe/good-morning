@@ -76,4 +76,3 @@ export PATH="/Library/Developer/CommandLineTools/usr/bin":"/Applications/CMake.a
 
 export PS1='\u@\h:\w ($(parse_git_branch)) \t\n\$'
 
-set -o vi
