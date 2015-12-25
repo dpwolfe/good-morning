@@ -1,4 +1,3 @@
-gvim=%ProgramFiles(x86)%\Vim\vim74\gvim.exe
 ls=ls -G
 ll=ls -la
 l.=ls -dG .*
@@ -34,7 +33,10 @@ cp=cp -i
 ln=ln -i
 k=kill -s KILL
 kg=kill -s KILL $(pgrep grunt)
+gc=git commit -m
+gca='git commit -a -m
 pull=git pull
-push=git push
+pullr=git pull --rebase origin master
 mm=git merge master
+push=git push
 cm=git checkout master
