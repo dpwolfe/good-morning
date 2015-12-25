@@ -1,5 +1,4 @@
-# environment
-Shared Engineering Environment Files
+# Shared Engineering Environment Files
 
 ## OS X Setup
 Run the following from a command prompt to enable holding key to repeat characters. You will need this when navigating using VI commands:
@@ -11,3 +10,6 @@ export REPO_ROOT=~/repo
 source $REPO_ROOT/environment/mac/.bash_profile
 ```
 Set REPO\_ROOT above to your preferred root directory for your cloned github repositories.
+
+## Scrum Board
+https://trello.com/b/mejsqvhk/dpwolfe-environment
