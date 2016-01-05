@@ -1,6 +1,6 @@
 rgfunction() { egrep -rso ".{0,40}$1.{0,40}" --color=auto --include="*.$2" *; }
 findfunction() { find . -name $1; }
-unix2dos() { 
+unix2dos() {
     sed "s/$/`echo -e \\\r`/" "$1" > "$1.new";
     rm "$1";
     mv "$1.new" "$1";
@@ -81,6 +81,7 @@ alias mm='git merge master'
 alias push='git push'
 alias pushs='git push --set-upstream origin $(parse_git_branch)'
 alias cm='git checkout master'
+alias gco='git checkout'
 
 export PATH="/Library/Developer/CommandLineTools/usr/bin":"/Applications/CMake.app/Contents/bin":"$PATH"
 
