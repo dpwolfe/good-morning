@@ -84,5 +84,4 @@ alias cm='git checkout master'
 
 export PATH="/Library/Developer/CommandLineTools/usr/bin":"/Applications/CMake.app/Contents/bin":"$PATH"
 
-export PS1='\u@\h:\w ($(parse_git_branch)) \t\n\$'
-
+export PS1='\[\033]0;$TITLEPREFIX:${PWD//[^[:ascii:]]/?}\007\]\n\[\033[32m\]\u@\h \[\033[33m\]\w \[\033[36m\](`parse_git_branch`)\[\033[0m\] \[\033[35m\]\t\[\033[0m\]\n$'
