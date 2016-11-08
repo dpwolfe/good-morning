@@ -1,3 +1,6 @@
+#Git autocomplete
+source git-completion.bash
+
 rgfunction() { egrep -rso ".{0,40}$1.{0,40}" --color=auto --include="*.$2" *; }
 findfunction() { find . -name $1; }
 unix2dos() {
