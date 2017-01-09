@@ -1,3 +1,10 @@
+#!/usr/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$DIR/git-completion.bash"
+#Git autocomplete
+#source git-completion.bash
+
 rgfunction() { egrep -rso ".{0,40}$1.{0,40}" --color=auto --include="*.$2" *; }
 findfunction() { find . -name $1; }
 unix2dos() {
@@ -5,6 +12,7 @@ unix2dos() {
     rm "$1";
     mv "$1.new" "$1";
 }
+
 parse_git_branch() {
     git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
 }
