@@ -161,6 +161,8 @@ https://releases.gpgtools.org/GPG_Suite-2017.1b3-v2.dmg
 curl https://releases.gpgtools.org/GPG_Suite-2017.1b3-v2.dmg -o ~/Downloads/GPGSuite.dmg
 hdiutil attach ~/Downloads/GPGSuite.dmg
 open /Volumes/GPG\ Suite/Install.pkg
+# Silence output about needing a passphrase on each GPG commit
+echo 'no-tty' >> ~/.gnupg/gpg.conf
 # clone the bing desktop script
 # schedule script for daily run
 # todo: setup daily refresh script
