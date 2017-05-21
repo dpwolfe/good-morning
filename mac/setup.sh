@@ -11,7 +11,7 @@ printf "\n"
 
 # Install Node Version Manager
 # https://github.com/creationix/nvm#install-script
-if ! type "npm" > /dev/null; then
+if ! type "nvm" > /dev/null; then
   echo "Installing NodeJS with Node Version Manager"
   # ensure the .bash_profile exists so that we are sure nvm appends its init commands
   touch "$HOME/.bash_profile"
