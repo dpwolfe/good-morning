@@ -13,7 +13,7 @@ printf "\n"
 # https://github.com/creationix/nvm#install-script
 if ! type "npm" > /dev/null; then
   echo "Installing NodeJS with Node Version Manager"
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
   nvm install lts/*
   npm i -g npm
   npm i -g npm-check-updates create-react-native-app flow-typed yarn
