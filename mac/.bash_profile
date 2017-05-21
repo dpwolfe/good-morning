@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+export LANG="en_US.UTF-8"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$DIR/git-completion.bash"
@@ -17,7 +18,7 @@ parse_git_branch() {
     git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
 }
 npm-exec() {
-    $(npm bin)/$@
+    "$(npm bin)/$*"
 }
 
 alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
@@ -74,13 +75,13 @@ alias kc='kill -s KILL $(pgrep Chrome)'
 alias kf='kill -s KILL $(pgrep firefox)'
 alias kn='kill -s KILL $(pgrep node)'
 
-alias s='source ~/.bash_profile'
-alias eb='vim ~/.bash_profile'
-alias ebpub='vim ~/repo/environment/mac/.bash_profile'
+alias s='source $HOME/.bash_profile'
+alias eb='vim $HOME/.bash_profile'
+alias ebpub='vim $HOME/repo/environment/mac/.bash_profile'
 
 alias u2d=unix2dos
 alias f=findfunction
-alias initem='source ~/emsdk_portable/emsdk_env.sh'
+alias initem='source $HOME/emsdk_portable/emsdk_env.sh'
 alias xs='sudo xcode-select --switch "/Applications/Xcode.app/Contents/Developer/"'
 alias dn='debug-node --web-port 8081'
 
