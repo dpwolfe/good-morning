@@ -13,11 +13,19 @@ printf "\n"
 # https://github.com/creationix/nvm#install-script
 if ! type "npm" > /dev/null; then
   echo "Installing NodeJS with Node Version Manager"
+  # ensure the .bash_profile exists so that we are sure nvm appends its init commands
+  touch "$HOME/.bash_profile"
+  # run the install script
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+  # Install highest Long Term Support build as a recommended "prod" node version
   nvm install lts/*
+  # update npm in the LTS build
   npm i -g npm
+  # install some npm staples
   npm i -g npm-check-updates create-react-native-app flow-typed yarn
+  # install highest version of node
   nvm install node
+  # install the same packages as those in lts/* in this version
   nvm reinstall-packages lts/*
 fi
 
@@ -247,13 +255,13 @@ printf "Click 'New GPG key' on GitHub and paste in the copied key."
 # enable autos-signing of all the commits
 git config --global commit.gpgsign true
 
-# initialize .bash_profile
+# initialize
 mkdir $HOME/repo && cd $HOME/repo || exit
 git clone git@github.com:dpwolfe/environment.git
-# todo: if there is an existing .bash_profile, just append
+# installing nvm should have already created a .bash_profile
 echo "export REPO_ROOT=$HOME/repo
 source \$REPO_ROOT/environment/mac/.bash_profile
-cd \$REPO_ROOT" > $HOME/.bash_profile
+cd \$REPO_ROOT" >> $HOME/.bash_profile
 
 # copy some starter terminal environment files
 cp $HOME/repo/environment/mac/.inputrc $HOME/.inputrc
