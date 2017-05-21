@@ -185,7 +185,7 @@ defaults write NSGlobalDomain KeyRepeat -int 2
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 # Silence output about needing a passphrase on each commit
 echo 'no-tty' >> $HOME/.gnupg/gpg.conf
-  
+
 # Install AWS CLI
 echo $PASSWORD | sudo -S -p "" pip install awscli
 
@@ -488,7 +488,7 @@ defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
 # Make Safari’s search banners default to Contains instead of Starts With
 defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
 # Remove useless icons from Safari’s bookmarks bar
-defaults write com.apple.Safari ProxiesInBookmarksBar "()"
+defaults write com.apple.Safari ProxiesInBookmarksBar ""
 # Enable the Develop menu and the Web Inspector in Safari
 defaults write com.apple.Safari IncludeDevelopMenu -bool true
 defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
@@ -546,7 +546,7 @@ defaults write com.apple.DiskUtility advanced-image-options -bool true
 # iOS Provisioning Profile Quick Look Generator
 curl -JL "https://github.com/chockenberry/Provisioning/releases/download/1.0.4/Provisioning-1.0.4.zip" -o $HOME/Downloads/qlprovisioning.zip
 unzip -q $HOME/Downloads/qlprovisioning.zip
-echo $PASSWORD | sudo -S -p "" mv $HOME/Downloads/qlprovisioning/Provisioning.qlgenerator /Library/QuickLook
+echo $PASSWORD | sudo -S -p "" mv $HOME/Downloads/Provisioning-1.0.4/Provisioning.qlgenerator /Library/QuickLook
 
 fi
 
