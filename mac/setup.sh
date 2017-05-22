@@ -36,9 +36,11 @@ if ! (type "nvm" && nvm --version | grep "0.33.2") > /dev/null; then
   npm i -g npm
   # install some npm staples
   npm i -g npm-check-updates create-react-native-app flow-typed
-  # install highest version of node
+  # install latest version of node
   nvm install node
-  # install the same packages as those in lts/* in this version
+  # update npm in the latest build
+  npm i -g npm
+  # install the same packages as those in lts/* in the latest version
   nvm reinstall-packages lts/*
 fi
 
