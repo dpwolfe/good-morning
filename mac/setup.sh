@@ -1,30 +1,45 @@
 #!/bin/bash
 
+
 # Read Password for sudo usage
 stty -echo
 printf "Password: "
 read PASSWORD
 stty echo
+# echo was off, so make sure to append a new line to keep the output clean
 printf "\n"
 
-# todo: Install latest version of git
+if ! git --version | grep "2.13" > /dev/null; then
+  # Install latest version of git
+  printf "Manual install of updated Git version required. Opening website for download.\nPress enter when finished installing."
+  open "https://git-scm.com/download/mac"
+  read
+fi
 
 # Install Node Version Manager
+# if nvm is already installed, load it for this script to check the version
+if [ -f $HOME/.nvm/nvm.sh ]; then
+  stty -echo
+  . $HOME/.nvm/nvm.sh
+  stty echo
+fi
 # https://github.com/creationix/nvm#install-script
-if ! type "nvm" > /dev/null; then
+if ! (type "nvm" && nvm --version | grep "0.33.2") > /dev/null; then
   echo "Installing NodeJS with Node Version Manager"
-  # ensure the .bash_profile exists so that we are sure nvm appends its init commands
+  # ensure the .bash_profile exists so that nvm will append its init commands
   touch "$HOME/.bash_profile"
   # run the install script
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
   # Install highest Long Term Support build as a recommended "prod" node version
   nvm install lts/*
+  nvm use lts/*
   # update npm in the LTS build
   npm i -g npm
   # install some npm staples
-  npm i -g npm-check-updates create-react-native-app flow-typed yarn
+  npm i -g npm-check-updates create-react-native-app flow-typed
   # install highest version of node
   nvm install node
+  nvm use node
   # install the same packages as those in lts/* in this version
   nvm reinstall-packages lts/*
 fi
@@ -54,6 +69,8 @@ brew install python
 brew install shpotify
 # Install shellcheck for shell script linting
 brew install shellcheck
+# Install Yarn using recommended method: https://yarnpkg.com/en/docs/install
+brew install yarn
 # install Mac App Store command line interface
 # https://github.com/mas-cli/mas
 brew install mas
@@ -299,10 +316,15 @@ open http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133
 
 # Install SourceTree
 
-# Install Visual Studio Code
+# Install Visual Studio Code, both Stable and Insiders editions
+curl -JL https://go.microsoft.com/fwlink/?LinkID=620882 -o $HOME/Downloads/VSCode.zip
+echo $PASSWORD | sudo -S -p "" unzip -q $HOME/Downloads/VSCode.zip -d /Applications/
+curl -JL https://go.microsoft.com/fwlink/?LinkId=723966 -o $HOME/Downloads/VSCodeInsiders.zip
+echo $PASSWORD | sudo -S -p "" unzip -q $HOME/Downloads/VSCodeInsiders.zip -d /Applications/
+rm $HOME/Downloads/VSCode.zip $HOME/Downloads/VSCodeInsiders.zip
 
 # Install XMind
-curl -JL http://dl2.xmind.net/xmind-downloads/xmind-8-update1-macosx.dmg -o $HOME/Downloads/InstallXMind.dmg
+curl -JL https://dl2.xmind.net/xmind-downloads/xmind-8-update2-macosx.dmg -o $HOME/Downloads/InstallXMind.dmg
 hdiutil attach $HOME/Downloads/InstallXMind.dmg
 echo $PASSWORD | sudo -S -p "" ditto /Volumes/XMind/XMind.app /Applications/XMind.app
 diskutil unmount XMind
@@ -319,8 +341,8 @@ open /Applications/ControlPlane.app
 
 # Install BeyondCompare
 curl -JL http://www.scootersoftware.com/BCompareOSX-4.2.2.22384.zip -o $HOME/Downloads/InstallBCompare.zip
-unzip -q $HOME/Downloads/InstallBCompare.zip
-echo $PASSWORD | sudo -S -p "" mv $HOME/Downloads/InstallBCompare/
+echo $PASSWORD | sudo -S -p "" unzip -q $HOME/Downloads/InstallBCompare.zip -d /Applications/
+rm $HOME/Downloads/InstallBCompare.zip
 
 # Install Framer
 
