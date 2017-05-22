@@ -32,14 +32,12 @@ if ! (type "nvm" && nvm --version | grep "0.33.2") > /dev/null; then
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
   # Install highest Long Term Support build as a recommended "prod" node version
   nvm install lts/*
-  nvm use lts/*
   # update npm in the LTS build
   npm i -g npm
   # install some npm staples
   npm i -g npm-check-updates create-react-native-app flow-typed
   # install highest version of node
   nvm install node
-  nvm use node
   # install the same packages as those in lts/* in this version
   nvm reinstall-packages lts/*
 fi
