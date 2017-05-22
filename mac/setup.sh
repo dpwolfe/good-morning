@@ -583,3 +583,9 @@ fi
 # todo: Clone the Bing desktop image downloader script repo and schedule script
 # for a daily run.
 # todo: setup daily refresh script
+# todo: use dark menu bar and dock from general settings
+# todo: set sidebar icon size to small
+# Show scroll bars when scrolling
+# todo: turn off indicators for open apps since only open apps appear
+# todo: turn off the slightly dim effect when disconnecting from power, this is more annoying than useful
+# todo: suppress sponsor offers when updating Java from Java settings
