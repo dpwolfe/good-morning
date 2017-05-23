@@ -193,6 +193,8 @@ defaults write com.apple.dock static-only -bool true
 defaults write com.apple.dock autohide -bool true
 # Make the auto show and hide for the dock happen immediately
 defaults write com.apple.dock autohide-time-modifier -int 0
+# Auto show and hide the menu bar
+defaults write -g _HIHideMenuBar -bool false
 # Attach the dock to the left side, the definitive optimal location according to the community
 defaults write com.apple.dock orientation left
 # Enable tap to click on trackpad
@@ -201,6 +203,16 @@ defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
 defaults write -g com.apple.trackpad.scaling 2
 # Turn off the annoying auto-capitalize while typing
 defaults write -g NSAutomaticCapitalizationEnabled -bool false
+# Set beep volume to 0
+defaults write -g com.apple.sound.beep.volume -int 0
+# Turn off the cursor location assist that will grow the cursor size when shaken
+defaults write -g CGDisableCursorLocationMagnification -bool true
+# Bump the mouse scaling up a couple notches
+defaults write -g com.apple.mouse.scaling -float 2
+# Set interface style to dark
+defaults write -g AppleInterfaceStyle -string "Dark"
+# Set a short alert sound
+defaults write -g com.apple.sound.beep.sound -string "/System/Library/Sounds/Pop.aiff"
 # todo: hide siri
 # Set fast speed key repeat rate, setting to 0 basically deletes everything at
 # once in some slower apps. 1 is still too fast for some apps. 2 is the
@@ -370,6 +382,8 @@ defaults write NSGlobalDomain NSTextShowsControlCharacters -bool true
 defaults write NSGlobalDomain NSQuitAlwaysKeepsWindows -bool false
 # Disable automatic termination of inactive apps
 defaults write NSGlobalDomain NSDisableAutomaticTermination -bool true
+# Disable automatic period substitution as it’s annoying when typing code
+defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
 # Disable the crash reporter
 defaults write com.apple.CrashReporter DialogType -string "none"
 # Set Help Viewer windows to non-floating mode
