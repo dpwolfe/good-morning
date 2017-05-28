@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Read Password for sudo usage
 stty -echo
 printf "Password: "
@@ -168,10 +167,10 @@ hdiutil attach $HOME/Downloads/InstallBlueJeans.dmg
 open /Volumes/Blue\ Jeans\ Launcher/Blue\ Jeans\ Launcher.app
 
 # Install Charles
-curl -JL https://www.charlesproxy.com/assets/release/4.1.1/charles-proxy-4.1.1.dmg -o $HOME/Downloads/InstallCharles.dmg
+curl -JL https://www.charlesproxy.com/assets/release/4.1.2/charles-proxy-4.1.2.dmg -o $HOME/Downloads/InstallCharles.dmg
 yes | hdiutil attach $HOME/Downloads/InstallCharles.dmg > /dev/null
-echo $PASSWORD | sudo -S -p "" ditto /Volumes/Charles\ Proxy\ v4.1.1/Charles.app /Applications/Charles.app
-diskutil unmount Charles\ Proxy\ v4.1.1
+echo $PASSWORD | sudo -S -p "" ditto /Volumes/Charles\ Proxy\ v4.1.2/Charles.app /Applications/Charles.app
+diskutil unmount Charles\ Proxy\ v4.1.2
 rm $HOME/Downloads/InstallCharles.dmg
 
 # Install GPG Suite
@@ -217,9 +216,9 @@ defaults write -g com.apple.sound.beep.sound -string "/System/Library/Sounds/Pop
 # Set fast speed key repeat rate, setting to 0 basically deletes everything at
 # once in some slower apps. 1 is still too fast for some apps. 2 is the
 # reasonable safe min.
-defaults write NSGlobalDomain KeyRepeat -int 2
+defaults write -g KeyRepeat -int 2
 # Set the delay until repeat to be very short
-defaults write NSGlobalDomain InitialKeyRepeat -int 15
+defaults write -g InitialKeyRepeat -int 15
 # Silence output about needing a passphrase on each commit
 echo 'no-tty' >> $HOME/.gnupg/gpg.conf
 
@@ -336,7 +335,7 @@ echo $PASSWORD | sudo -S -p "" unzip -q $HOME/Downloads/VSCodeInsiders.zip -d /A
 rm $HOME/Downloads/VSCode.zip $HOME/Downloads/VSCodeInsiders.zip
 
 # Install XMind
-curl -JL https://dl2.xmind.net/xmind-downloads/xmind-8-update2-macosx.dmg -o $HOME/Downloads/InstallXMind.dmg
+curl -JL http://dl2.xmind.net/xmind-downloads/xmind-8-update2-macosx.dmgg -o $HOME/Downloads/InstallXMind.dmg
 hdiutil attach $HOME/Downloads/InstallXMind.dmg
 echo $PASSWORD | sudo -S -p "" ditto /Volumes/XMind/XMind.app /Applications/XMind.app
 diskutil unmount XMind
@@ -365,25 +364,25 @@ defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
 defaults write com.apple.systemuiserver menuExtras -array-add "/System/Library/CoreServices/Menu Extras/Volume.menu"
 defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.volume" -bool true
 # Increase window resize speed for Cocoa applications
-defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+defaults write -g NSWindowResizeTime -float 0.001
 # Expand save panel by default
-defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+defaults write -g NSNavPanelExpandedStateForSaveMode -bool true
 # Expand print panel by default
-defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
+defaults write -g PMPrintingExpandedStateForPrint -bool true
 # Save to disk (not to iCloud) by default
-defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
+defaults write -g NSDocumentSaveNewDocumentsToCloud -bool false
 # Automatically quit printer app once the print jobs complete
 defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 # Disable the "Are you sure you want to open this application?" dialog
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 # Display ASCII control characters using caret notation in standard text views
-defaults write NSGlobalDomain NSTextShowsControlCharacters -bool true
+defaults write -g NSTextShowsControlCharacters -bool true
 # Disable Resume system-wide
-defaults write NSGlobalDomain NSQuitAlwaysKeepsWindows -bool false
+defaults write -g NSQuitAlwaysKeepsWindows -bool false
 # Disable automatic termination of inactive apps
-defaults write NSGlobalDomain NSDisableAutomaticTermination -bool true
+defaults write -g NSDisableAutomaticTermination -bool true
 # Disable automatic period substitution as it’s annoying when typing code
-defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
+defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
 # Disable the crash reporter
 defaults write com.apple.CrashReporter DialogType -string "none"
 # Set Help Viewer windows to non-floating mode
@@ -396,41 +395,41 @@ defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 # Mouse Behavior
 # Trackpad: enable tap to click for this user and for the login screen
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
-defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
+defaults write -g com.apple.mouse.tapBehavior -int 1
 # Trackpad: map bottom right corner to right-click
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -int 2
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -bool true
-defaults -currentHost write NSGlobalDomain com.apple.trackpad.trackpadCornerClickBehavior -int 1
-defaults -currentHost write NSGlobalDomain com.apple.trackpad.enableSecondaryClick -bool true
+defaults -currentHost write -g com.apple.trackpad.trackpadCornerClickBehavior -int 1
+defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick -bool true
 # Trackpad: swipe between pages with three fingers
-defaults write NSGlobalDomain AppleEnableSwipeNavigateWithScrolls -bool true
-defaults -currentHost write NSGlobalDomain com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
+defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
+defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerHorizSwipeGesture -int 1
 # Disable "natural" (Lion-style) scrolling
-# defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
+# defaults write -g com.apple.swipescrolldirection -bool false
 # Increase sound quality for Bluetooth headphones/headsets
 defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
 # Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)
-defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+defaults write -g AppleKeyboardUIMode -int 3
 # Use scroll gesture with the Ctrl (^) modifier key to zoom
 defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
 defaults write com.apple.universalaccess HIDScrollZoomModifierMask -int 262144
 # Follow the keyboard focus while zoomed in
 defaults write com.apple.universalaccess closeViewZoomFollowsFocus -bool true
 # Disable press-and-hold for keys in favor of key repeat
-defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+defaults write -g ApplePressAndHoldEnabled -bool false
 # Automatically illuminate built-in MacBook keyboard in low light
 defaults write com.apple.BezelServices kDim -bool true
 # Turn off keyboard illumination when computer is not used for 5 minutes
 defaults write com.apple.BezelServices kDimTime -int 300
 # Set language and text formats
-defaults write NSGlobalDomain AppleLanguages -array "en"
-defaults write NSGlobalDomain AppleLocale -string "en_US@currency=USD"
-defaults write NSGlobalDomain AppleMeasurementUnits -string "Inches"
-defaults write NSGlobalDomain AppleMetricUnits -bool false
+defaults write -g AppleLanguages -array "en"
+defaults write -g AppleLocale -string "en_US@currency=USD"
+defaults write -g AppleMeasurementUnits -string "Inches"
+defaults write -g AppleMetricUnits -bool false
 # Disable auto-correct
-defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
 
 # Screen
 # Require password immediately after sleep or screen saver begins
@@ -443,7 +442,7 @@ defaults write com.apple.screencapture type -string "png"
 # Disable shadow in screenshots
 defaults write com.apple.screencapture disable-shadow -bool true
 # Enable subpixel font rendering on non-Apple LCDs
-defaults write NSGlobalDomain AppleFontSmoothing -int 2
+defaults write -g AppleFontSmoothing -int 2
 # Enable HiDPI display modes (requires restart)
 echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 
@@ -460,7 +459,7 @@ defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
 # Finder: show hidden files by default
 defaults write com.apple.finder AppleShowAllFiles -bool true
 # Finder: show all filename extensions
-defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+defaults write -g AppleShowAllExtensions -bool true
 # Finder: show status bar
 defaults write com.apple.finder ShowStatusBar -bool true
 # Finder: allow text selection in Quick Look
@@ -538,7 +537,7 @@ defaults write com.apple.Safari IncludeDevelopMenu -bool true
 defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
 defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
 # Add a context menu item for showing the Web Inspector in web views
-defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
+defaults write -g WebKitDeveloperExtras -bool true
 # Enable the WebKit Developer Tools in the Mac App Store
 defaults write com.apple.appstore WebKitDeveloperExtras -bool true
 
@@ -585,6 +584,14 @@ defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 # Enable the debug menu in Disk Utility
 defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
+
+# Enable auto dowload & install of Mac App Store and System Updates
+echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload -bool true
+echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
+echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall -bool true
+echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.commerce AutoUpdate -bool true
+echo $PASSWORD | sudo -S -p "" defaults write /Library/Preferences/com.apple.commerce AutoUpdateRestartRequired -bool true
 
 # Quick Look Generators
 # iOS Provisioning Profile Quick Look Generator
