@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# List of versions that will be installed for easier updating
+GIT_VERSION="2.13"
+NVM_VERSION="0.33.2"
+
 # Read Password for sudo usage
 stty -echo
 printf "Password: "
@@ -8,9 +12,10 @@ stty echo
 # echo was off, so make sure to append a new line to keep the output clean
 printf "\n"
 
-if ! git --version | grep "2.13" > /dev/null; then
+if ! git --version | grep "$GIT_VERSION" > /dev/null; then
   # Install latest version of git
-  printf "Manual install of updated Git version required. Opening website for download.\nPress enter when finished installing."
+  printf "Manual install of updated Git version required. Opening website for download.\n"
+  printf "Press enter when finished installing."
   open "https://git-scm.com/download/mac"
   read
 fi
@@ -23,14 +28,14 @@ if [ -f $HOME/.nvm/nvm.sh ]; then
   stty echo
 fi
 # https://github.com/creationix/nvm#install-script
-if ! (type "nvm" && nvm --version | grep "0.33.2") > /dev/null; then
-  echo "Installing NodeJS with Node Version Manager"
+if ! ( type "nvm" && nvm --version | grep "$NVM_VERSION" ) > /dev/null; then
+  echo "Installing Node Version Manager v$NVM_VERSION"
   # ensure the .bash_profile exists so that nvm will append its init commands
   touch "$HOME/.bash_profile"
   # run the install script
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
   # Install highest Long Term Support build as a recommended "prod" node version
-  nvm install lts/*
+  nvm install --lts
   # update npm in the LTS build
   npm i -g npm
   # install some npm staples
@@ -40,7 +45,7 @@ if ! (type "nvm" && nvm --version | grep "0.33.2") > /dev/null; then
   # update npm in the latest build
   npm i -g npm
   # install the same packages as those in lts/* in the latest version
-  nvm reinstall-packages lts/*
+  nvm --reinstall-packages-from=lts
 fi
 
 # commands below pending fixes and integration above or simply deletion
