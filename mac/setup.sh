@@ -89,8 +89,10 @@ brews=(
   android-platform-tools
   git
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
+  maven
   python
   python3
+  caskroom/cask/java
   shellcheck # shell script linting
   shpotify # Spotify shell CLI
   vim
@@ -99,6 +101,7 @@ brews=(
 )
 brewtempfile="$HOME/brewlist.temp"
 brew list > "$brewtempfile"
+brew tap caskroom/cask
 for brew in "${brews[@]}";
 do
   if ! grep "$brew" "$brewtempfile" > /dev/null; then
