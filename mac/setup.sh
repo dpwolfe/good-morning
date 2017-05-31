@@ -116,7 +116,7 @@ fi
 
 # Install Xcode - https://itunes.apple.com/us/app/id497799835
 masinstall 497799835 "Xcode"
-if xcode-select --install > /dev/null; then
+if xcode-select --install 2> /dev/null ; then
   # Execute these during first time setup
   sudoit /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -license accept
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
