@@ -653,7 +653,7 @@ if askto "configure git settings"; then
     echo "Host *
  AddKeysToAgent yes
  UseKeychain yes
- IdentityFile \"HOME/.ssh/id_rsa\"" > "$HOME/.ssh/config"
+ IdentityFile \"$HOME/.ssh/id_rsa\"" > "$HOME/.ssh/config"
     # add your ssh key to ssh-agent
     ssh-add -K "$HOME/.ssh/id_rsa"
     # copy public ssh key to clipboard for pasting on GitHub
