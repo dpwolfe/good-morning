@@ -110,7 +110,7 @@ done
 rm "$brewtempfile"
 
 # Make sure user is signed into the Mac App Store
-if ! mas account; then
+if ! mas account > /dev/null; then
   mas signin --dialog youremail@example.com
 fi
 
@@ -144,10 +144,9 @@ NVM_VERSION="0.33.2"
 # if nvm is already installed, load it in order to check its version
 if [ -s "$HOME/.nvm/nvm.sh" ]; then
   echo "Loading Node Version Manager..."
-  stty -echo
   # shellcheck source=/dev/null
-  . "$HOME/.nvm/nvm.sh"
-  stty echo
+  . "$HOME/.nvm/nvm.sh" > /dev/null
+  echo "Node Version Manager Loaded."
 fi
 
 # https://github.com/creationix/nvm#install-script
@@ -157,6 +156,7 @@ if ! ( type "nvm" && nvm --version | grep "$NVM_VERSION" ) > /dev/null; then
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
 fi
 
+echo "Checking local versions of node..."
 LOCAL_NODE_LTS_VERSION=$(nvm version lts/*)
 LATEST_NODE_LTS_VERSION=$(nvm version-remote --lts)
 # Install highest Long Term Support build as a recommended "prod" node version
@@ -185,6 +185,7 @@ if [[ "$LOCAL_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
   # install some npm staples
   npm i -g npm-check-updates create-react-native-app flow-typed
 fi
+echo "Node versions are up-to-date."
 
 # Install iTerm http://iterm2.com
 if ! [ -d "$HOME/Applications/iTerm.app" ]; then
@@ -380,259 +381,261 @@ if ! [ -d /Library/QuickLook/Provisioning.qlgenerator ]; then
   sudoit mv "$HOME/Downloads/Provisioning-1.0.4/Provisioning.qlgenerator" /Library/QuickLook
 fi
 
-echo "Modifying System Settings"
-echo "Only show icons of running apps in app bar, using Spotlight to launch"
-defaults write com.apple.dock static-only -bool true
-echo "Auto show and hide the menu bar"
-defaults write -g _HIHideMenuBar -bool false
-echo "Attach the dock to the left side, the definitive optimal location according to the community"
-defaults write com.apple.dock orientation left
-echo "Enable tap to click on trackpad"
-defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
-echo "Bump up the trackpad speed a couple notches"
-defaults write -g com.apple.trackpad.scaling 2
-echo "Turn off the annoying auto-capitalize while typing"
-defaults write -g NSAutomaticCapitalizationEnabled -bool false
-echo "Set beep volume to 0"
-defaults write -g com.apple.sound.beep.volume -int 0
-echo "Turn off the cursor location assist that will grow the cursor size when shaken"
-defaults write -g CGDisableCursorLocationMagnification -bool true
-echo "Bump the mouse scaling up a couple notches"
-defaults write -g com.apple.mouse.scaling -float 2
-echo "Set interface style to dark"
-defaults write -g AppleInterfaceStyle -string "Dark"
-echo "Set a short alert sound"
-defaults write -g com.apple.sound.beep.sound -string "/System/Library/Sounds/Pop.aiff"
-# todo: hide siri
-echo "Set fast speed key repeat rate, setting to 0 basically deletes everything at"
-echo "once in some slower apps. 1 is still too fast for some apps. 2 is the"
-echo "reasonable safe min."
-defaults write -g KeyRepeat -int 2
-echo "Set the delay until repeat to be very short"
-defaults write -g InitialKeyRepeat -int 15
-echo "Disable the auto spelling correction since technical acronyms and names get so often miss-corrected"
-defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
-echo "Show Volume in the menu bar"
-defaults write com.apple.systemuiserver menuExtras -array-add "/System/Library/CoreServices/Menu Extras/Volume.menu"
-defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.volume" -bool true
-echo "Increase window resize speed for Cocoa applications"
-defaults write -g NSWindowResizeTime -float 0.001
-echo "Expand save panel by default"
-defaults write -g NSNavPanelExpandedStateForSaveMode -bool true
-echo "Expand print panel by default"
-defaults write -g PMPrintingExpandedStateForPrint -bool true
-echo "Save to disk (not to iCloud) by default"
-defaults write -g NSDocumentSaveNewDocumentsToCloud -bool false
-echo "Automatically quit printer app once the print jobs complete"
-defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
-echo "Disable the "Are you sure you want to open this application?" dialog"
-defaults write com.apple.LaunchServices LSQuarantine -bool false
-echo "Display ASCII control characters using caret notation in standard text views"
-defaults write -g NSTextShowsControlCharacters -bool true
-echo "Disable Resume system-wide"
-defaults write -g NSQuitAlwaysKeepsWindows -bool false
-echo "Disable automatic termination of inactive apps"
-defaults write -g NSDisableAutomaticTermination -bool true
-echo "Disable automatic period substitution as it’s annoying when typing code"
-defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
-echo "Disable the crash reporter"
-defaults write com.apple.CrashReporter DialogType -string "none"
-echo "Set Help Viewer windows to non-floating mode"
-defaults write com.apple.helpviewer DevMode -bool true
-echo "Reveal IP address, hostname, OS version, etc. when clicking the clock in the login window"
-sudoit defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
-echo "Check for software updates daily, not just once per week"
-defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
+if askto "set some starter system settings"; then
+  echo "Modifying System Settings"
+  echo "Only show icons of running apps in app bar, using Spotlight to launch"
+  defaults write com.apple.dock static-only -bool true
+  echo "Auto show and hide the menu bar"
+  defaults write -g _HIHideMenuBar -bool false
+  echo "Attach the dock to the left side, the definitive optimal location according to the community"
+  defaults write com.apple.dock orientation left
+  echo "Enable tap to click on trackpad"
+  defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+  echo "Bump up the trackpad speed a couple notches"
+  defaults write -g com.apple.trackpad.scaling 2
+  echo "Turn off the annoying auto-capitalize while typing"
+  defaults write -g NSAutomaticCapitalizationEnabled -bool false
+  echo "Set beep volume to 0"
+  defaults write -g com.apple.sound.beep.volume -int 0
+  echo "Turn off the cursor location assist that will grow the cursor size when shaken"
+  defaults write -g CGDisableCursorLocationMagnification -bool true
+  echo "Bump the mouse scaling up a couple notches"
+  defaults write -g com.apple.mouse.scaling -float 2
+  echo "Set interface style to dark"
+  defaults write -g AppleInterfaceStyle -string "Dark"
+  echo "Set a short alert sound"
+  defaults write -g com.apple.sound.beep.sound -string "/System/Library/Sounds/Pop.aiff"
+  # todo: hide siri
+  echo "Set fast speed key repeat rate, setting to 0 basically deletes everything at"
+  echo "once in some slower apps. 1 is still too fast for some apps. 2 is the"
+  echo "reasonable safe min."
+  defaults write -g KeyRepeat -int 2
+  echo "Set the delay until repeat to be very short"
+  defaults write -g InitialKeyRepeat -int 15
+  echo "Disable the auto spelling correction since technical acronyms and names get so often miss-corrected"
+  defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
+  echo "Show Volume in the menu bar"
+  defaults write com.apple.systemuiserver menuExtras -array-add "/System/Library/CoreServices/Menu Extras/Volume.menu"
+  defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.volume" -bool true
+  echo "Increase window resize speed for Cocoa applications"
+  defaults write -g NSWindowResizeTime -float 0.001
+  echo "Expand save panel by default"
+  defaults write -g NSNavPanelExpandedStateForSaveMode -bool true
+  echo "Expand print panel by default"
+  defaults write -g PMPrintingExpandedStateForPrint -bool true
+  echo "Save to disk (not to iCloud) by default"
+  defaults write -g NSDocumentSaveNewDocumentsToCloud -bool false
+  echo "Automatically quit printer app once the print jobs complete"
+  defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
+  echo "Disable the "Are you sure you want to open this application?" dialog"
+  defaults write com.apple.LaunchServices LSQuarantine -bool false
+  echo "Display ASCII control characters using caret notation in standard text views"
+  defaults write -g NSTextShowsControlCharacters -bool true
+  echo "Disable Resume system-wide"
+  defaults write -g NSQuitAlwaysKeepsWindows -bool false
+  echo "Disable automatic termination of inactive apps"
+  defaults write -g NSDisableAutomaticTermination -bool true
+  echo "Disable automatic period substitution as it’s annoying when typing code"
+  defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
+  echo "Disable the crash reporter"
+  defaults write com.apple.CrashReporter DialogType -string "none"
+  echo "Set Help Viewer windows to non-floating mode"
+  defaults write com.apple.helpviewer DevMode -bool true
+  echo "Reveal IP address, hostname, OS version, etc. when clicking the clock in the login window"
+  sudoit defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
+  echo "Check for software updates daily, not just once per week"
+  defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 
-echo "Modifying Mouse Settings"
-echo "Trackpad: enable tap to click for this user and for the login screen"
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
-defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
-defaults write -g com.apple.mouse.tapBehavior -int 1
-echo "Trackpad: map bottom right corner to right-click"
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -int 2
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -bool true
-defaults -currentHost write -g com.apple.trackpad.trackpadCornerClickBehavior -int 1
-defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick -bool true
-echo "Trackpad: swipe between pages with three fingers"
-defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
-defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerHorizSwipeGesture -int 1
-echo "Increase sound quality for Bluetooth headphones/headsets"
-defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
-echo "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
-defaults write -g AppleKeyboardUIMode -int 3
-echo "Use scroll gesture with the Ctrl (^) modifier key to zoom"
-defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
-defaults write com.apple.universalaccess HIDScrollZoomModifierMask -int 262144
-echo "Follow the keyboard focus while zoomed in"
-defaults write com.apple.universalaccess closeViewZoomFollowsFocus -bool true
-echo "Disable press-and-hold for keys in favor of key repeat"
-defaults write -g ApplePressAndHoldEnabled -bool false
-echo "Automatically illuminate built-in MacBook keyboard in low light"
-defaults write com.apple.BezelServices kDim -bool true
-echo "Turn off keyboard illumination when computer is not used for 5 minutes"
-defaults write com.apple.BezelServices kDimTime -int 300
-echo "Set language and text formats"
-defaults write -g AppleLanguages -array "en"
-defaults write -g AppleLocale -string "en_US@currency=USD"
-defaults write -g AppleMeasurementUnits -string "Inches"
-defaults write -g AppleMetricUnits -bool false
-echo "Disable auto-correct"
-defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
+  echo "Modifying Mouse Settings"
+  echo "Trackpad: enable tap to click for this user and for the login screen"
+  defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+  defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
+  defaults write -g com.apple.mouse.tapBehavior -int 1
+  echo "Trackpad: map bottom right corner to right-click"
+  defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -int 2
+  defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -bool true
+  defaults -currentHost write -g com.apple.trackpad.trackpadCornerClickBehavior -int 1
+  defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick -bool true
+  echo "Trackpad: swipe between pages with three fingers"
+  defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
+  defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
+  defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerHorizSwipeGesture -int 1
+  echo "Increase sound quality for Bluetooth headphones/headsets"
+  defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
+  echo "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
+  defaults write -g AppleKeyboardUIMode -int 3
+  echo "Use scroll gesture with the Ctrl (^) modifier key to zoom"
+  defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
+  defaults write com.apple.universalaccess HIDScrollZoomModifierMask -int 262144
+  echo "Follow the keyboard focus while zoomed in"
+  defaults write com.apple.universalaccess closeViewZoomFollowsFocus -bool true
+  echo "Disable press-and-hold for keys in favor of key repeat"
+  defaults write -g ApplePressAndHoldEnabled -bool false
+  echo "Automatically illuminate built-in MacBook keyboard in low light"
+  defaults write com.apple.BezelServices kDim -bool true
+  echo "Turn off keyboard illumination when computer is not used for 5 minutes"
+  defaults write com.apple.BezelServices kDimTime -int 300
+  echo "Set language and text formats"
+  defaults write -g AppleLanguages -array "en"
+  defaults write -g AppleLocale -string "en_US@currency=USD"
+  defaults write -g AppleMeasurementUnits -string "Inches"
+  defaults write -g AppleMetricUnits -bool false
+  echo "Disable auto-correct"
+  defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
 
-echo "Modifying Screen Settings"
-echo "Require password immediately after sleep or screen saver begins"
-defaults write com.apple.screensaver askForPassword -int 1
-defaults write com.apple.screensaver askForPasswordDelay -int 0
-echo "Save screenshots to the desktop"
-defaults write com.apple.screencapture location -string "$HOME/Desktop"
-echo "Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
-defaults write com.apple.screencapture type -string "png"
-echo "Disable shadow in screenshots"
-defaults write com.apple.screencapture disable-shadow -bool true
-echo "Enable subpixel font rendering on non-Apple LCDs"
-defaults write -g AppleFontSmoothing -int 2
-echo "Enable HiDPI display modes (requires restart)"
-sudoit defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
+  echo "Modifying Screen Settings"
+  echo "Require password immediately after sleep or screen saver begins"
+  defaults write com.apple.screensaver askForPassword -int 1
+  defaults write com.apple.screensaver askForPasswordDelay -int 0
+  echo "Save screenshots to the desktop"
+  defaults write com.apple.screencapture location -string "$HOME/Desktop"
+  echo "Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
+  defaults write com.apple.screencapture type -string "png"
+  echo "Disable shadow in screenshots"
+  defaults write com.apple.screencapture disable-shadow -bool true
+  echo "Enable subpixel font rendering on non-Apple LCDs"
+  defaults write -g AppleFontSmoothing -int 2
+  echo "Enable HiDPI display modes (requires restart)"
+  sudoit defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 
-echo "Modifying Finder Settings"
-echo "Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons"
-defaults write com.apple.finder QuitMenuItem -bool true
-echo "Finder: disable window animations and Get Info animations"
-defaults write com.apple.finder DisableAllAnimations -bool true
-echo "Show icons for hard drives, servers, and removable media on the desktop"
-defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
-defaults write com.apple.finder ShowHardDrivesOnDesktop -bool true
-defaults write com.apple.finder ShowMountedServersOnDesktop -bool true
-defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
-echo "Finder: show hidden files by default"
-defaults write com.apple.finder AppleShowAllFiles -bool true
-echo "Finder: show all filename extensions"
-defaults write -g AppleShowAllExtensions -bool true
-echo "Finder: show status bar"
-defaults write com.apple.finder ShowStatusBar -bool true
-echo "Finder: allow text selection in Quick Look"
-defaults write com.apple.finder QLEnableTextSelection -bool true
-echo "Display full POSIX path as Finder window title"
-defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
-echo "When performing a search, search the current folder by default"
-defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
-echo "Disable the warning when changing a file extension"
-defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
-echo "Avoid creating .DS_Store files on network volumes"
-defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
-echo "Disable disk image verification"
-defaults write com.apple.frameworks.diskimages skip-verify -bool true
-defaults write com.apple.frameworks.diskimages skip-verify-locked -bool true
-defaults write com.apple.frameworks.diskimages skip-verify-remote -bool true
-echo "Automatically open a new Finder window when a volume is mounted"
-defaults write com.apple.frameworks.diskimages auto-open-ro-root -bool true
-defaults write com.apple.frameworks.diskimages auto-open-rw-root -bool true
-defaults write com.apple.finder OpenWindowForNewRemovableDisk -bool true
-echo "Use list view in all Finder windows by default"
-# You can set the other view modes by using one of these four-letter codes: icnv, clmv, Flwv
-defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
-echo "Disable the warning before emptying the Trash"
-defaults write com.apple.finder WarnOnEmptyTrash -bool false
-echo "Empty Trash securely by default"
-defaults write com.apple.finder EmptyTrashSecurely -bool true
-echo "Enable AirDrop over Ethernet and on unsupported Macs running Lion"
-defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
+  echo "Modifying Finder Settings"
+  echo "Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons"
+  defaults write com.apple.finder QuitMenuItem -bool true
+  echo "Finder: disable window animations and Get Info animations"
+  defaults write com.apple.finder DisableAllAnimations -bool true
+  echo "Show icons for hard drives, servers, and removable media on the desktop"
+  defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
+  defaults write com.apple.finder ShowHardDrivesOnDesktop -bool true
+  defaults write com.apple.finder ShowMountedServersOnDesktop -bool true
+  defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
+  echo "Finder: show hidden files by default"
+  defaults write com.apple.finder AppleShowAllFiles -bool true
+  echo "Finder: show all filename extensions"
+  defaults write -g AppleShowAllExtensions -bool true
+  echo "Finder: show status bar"
+  defaults write com.apple.finder ShowStatusBar -bool true
+  echo "Finder: allow text selection in Quick Look"
+  defaults write com.apple.finder QLEnableTextSelection -bool true
+  echo "Display full POSIX path as Finder window title"
+  defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+  echo "When performing a search, search the current folder by default"
+  defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+  echo "Disable the warning when changing a file extension"
+  defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+  echo "Avoid creating .DS_Store files on network volumes"
+  defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+  echo "Disable disk image verification"
+  defaults write com.apple.frameworks.diskimages skip-verify -bool true
+  defaults write com.apple.frameworks.diskimages skip-verify-locked -bool true
+  defaults write com.apple.frameworks.diskimages skip-verify-remote -bool true
+  echo "Automatically open a new Finder window when a volume is mounted"
+  defaults write com.apple.frameworks.diskimages auto-open-ro-root -bool true
+  defaults write com.apple.frameworks.diskimages auto-open-rw-root -bool true
+  defaults write com.apple.finder OpenWindowForNewRemovableDisk -bool true
+  echo "Use list view in all Finder windows by default"
+  # You can set the other view modes by using one of these four-letter codes: icnv, clmv, Flwv
+  defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+  echo "Disable the warning before emptying the Trash"
+  defaults write com.apple.finder WarnOnEmptyTrash -bool false
+  echo "Empty Trash securely by default"
+  defaults write com.apple.finder EmptyTrashSecurely -bool true
+  echo "Enable AirDrop over Ethernet and on unsupported Macs running Lion"
+  defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
 
-echo "Modifying Dock & Hot Corner Settings"
-echo "Enable highlight hover effect for the grid view of a stack (Dock)"
-defaults write com.apple.dock mouse-over-hilte-stack -bool true
-echo "Set the icon size of Dock items to 36 pixels"
-defaults write com.apple.dock tilesize -int 36
-echo "Enable spring loading for all Dock items"
-defaults write com.apple.dock enable-spring-load-actions-on-all-items -bool true
-echo "Show indicator lights for open applications in the Dock"
-defaults write com.apple.dock show-process-indicators -bool true
-echo "Don’t animate opening applications from the Dock"
-defaults write com.apple.dock launchanim -bool false
-echo "Speed up Mission Control animations"
-defaults write com.apple.dock expose-animation-duration -float 0.1
-echo "Remove the auto-hiding Dock delay"
-defaults write com.apple.Dock autohide-delay -float 0
-echo "Remove the animation when hiding/showing the Dock"
-defaults write com.apple.dock autohide-time-modifier -float 0
-echo "Automatically hide and show the Dock"
-defaults write com.apple.dock autohide -bool true
-echo "Make Dock icons of hidden applications translucent"
-defaults write com.apple.dock showhidden -bool true
-echo "Top right screen corner starts the screen saver"
-defaults write com.apple.dock wvous-tr-corner -int 5
-defaults write com.apple.dock wvous-tr-modifier -int 0
+  echo "Modifying Dock & Hot Corner Settings"
+  echo "Enable highlight hover effect for the grid view of a stack (Dock)"
+  defaults write com.apple.dock mouse-over-hilte-stack -bool true
+  echo "Set the icon size of Dock items to 36 pixels"
+  defaults write com.apple.dock tilesize -int 36
+  echo "Enable spring loading for all Dock items"
+  defaults write com.apple.dock enable-spring-load-actions-on-all-items -bool true
+  echo "Show indicator lights for open applications in the Dock"
+  defaults write com.apple.dock show-process-indicators -bool true
+  echo "Don’t animate opening applications from the Dock"
+  defaults write com.apple.dock launchanim -bool false
+  echo "Speed up Mission Control animations"
+  defaults write com.apple.dock expose-animation-duration -float 0.1
+  echo "Remove the auto-hiding Dock delay"
+  defaults write com.apple.Dock autohide-delay -float 0
+  echo "Remove the animation when hiding/showing the Dock"
+  defaults write com.apple.dock autohide-time-modifier -float 0
+  echo "Automatically hide and show the Dock"
+  defaults write com.apple.dock autohide -bool true
+  echo "Make Dock icons of hidden applications translucent"
+  defaults write com.apple.dock showhidden -bool true
+  echo "Top right screen corner starts the screen saver"
+  defaults write com.apple.dock wvous-tr-corner -int 5
+  defaults write com.apple.dock wvous-tr-modifier -int 0
 
-echo "Modifying Safari & WebKit Settings"
-echo "Set Safari’s home page to about:blank for faster loading"
-defaults write com.apple.Safari HomePage -string "about:blank"
-echo "Prevent Safari from opening ‘safe’ files automatically after downloading"
-defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
-echo "Hide Safari’s bookmarks bar by default"
-defaults write com.apple.Safari ShowFavoritesBar -bool false
-echo "Disable Safari’s thumbnail cache for History and Top Sites"
-defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
-echo "Enable Safari’s debug menu"
-defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-echo "Make Safari’s search banners default to Contains instead of Starts With"
-defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
-echo "Remove useless icons from Safari’s bookmarks bar"
-defaults write com.apple.Safari ProxiesInBookmarksBar ""
-echo "Enable the Develop menu and the Web Inspector in Safari"
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
-echo "Add a context menu item for showing the Web Inspector in web views"
-defaults write -g WebKitDeveloperExtras -bool true
-echo "Enable the WebKit Developer Tools in the Mac App Store"
-defaults write com.apple.appstore WebKitDeveloperExtras -bool true
+  echo "Modifying Safari & WebKit Settings"
+  echo "Set Safari’s home page to about:blank for faster loading"
+  defaults write com.apple.Safari HomePage -string "about:blank"
+  echo "Prevent Safari from opening ‘safe’ files automatically after downloading"
+  defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
+  echo "Hide Safari’s bookmarks bar by default"
+  defaults write com.apple.Safari ShowFavoritesBar -bool false
+  echo "Disable Safari’s thumbnail cache for History and Top Sites"
+  defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
+  echo "Enable Safari’s debug menu"
+  defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
+  echo "Make Safari’s search banners default to Contains instead of Starts With"
+  defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
+  echo "Remove useless icons from Safari’s bookmarks bar"
+  defaults write com.apple.Safari ProxiesInBookmarksBar ""
+  echo "Enable the Develop menu and the Web Inspector in Safari"
+  defaults write com.apple.Safari IncludeDevelopMenu -bool true
+  defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+  defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+  echo "Add a context menu item for showing the Web Inspector in web views"
+  defaults write -g WebKitDeveloperExtras -bool true
+  echo "Enable the WebKit Developer Tools in the Mac App Store"
+  defaults write com.apple.appstore WebKitDeveloperExtras -bool true
 
-echo "Modifying iTunes Settings"
-echo "Disable the iTunes store link arrows"
-defaults write com.apple.iTunes show-store-link-arrows -bool false
-echo "Disable the Genius sidebar in iTunes"
-defaults write com.apple.iTunes disableGeniusSidebar -bool true
-echo "Disable the Ping sidebar in iTunes"
-defaults write com.apple.iTunes disablePingSidebar -bool true
-echo "Disable all the other Ping stuff in iTunes"
-defaults write com.apple.iTunes disablePing -bool true
-echo "Disable radio stations in iTunes"
-defaults write com.apple.iTunes disableRadio -bool true
-echo "Make ⌘ + F focus the search input in iTunes"
-defaults write com.apple.iTunes NSUserKeyEquivalents -dict-add "Target Search Field" "@F"
+  echo "Modifying iTunes Settings"
+  echo "Disable the iTunes store link arrows"
+  defaults write com.apple.iTunes show-store-link-arrows -bool false
+  echo "Disable the Genius sidebar in iTunes"
+  defaults write com.apple.iTunes disableGeniusSidebar -bool true
+  echo "Disable the Ping sidebar in iTunes"
+  defaults write com.apple.iTunes disablePingSidebar -bool true
+  echo "Disable all the other Ping stuff in iTunes"
+  defaults write com.apple.iTunes disablePing -bool true
+  echo "Disable radio stations in iTunes"
+  defaults write com.apple.iTunes disableRadio -bool true
+  echo "Make ⌘ + F focus the search input in iTunes"
+  defaults write com.apple.iTunes NSUserKeyEquivalents -dict-add "Target Search Field" "@F"
 
-echo "Modifying Mail Settings"
-echo "Disable send and reply animations in Mail.app"
-defaults write com.apple.mail DisableReplyAnimations -bool true
-defaults write com.apple.mail DisableSendAnimations -bool true
-echo "Add the keyboard shortcut ⌘ + Enter to send an email in Mail.app"
-defaults write com.apple.mail NSUserKeyEquivalents -dict-add "Send" "@U21a9"
+  echo "Modifying Mail Settings"
+  echo "Disable send and reply animations in Mail.app"
+  defaults write com.apple.mail DisableReplyAnimations -bool true
+  defaults write com.apple.mail DisableSendAnimations -bool true
+  echo "Add the keyboard shortcut ⌘ + Enter to send an email in Mail.app"
+  defaults write com.apple.mail NSUserKeyEquivalents -dict-add "Send" "@U21a9"
 
-echo "Modifying Terminal Settings"
-echo "Enable \"focus follows mouse\" for Terminal.app and all X11 apps."
-echo "i.e. hover over a window and start typing in it without clicking first"
-defaults write com.apple.terminal FocusFollowsMouse -bool true
-defaults write org.x.X11 wm_ffm -bool true
+  echo "Modifying Terminal Settings"
+  echo "Enable \"focus follows mouse\" for Terminal.app and all X11 apps."
+  echo "i.e. hover over a window and start typing in it without clicking first"
+  defaults write com.apple.terminal FocusFollowsMouse -bool true
+  defaults write org.x.X11 wm_ffm -bool true
 
-echo "Modifying Time Machine Settings"
-echo "Prevent Time Machine from prompting to use new hard drives as backup volume"
-defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
+  echo "Modifying Time Machine Settings"
+  echo "Prevent Time Machine from prompting to use new hard drives as backup volume"
+  defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 
-echo "Modifying Address Book, Dashboard, iCal, TextEdit, and Disk Utility Settings"
-echo "Enable the debug menu in Address Book"
-defaults write com.apple.addressbook ABShowDebugMenu -bool true
-echo "Enable Dashboard dev mode (allows keeping widgets on the desktop)"
-defaults write com.apple.dashboard devmode -bool true
-echo "Use plain text mode for new TextEdit documents"
-defaults write com.apple.TextEdit RichText -int 0
-echo "Open and save files as UTF–8 in TextEdit"
-defaults write com.apple.TextEdit PlainTextEncoding -int 4
-defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
-echo "Enable the debug menu in Disk Utility"
-defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
-defaults write com.apple.DiskUtility advanced-image-options -bool true
+  echo "Modifying Address Book, Dashboard, iCal, TextEdit, and Disk Utility Settings"
+  echo "Enable the debug menu in Address Book"
+  defaults write com.apple.addressbook ABShowDebugMenu -bool true
+  echo "Enable Dashboard dev mode (allows keeping widgets on the desktop)"
+  defaults write com.apple.dashboard devmode -bool true
+  echo "Use plain text mode for new TextEdit documents"
+  defaults write com.apple.TextEdit RichText -int 0
+  echo "Open and save files as UTF–8 in TextEdit"
+  defaults write com.apple.TextEdit PlainTextEncoding -int 4
+  defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
+  echo "Enable the debug menu in Disk Utility"
+  defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
+  defaults write com.apple.DiskUtility advanced-image-options -bool true
+fi
 
 GITHUB_KEYS_URL="https://github.com/settings/keys"
 if askto "configure git settings"; then
