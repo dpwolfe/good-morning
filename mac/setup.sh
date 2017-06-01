@@ -94,6 +94,7 @@ brews=(
   caskroom/cask/java
   shellcheck # shell script linting
   shpotify # Spotify shell CLI
+  terraform
   vim
   wget
   yarn # Recommended install method - https://yarnpkg.com/en/docs/install
