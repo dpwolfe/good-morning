@@ -1,15 +1,19 @@
 # Shared Engineering Environment Files
+Setup a machine quickly instead of wasting half a day.
 
-## OS X Setup
-Run the following from a command prompt to enable holding key to repeat characters. You will need this when navigating using VI commands:
-`defaults write -g ApplePressAndHoldEnabled -bool false`
+## macOS Instructions
+Run this command in a terminal:
 
-Add these lines to your ~\.bash_profile, creating one if it doesn't exist:
-```shell
-export REPO_ROOT=~/repo
-source $REPO_ROOT/environment/mac/.bash_profile
 ```
-Set REPO\_ROOT above to your preferred root directory for your cloned github repositories.
+curl -sL https://raw.githubusercontent.com/dpwolfe/environment/master/mac/setup.sh | sh
+```
 
-## Scrum Board
-https://trello.com/b/mejsqvhk/dpwolfe-environment
+A .bash_profile is created for you by running setup.sh. In case you already had one, add these lines to your ~\.bash_profile, setting REPO_ROOT correctly to match your own setup:
+```shell
+export REPO_ROOT="$HOME/repo"
+source "$REPO_ROOT/environment/mac/.bash_profile"
+```
+Set REPO\_ROOT above to your preferred root directory for your cloned GitHub repositories.
+
+## Contributors
+Yes, please.
