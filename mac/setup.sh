@@ -210,6 +210,8 @@ fi
 # Install OmniFocus 2
 # Beta builds may be available from - https://omnistaging.omnigroup.com/omnifocus-2/
 dmginstall "OmniFocus" https://www.omnigroup.com/download/latest/omnifocus/ "OmniFocus"
+# Install OmniGraffle
+dmginstall "OmniGraffle" https://downloads.omnigroup.com/software/MacOSX/10.11/OmniGraffle-7.3.1.dmg "OmniGraffle"
 # Install OmniOutliner 5
 # Beta builds may be available from - https://omnistaging.omnigroup.com/omnioutliner/
 dmginstall "OmniOutliner" https://www.omnigroup.com/download/latest/omnioutliner/ "OmniOutliner"
