@@ -163,7 +163,7 @@ LATEST_NODE_LTS_VERSION=$(nvm version-remote --lts)
 # Install highest Long Term Support build as a recommended "prod" node version
 if [[ "$LOCAL_NODE_LTS_VERSION" != "$LATEST_NODE_LTS_VERSION" ]]; then
   nvm install --lts
-  if "$LOCAL_NODE_LTS_VERSION" != "N/A"; then
+  if [[ "$LOCAL_NODE_LTS_VERSION" != "N/A" ]]; then
     nvm reinstall-packages "$LOCAL_NODE_LTS_VERSION"
     nvm uninstall "$LOCAL_NODE_LTS_VERSION"
   fi
@@ -177,7 +177,7 @@ LOCAL_NODE_VERSION=$(nvm version node)
 LATEST_NODE_VERSION=$(nvm version-remote node)
 if [[ "$LOCAL_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
   nvm install node
-  if "$LOCAL_NODE_VERSION" != "N/A"; then
+  if [[ "$LOCAL_NODE_VERSION" != "N/A" ]]; then
     nvm reinstall-packages "$LOCAL_NODE_VERSION"
     nvm uninstall "$LOCAL_NODE_VERSION"
   fi
