@@ -268,7 +268,7 @@ if ! [ -d "/Applications/Dropbox.app" ] && askto "install Dropbox"; then
 fi
 
 # Install Blue Jeans Launcher
-if ! [ -d "/Applications/Blue Jeans.app" ] && askto "install Blue Jeans"; then
+if ! [ -d "$HOME/Applications/Blue Jeans.app" ] && askto "install Blue Jeans"; then
   dmg="$HOME/Downloads/BlueJeans.dmg"
   curl -JL https://swdl.bluejeans.com/desktop/mac/launchers/BlueJeansLauncher_live_168.dmg -o "$dmg"
   hdiutil attach "$dmg"
