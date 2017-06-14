@@ -233,6 +233,8 @@ dmginstall "XMind" http://dl2.xmind.net/xmind-downloads/xmind-8-update2-macosx.d
 dmginstall "ControlPlane" https://www.dropbox.com/s/lhuyzp1csx3f9cc/ControlPlane-1.6.6.dmg?dl=1 "ControlPlane"
 # Install Blue Jeans Scheduler
 dmginstall "Blue Jeans Scheduler for Mac" https://swdl.bluejeans.com/bluejeansformac/Blue+Jeans+Scheduler+for+Mac-1.0.208.dmg "Blue Jeans Scheduler for Mac"
+# Install KeeWeb
+dmginstall "KeeWeb" https://github.com/keeweb/keeweb/releases/download/v1.5.4/KeeWeb-1.5.4.mac.dmg "KeeWeb"
 
 # Install AWS CLI
 if ! type "aws" > /dev/null; then
