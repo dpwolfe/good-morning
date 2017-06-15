@@ -216,7 +216,8 @@ dmginstall "OmniGraffle" https://downloads.omnigroup.com/software/MacOSX/10.11/O
 # Beta builds may be available from - https://omnistaging.omnigroup.com/omnioutliner/
 dmginstall "OmniOutliner" https://www.omnigroup.com/download/latest/omnioutliner/ "OmniOutliner"
 # Install Google Chrome
-dmginstall "Google Chrome" https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg "Google Chrome"
+# disabled for now since Google Chrome does not seem to work correctly when in the user Applications folder.
+# dmginstall "Google Chrome" https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg "Google Chrome"
 # Install Spotify
 dmginstall "Spotify" https://download.spotify.com/Spotify.dmg "Spotify"
 # Install Docker
