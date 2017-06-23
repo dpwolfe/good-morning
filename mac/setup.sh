@@ -76,7 +76,7 @@ else
   # steps from homebrew-core say to run brew update twice when troubleshooting
   # brew update
   echo "Upgrading Homebrew..."
-  brew upgrade
+  brew upgrade --cleanup
 fi
 brew doctor
 # Having Homebrew issues? Run this command below.
@@ -241,6 +241,9 @@ dmginstall "KeeWeb" https://github.com/keeweb/keeweb/releases/download/v1.5.4/Ke
 if ! type "aws" > /dev/null; then
   # passing -H instead of using sudoit
   echo "$PASSWORD" | sudo -H -S -p "" pip install awscli
+else
+  # update AWS CLI
+  echo "$PASSWORD" | sudo -H -S -p "" pip install --upgrade awscli
 fi
 
 if askto "enable auto download & install of Mac App Store updates and macOS updates"; then
@@ -346,6 +349,9 @@ apms=(
   split-diff
 )
 if type "apm" > /dev/null; then
+  # Update all the Atom packages
+  yes | apm update -c false
+  # Get list of currently installed packages
   apmtempfile="$HOME/apmlist.temp"
   apm list > "$apmtempfile"
   for pkg in "${apms[@]}";
