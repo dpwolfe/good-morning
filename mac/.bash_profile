@@ -2,14 +2,14 @@
 export LANG="en_US.UTF-8"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$DIR/git-completion.bash"
 #Git autocomplete
-#source git-completion.bash
+# shellcheck source=git-completion.bash
+source "$DIR/git-completion.bash"
 
-rgfunction() { egrep -rso ".{0,40}$1.{0,40}" --color=auto --include="*.$2" *; }
-findfunction() { find . -name $1; }
+rgfunction() { grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *; }
+findfunction() { find . -name "$1"; }
 unix2dos() {
-    sed "s/$/`echo -e \\\r`/" "$1" > "$1.new";
+    sed "s/$/$(printf '\r')/" "$1" > "$1.new";
     rm "$1";
     mv "$1.new" "$1";
 }
@@ -95,6 +95,8 @@ alias push='git push'
 alias pushs='git push --set-upstream origin $(parse_git_branch)'
 alias cm='git checkout master'
 alias gco='git checkout'
+
+alias good_morning='source $DIR/setup.sh'
 
 export PATH="/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"
 export PS1='\[\033]0;$TITLEPREFIX:${PWD//[^[:ascii:]]/?}\007\]\n\[\033[32m\]\u@\h \[\033[33m\]\w \[\033[36m\](`parse_git_branch`)\[\033[0m\] \[\033[35m\]\t\[\033[0m\]\n$'
