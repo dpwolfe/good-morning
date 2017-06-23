@@ -238,12 +238,15 @@ dmginstall "Blue Jeans Scheduler for Mac" https://swdl.bluejeans.com/bluejeansfo
 # Install KeeWeb
 dmginstall "KeeWeb" https://github.com/keeweb/keeweb/releases/download/v1.5.4/KeeWeb-1.5.4.mac.dmg "KeeWeb"
 
-# Install AWS CLI
 if ! type "aws" > /dev/null; then
+  # call sudoit to ensure password is set
+  sudoit echo "Installing AWS CLI..."
   # passing -H instead of using sudoit
   echo "$PASSWORD" | sudo -H -S -p "" pip install awscli
 else
-  # update AWS CLI
+  # call sudoit to ensure password is set
+  sudoit echo "Upgrading AWS CLI..."
+  # passing -H instead of using sudoit
   echo "$PASSWORD" | sudo -H -S -p "" pip install --upgrade awscli
 fi
 
