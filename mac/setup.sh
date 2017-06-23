@@ -136,7 +136,8 @@ if ! mas list | grep "441258766" > /dev/null; then
 fi
 
 # Install Slack https://itunes.apple.com/us/app/id803453959
-masinstall 803453959 "Slack"
+# Currently using direct download option.
+# masinstall 803453959 "Slack"
 # Install OneDrive https://itunes.apple.com/us/app/id823766827
 masinstall 823766827 "OneDrive"
 
@@ -338,6 +339,7 @@ apms=(
   last-cursor-position
   linter
   linter-eslint
+  # todo: auto add -x option to shellcheck settings in atom
   linter-shellcheck
   linter-ui-default
   merge-conflicts
