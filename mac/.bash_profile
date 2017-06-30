@@ -96,6 +96,9 @@ alias pushs='git push --set-upstream origin $(parse_git_branch)'
 alias cm='git checkout master'
 alias gco='git checkout'
 
+# create a new SSL cert with Let's Encrypt using certbot and a DNS TXT challenge
+alias letscert='sudo certbot certonly --manual --preferred-challenges dns'
+
 alias good_morning='source $DIR/setup.sh'
 
 export PATH="/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"
