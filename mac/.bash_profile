@@ -18,7 +18,10 @@ parse_git_branch() {
     git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
 }
 npm-exec() {
-    "$(npm bin)/$*"
+    bin="$1"
+    shift
+    # shellcheck disable=SC2068
+    "$(npm bin)/$bin" $@
 }
 
 alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
