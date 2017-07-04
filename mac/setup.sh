@@ -52,7 +52,7 @@ if ! [ -d "$REPO_ROOT" ]; then
   mkdir -p "$REPO_ROOT"
 fi
 
-# Clone environment repository
+# Setup clone of environment repository
 ENVIRONMENT_REPO_ROOT="$REPO_ROOT/environment"
 if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
   echo "Cloning environment repository..."
@@ -65,6 +65,11 @@ cd \"\$REPO_ROOT\"" >> "$HOME/.bash_profile"
   cp "$ENVIRONMENT_REPO_ROOT/mac/.inputrc" "$HOME/.inputrc"
   cp "$ENVIRONMENT_REPO_ROOT/mac/.vimrc" "$HOME/.vimrc"
   cp -rf "$ENVIRONMENT_REPO_ROOT/mac/.vim" "$HOME/.vim"
+else
+  echo "Pulling latest for environment repository..."
+  pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
+  git pull
+  popd > /dev/null
 fi
 
 # Install homebrew - https://brew.sh
