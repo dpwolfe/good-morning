@@ -19,6 +19,7 @@ function askto {
 function sudoit {
   if [ -z "$PASSWORD" ]; then
     read -r -s -p "Password: " PASSWORD
+    echo # echo newline after input
   fi
   echo "$PASSWORD" | sudo -S -p "" "$@"
 }
