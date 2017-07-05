@@ -6,6 +6,19 @@ set +o errexit
 # Turn on for debugging
 # set -o xtrace
 
+function randstring32 {
+  env LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1
+}
+
+passphrase=randstring32
+function encryptToFile {
+  echo "$1" | openssl enc -aes-256-cbc -k $passphrase > "$2"
+}
+
+function decryptFromFile {
+  openssl enc -aes-256-cbc -d -k $passphrase < "$1"
+}
+
 function askto {
   echo "Do you want to $1? $3"
   select yn in "Yes" "No"; do
@@ -16,12 +29,19 @@ function askto {
   done
 }
 
+if [ -e "$passfile" ]; then
+  rm "$passfile"
+fi
+unset passfile
 function sudoit {
-  if [ -z "$PASSWORD" ]; then
-    read -r -s -p "Password: " PASSWORD
+  if [ -z "$passfile" ]; then
+    passfile="$HOME/.temp_$(randstring32)"
+    read -r -s -p "Password: " p
     echo # echo newline after input
+    encryptToFile "$p" "$passfile"
+    unset p
   fi
-  echo "$PASSWORD" | sudo -S -p "" "$@"
+  decryptFromFile "$passfile" | sudo -S -p "" "$@"
 }
 
 function masinstall {
@@ -244,12 +264,14 @@ if ! type "aws" > /dev/null; then
   # call sudoit to ensure password is set
   sudoit echo "Installing AWS CLI..."
   # passing -H instead of using sudoit
-  echo "$PASSWORD" | sudo -H -S -p "" pip install awscli
+  # shellcheck disable=SC2002
+  cat "$passfile" | sudo -H -S -p "" pip install awscli
 else
   # call sudoit to ensure password is set
   sudoit echo "Upgrading AWS CLI..."
   # passing -H instead of using sudoit
-  echo "$PASSWORD" | sudo -H -S -p "" pip install --upgrade awscli
+  # shellcheck disable=SC2002
+  cat "$passfile" | sudo -H -S -p "" pip install --upgrade awscli
 fi
 
 if askto "enable auto download & install of Mac App Store updates and macOS updates"; then
@@ -334,6 +356,7 @@ fi
 apms=(
   atom-typescript
   busy-signal
+  circle-ci
   docblockr
   file-icons
   git-plus
@@ -341,8 +364,11 @@ apms=(
   highlight-selected
   intentions
   jumpy
+  language-docker
+  language-terraform # this caused freezes for me, uninstall and reinstall if that happens
   last-cursor-position
   linter
+  linter-docker
   linter-eslint
   # todo: auto add -x option to shellcheck settings in atom
   linter-shellcheck
@@ -720,8 +746,6 @@ EOF
   fi
 fi
 
-echo "Done!"
-
 if false; then
 # todo: Install JDK 8
 open http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
@@ -745,8 +769,11 @@ open "$HOME/Applications/ControlPlane.app"
 # todo: suppress sponsor offers when updating Java from Java settings
 fi
 
+rm "$passfile"
+unset passfile
+unset passphrase
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
-echo "Pulling latest for environment repository..."
+echo "Almost done! Pulling latest for environment repository..."
 pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
 git pull && popd > /dev/null # DO NOT PUT ANYTHING BELOW THIS LINE
