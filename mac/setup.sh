@@ -65,11 +65,6 @@ cd \"\$REPO_ROOT\"" >> "$HOME/.bash_profile"
   cp "$ENVIRONMENT_REPO_ROOT/mac/.inputrc" "$HOME/.inputrc"
   cp "$ENVIRONMENT_REPO_ROOT/mac/.vimrc" "$HOME/.vimrc"
   cp -rf "$ENVIRONMENT_REPO_ROOT/mac/.vim" "$HOME/.vim"
-else
-  echo "Pulling latest for environment repository..."
-  pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
-  git pull
-  popd > /dev/null
 fi
 
 # Install homebrew - https://brew.sh
@@ -748,3 +743,9 @@ open "$HOME/Applications/ControlPlane.app"
 # todo: turn off the slightly dim effect when disconnecting from power, this is more annoying than useful
 # todo: suppress sponsor offers when updating Java from Java settings
 fi
+
+# Update the environment repository last since a change to this script while
+# in the middle of execution will break it.
+echo "Pulling latest for environment repository..."
+pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
+git pull && popd > /dev/null # DO NOT PUT ANYTHING BELOW THIS LINE
