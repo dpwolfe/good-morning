@@ -108,6 +108,7 @@ brew doctor
 # shellcheck disable=SC2034
 brews=(
   certbot # For generating SSL certs with Let's Encrypt
+  go
   git
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
