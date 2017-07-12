@@ -371,6 +371,7 @@ apms=(
   linter
   linter-docker
   linter-eslint
+  linter-js-standard # for standardjs
   # todo: auto add -x option to shellcheck settings in atom
   linter-shellcheck
   linter-ui-default
