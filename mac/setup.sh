@@ -331,6 +331,13 @@ if ! [ -d "/Applications/YubiKey PIV Manager.app" ] && askto "install YubiKey PI
   rm "$pkg"
 fi
 
+# Keyboard Maestro
+if ! [ -d "/Applications/Keyboard Maestro.app" ] && askto "install Keyboard Maestro"; then
+  curl -JL https://files.stairways.com/keyboardmaestro-731.zip -o "$HOME/Downloads/KeyboardMaestro.zip"
+  unzip -q "$HOME/Downloads/KeyboardMaestro.zip" -d "/Applications"
+  rm "$HOME/Downloads/KeyboardMaestro.zip"
+fi
+
 # Install Atom
 if ! [ -d "$HOME/Applications/Atom.app" ] && askto "install Atom"; then
   curl -JL https://atom.io/download/mac -o "$HOME/Downloads/Atom.zip"
