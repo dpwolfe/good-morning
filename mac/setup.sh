@@ -69,13 +69,15 @@ function dmginstall {
   fi
 }
 
+# Pick a default repo root unless one is already set
+if [ -z "${REPO_ROOT+x}" ]; then
+  REPO_ROOT="$HOME/repo"
+fi
 # Create local repository root
-REPO_ROOT="$HOME/repo"
 if ! [ -d "$REPO_ROOT" ]; then
   echo "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
-
 # Setup clone of environment repository
 ENVIRONMENT_REPO_ROOT="$REPO_ROOT/environment"
 if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
@@ -165,7 +167,7 @@ fi
 # Currently using direct download option.
 # masinstall 803453959 "Slack"
 # Install OneDrive https://itunes.apple.com/us/app/id823766827
-masinstall 823766827 "OneDrive"
+# masinstall 823766827 "OneDrive"
 
 # Install Node Version Manager
 NVM_VERSION="0.33.2"
@@ -215,25 +217,6 @@ if [[ "$LOCAL_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
 fi
 echo "Node versions are up-to-date."
 
-# Install iTerm http://iterm2.com
-if ! [ -d "$HOME/Applications/iTerm.app" ]; then
-  echo "Installing iTerm"
-  curl -JL https://iterm2.com/downloads/stable/latest -o "$HOME/Downloads/iTerm.zip"
-  unzip -q "$HOME/Downloads/iTerm.zip" -d "$HOME/Applications"
-  rm "$HOME/Downloads/iTerm.zip"
-  # Install Fixed Solarized iTerm colors https://github.com/yuex/solarized-dark-iterm2
-  curl -JL "https://github.com/yuex/solarized-dark-iterm2/raw/master/Solarized%20Dark%20(Fixed).itermcolors" -o "$HOME/Downloads/SolarizedFixed.itermcolors"
-  echo "Follow these steps to complete the iTerm setup:"
-  echo "1. Import the Solarized Dark (Fixed) iTerm colors into Preferences > Profiles > Colors > Color Presets... > Import"
-  echo "2. Select that imported preset that is now in the drop down list."
-  echo "3. Set the iTerm buffer scroll back to unlimited in Settings > Profiles > Terminal"
-  echo "4. Install the iTerm shell integrations from the File menu"
-  echo "5. Use iTerm instead of Terminal from now on."
-  read -r -p "Hit Enter to continue..."
-  # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
-  # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
-fi
-
 if ! type "aws" > /dev/null; then
   echo "Installing AWS CLI..."
   # call sudoit to ensure password is set
@@ -251,6 +234,24 @@ else
 fi
 
 if askto "review and install some recommended applications"; then
+  # Install iTerm http://iterm2.com
+  if ! [ -d "/Applications/iTerm.app" ]; then
+    echo "Installing iTerm"
+    curl -JL https://iterm2.com/downloads/stable/latest -o "$HOME/Downloads/iTerm.zip"
+    sudoit unzip -q "$HOME/Downloads/iTerm.zip" -d "/Applications"
+    rm "$HOME/Downloads/iTerm.zip"
+    # Install Fixed Solarized iTerm colors https://github.com/yuex/solarized-dark-iterm2
+    curl -JL "https://github.com/yuex/solarized-dark-iterm2/raw/master/Solarized%20Dark%20(Fixed).itermcolors" -o "$HOME/Downloads/SolarizedFixed.itermcolors"
+    echo "Follow these steps to complete the iTerm setup:"
+    echo "1. Import the Solarized Dark (Fixed) iTerm colors into Preferences > Profiles > Colors > Color Presets... > Import"
+    echo "2. Select that imported preset that is now in the drop down list."
+    echo "3. Set the iTerm buffer scroll back to unlimited in Settings > Profiles > Terminal"
+    echo "4. Install the iTerm shell integrations from the File menu"
+    echo "5. Use iTerm instead of Terminal from now on."
+    read -r -p "Hit Enter to continue..."
+    # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
+    # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
+  fi
   # Install OmniFocus 2
   # Beta builds may be available from - https://omnistaging.omnigroup.com/omnifocus-2/
   dmginstall "OmniFocus" https://www.omnigroup.com/download/latest/omnifocus/ "OmniFocus"
@@ -297,7 +298,7 @@ if askto "review and install some recommended applications"; then
     rm "$dmg"
   fi
 
-  if ! [ -d "$HOME/Applications/Blue Jeans.app" ] && askto "install Blue Jeans"; then
+  if ! [ -d "/Applications/Blue Jeans.app" ] && askto "install Blue Jeans"; then
     dmg="$HOME/Downloads/BlueJeans.dmg"
     curl -JL https://swdl.bluejeans.com/desktop/mac/launchers/BlueJeansLauncher_live_168.dmg -o "$dmg"
     hdiutil attach "$dmg"
@@ -326,22 +327,22 @@ if askto "review and install some recommended applications"; then
 
   if ! [ -d "/Applications/Keyboard Maestro.app" ] && askto "install Keyboard Maestro"; then
     curl -JL https://files.stairways.com/keyboardmaestro-731.zip -o "$HOME/Downloads/KeyboardMaestro.zip"
-    unzip -q "$HOME/Downloads/KeyboardMaestro.zip" -d "/Applications"
+    sudoit unzip -q "$HOME/Downloads/KeyboardMaestro.zip" -d "/Applications"
     rm "$HOME/Downloads/KeyboardMaestro.zip"
   fi
 
-  if ! [ -d "$HOME/Applications/Atom.app" ] && askto "install Atom"; then
+  if ! [ -d "/Applications/Atom.app" ] && askto "install Atom"; then
     curl -JL https://atom.io/download/mac -o "$HOME/Downloads/Atom.zip"
-    unzip -q "$HOME/Downloads/Atom.zip" -d "$HOME/Applications"
+    sudoit unzip -q "$HOME/Downloads/Atom.zip" -d "/Applications"
     rm "$HOME/Downloads/Atom.zip"
   fi
 
   # Ensure Atom Shell Commands are installed
-  if [ -d "$HOME/Applications/Atom.app" ] && ! type "apm" > /dev/null; then
+  if [ -d "/Applications/Atom.app" ] && ! type "apm" > /dev/null; then
     echo "Please install the Atom shell commands from inside Atom."
     echo "From the Atom menu bar, select Atom > Install Shell Commands."
     read -r -p "Hit Enter to open Atom..."
-    open "$HOME/Applications/Atom.app"
+    open "/Applications/Atom.app"
     read -r -p "Hit Enter when finished installing the shell commands..."
     if ! apm list | grep "── vim-mode@" > /dev/null && askto "install Atom vim-mode"; then
       apm install vim-mode ex-mode
@@ -350,25 +351,25 @@ if askto "review and install some recommended applications"; then
 
   if ! [ -d "$HOME/Applications/Atom Beta.app" ] && askto "install Atom Beta"; then
     curl -JL https://atom.io/download/mac?channel=beta -o "$HOME/Downloads/AtomBeta.zip"
-    unzip -q "$HOME/Downloads/AtomBeta.zip" -d "$HOME/Applications"
+    sudoit unzip -q "$HOME/Downloads/AtomBeta.zip" -d "/Applications"
     rm "$HOME/Downloads/AtomBeta.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Visual Studio Code.app" ] && askto "install Visual Studio Code"; then
     curl -JL https://go.microsoft.com/fwlink/?LinkID=620882 -o "$HOME/Downloads/VSCode.zip"
-    unzip -q "$HOME/Downloads/VSCode.zip" -d "$HOME/Applications/"
+    sudoit unzip -q "$HOME/Downloads/VSCode.zip" -d "/Applications"
     rm "$HOME/Downloads/VSCode.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Visual Studio Code - Insiders.app" ] && askto "install Visual Studio Code Insiders"; then
     curl -JL https://go.microsoft.com/fwlink/?LinkId=723966 -o "$HOME/Downloads/VSCodeInsiders.zip"
-    unzip -q "$HOME/Downloads/VSCodeInsiders.zip" -d "$HOME/Applications/"
+    sudoit unzip -q "$HOME/Downloads/VSCodeInsiders.zip" -d "/Applications"
     rm "$HOME/Downloads/VSCodeInsiders.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Beyond Compare.app" ] && askto "install Beyond Compare"; then
     curl -JL http://www.scootersoftware.com/BCompareOSX-4.2.2.22384.zip -o "$HOME/Downloads/BeyondCompare.zip"
-    unzip -q "$HOME/Downloads/BeyondCompare.zip" -d "$HOME/Applications/"
+    sudoit unzip -q "$HOME/Downloads/BeyondCompare.zip" -d "/Applications"
     rm "$HOME/Downloads/BeyondCompare.zip"
   fi
 
@@ -765,7 +766,7 @@ fi
 
 if false; then
 # todo: setup ControlPlane
-open "$HOME/Applications/ControlPlane.app"
+open "/Applications/ControlPlane.app"
 # todo: install Adobe Connect
 https://www.adobe.com/go/adobeconnect_9_addin_mac
 # adobeconnectaddin-installer.pkg
