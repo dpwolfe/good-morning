@@ -331,9 +331,9 @@ if askto "review and install some recommended applications"; then
     rm "$HOME/Downloads/KeyboardMaestro.zip"
   fi
 
-  if ! [ -d "/Applications/Atom.app" ] && askto "install Atom"; then
+  if ! [ -d "$HOME/Applications/Atom.app" ] && askto "install Atom"; then
     curl -JL https://atom.io/download/mac -o "$HOME/Downloads/Atom.zip"
-    sudoit unzip -q "$HOME/Downloads/Atom.zip" -d "/Applications"
+    sudoit unzip -q "$HOME/Downloads/Atom.zip" -d "$HOME/Applications"
     rm "$HOME/Downloads/Atom.zip"
   fi
 
@@ -351,25 +351,25 @@ if askto "review and install some recommended applications"; then
 
   if ! [ -d "$HOME/Applications/Atom Beta.app" ] && askto "install Atom Beta"; then
     curl -JL https://atom.io/download/mac?channel=beta -o "$HOME/Downloads/AtomBeta.zip"
-    sudoit unzip -q "$HOME/Downloads/AtomBeta.zip" -d "/Applications"
+    sudoit unzip -q "$HOME/Downloads/AtomBeta.zip" -d "$HOME/Applications"
     rm "$HOME/Downloads/AtomBeta.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Visual Studio Code.app" ] && askto "install Visual Studio Code"; then
     curl -JL https://go.microsoft.com/fwlink/?LinkID=620882 -o "$HOME/Downloads/VSCode.zip"
-    sudoit unzip -q "$HOME/Downloads/VSCode.zip" -d "/Applications"
+    sudoit unzip -q "$HOME/Downloads/VSCode.zip" -d "$HOME/Applications"
     rm "$HOME/Downloads/VSCode.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Visual Studio Code - Insiders.app" ] && askto "install Visual Studio Code Insiders"; then
     curl -JL https://go.microsoft.com/fwlink/?LinkId=723966 -o "$HOME/Downloads/VSCodeInsiders.zip"
-    sudoit unzip -q "$HOME/Downloads/VSCodeInsiders.zip" -d "/Applications"
+    sudoit unzip -q "$HOME/Downloads/VSCodeInsiders.zip" -d "$HOME/Applications"
     rm "$HOME/Downloads/VSCodeInsiders.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Beyond Compare.app" ] && askto "install Beyond Compare"; then
     curl -JL http://www.scootersoftware.com/BCompareOSX-4.2.2.22384.zip -o "$HOME/Downloads/BeyondCompare.zip"
-    sudoit unzip -q "$HOME/Downloads/BeyondCompare.zip" -d "/Applications"
+    sudoit unzip -q "$HOME/Downloads/BeyondCompare.zip" -d "$HOME/Applications"
     rm "$HOME/Downloads/BeyondCompare.zip"
   fi
 
