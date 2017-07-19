@@ -223,14 +223,14 @@ if ! type "aws" > /dev/null; then
   sudoit printf ""
   # passing -H instead of using sudoit
   # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" pip install awscli
+  cat "$passfile" | sudo -H -S -p "" pip2 install awscli
 else
   echo "Upgrading AWS CLI..."
   # call sudoit to ensure password is set
   sudoit printf ""
   # passing -H instead of using sudoit
   # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" pip install --upgrade awscli
+  cat "$passfile" | sudo -H -S -p "" pip2 install --upgrade awscli
 fi
 
 if askto "review and install some recommended applications"; then
