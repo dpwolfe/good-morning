@@ -11,4 +11,4 @@ curl -sL https://raw.githubusercontent.com/dpwolfe/environment/master/mac/setup.
 ## Windows users
 There are some unmaintained artifacts in the source that you can check out.
 
-Contributors interested in enabling the Windows bash support for using the aliases is greatly appreciated.
+Contributors interested in enabling the Windows bash support for using the macOS aliases is greatly appreciated.
