@@ -69,7 +69,7 @@ function dmginstall {
   fi
 }
 
-if /usr/bin/xcrun clang 2>&1 | grep error > /dev/null; then
+if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   echo "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
   echo "Installing Xcode command line tools..."
