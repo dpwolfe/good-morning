@@ -69,6 +69,14 @@ function dmginstall {
   fi
 }
 
+if xcode-select --install 2> /dev/null; then
+  # Execute these during first time setup before git will work
+  sudoit xcodebuild -license accept
+  sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
+  sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
+  sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
+fi
+
 # Pick a default repo root unless one is already set
 if [ -z "${REPO_ROOT+x}" ]; then
   REPO_ROOT="$HOME/repo"
@@ -146,15 +154,6 @@ fi
 
 # Install Xcode - https://itunes.apple.com/us/app/id497799835
 masinstall 497799835 "Xcode"
-if xcode-select --install 2> /dev/null; then
-  # Execute these during first time setup
-  sudoit /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -license accept
-  sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
-  sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
-  sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
-  # Xcode - Agree to license
-  sudoit xcodebuild -license
-fi
 
 if ! mas list | grep "441258766" > /dev/null; then
   # Install Magnet https://itunes.apple.com/us/app/id441258766
