@@ -183,6 +183,8 @@ cd \"\$REPO_ROOT\"" >> "$HOME/.bash_profile"
   cp "$ENVIRONMENT_REPO_ROOT/mac/.inputrc" "$HOME/.inputrc"
   cp "$ENVIRONMENT_REPO_ROOT/mac/.vimrc" "$HOME/.vimrc"
   cp -rf "$ENVIRONMENT_REPO_ROOT/mac/.vim" "$HOME/.vim"
+  # set flag to indicate this is the first run to turn on additional setup features
+  FIRST_RUN=1
 fi
 
 # Install homebrew - https://brew.sh
@@ -317,7 +319,7 @@ else
   cat "$passfile" | sudo -H -S -p "" pip2 install --upgrade awscli
 fi
 
-if askto "review and install some recommended applications"; then
+if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
   # Install iTerm http://iterm2.com
   if ! [ -d "/Applications/iTerm.app" ]; then
     echo "Installing iTerm"
@@ -459,7 +461,7 @@ if askto "review and install some recommended applications"; then
 
 fi
 
-if ! (defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled && \
+if [ -n "$FIRST_RUN" ] && ! (defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall && \
@@ -528,7 +530,7 @@ if ! [ -d /Library/QuickLook/Provisioning.qlgenerator ]; then
   rm -rf "$HOME/Downloads/Provisioning-1.0.4/"
 fi
 
-if askto "set some opinionated starter system settings"; then
+if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
   echo "Modifying System Settings"
   echo "Only show icons of running apps in app bar, using Spotlight to launch"
   defaults write com.apple.dock static-only -bool true
@@ -811,6 +813,7 @@ fi
 rm "$passfile"
 unset passfile
 unset passphrase
+unset FIRST_RUN
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
 echo "Almost done! Pulling latest for environment repository..."
