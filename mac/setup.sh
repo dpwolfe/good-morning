@@ -21,7 +21,7 @@ function decryptFromFile {
 
 function askto {
   echo "Do you want to $1? $3"
-  read -r -n 1 -p "(y/n) " yn < /dev/tty;
+  read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
   case $yn in
     y|Y ) ${2}; return 0;;
@@ -236,10 +236,9 @@ rm "$brewtempfile"
 
 if ! type "pip-review" > /dev/null 2> /dev/null; then
   pip2 install pip-review
-else
-  # update all packages installed with pip
-  pip-review --auto
 fi
+# update all packages installed with pip
+pip-review --auto
 
 # Make sure user is signed into the Mac App Store
 if ! mas account > /dev/null; then
