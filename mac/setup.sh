@@ -69,9 +69,10 @@ function dmginstall {
   fi
 }
 
-if xcode-select --install 2> /dev/null; then
-  # Execute these during first time setup before git will work
+if /usr/bin/xcrun clang 2> /dev/null; then
+  echo "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
+  echo "Installing Xcode command line tools..."
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
