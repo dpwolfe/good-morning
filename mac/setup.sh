@@ -172,7 +172,7 @@ fi
 ENVIRONMENT_REPO_ROOT="$REPO_ROOT/environment"
 if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
   echo "Cloning environment repository..."
-  git clone git@github.com:dpwolfe/environment.git "$ENVIRONMENT_REPO_ROOT"
+  git clone https://github.com/dpwolfe/environment.git "$ENVIRONMENT_REPO_ROOT"
   echo "export REPO_ROOT=\"\$HOME/repo\"
 source \"\$REPO_ROOT/environment/mac/.bash_profile\"
 cd \"\$REPO_ROOT\"" >> "$HOME/.bash_profile"
