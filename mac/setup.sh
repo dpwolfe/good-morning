@@ -44,8 +44,11 @@ unset passfile
 function sudoit {
   if [ -z "$passfile" ]; then
     passfile="$HOME/.temp_$(randstring32)"
-    promptsecret "Password" p
-    echo # echo newline after input
+    p=
+    while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
+      promptsecret "Password" p
+      echo # echo newline after input
+    done
     encryptToFile "$p" "$passfile"
     unset p
   fi
