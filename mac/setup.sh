@@ -21,7 +21,7 @@ function decryptFromFile {
 
 function askto {
   echo "Do you want to $1? $3"
-  read -r -n 1 -p "(y/n) " yn;
+  read -r -n 1 -p "(y/n) " yn < /dev/tty;
   echo # echo newline after input
   case $yn in
     y|Y ) ${2}; return 0;;
