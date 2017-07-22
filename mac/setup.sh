@@ -88,6 +88,7 @@ if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
+  xcode-select --install
 fi
 
 GITHUB_EMAIL="$(git config --global --get user.email)"
@@ -204,6 +205,9 @@ brew doctor
 # Install brews
 # shellcheck disable=SC2034
 brews=(
+  # java needs to be installed before maven, so bumping to top
+  caskroom/cask/java # todo: current detection below doesn't see this, fix it
+
   certbot # For generating SSL certs with Let's Encrypt
   go
   git
@@ -211,7 +215,6 @@ brews=(
   maven
   python
   python3
-  caskroom/cask/java # todo: current detection below doesn't see this, fix it
   shellcheck # shell script linting
   shpotify # Spotify shell CLI
   terraform
@@ -230,6 +233,13 @@ do
   fi
 done
 rm "$brewtempfile"
+
+if ! type "pip-review" > /dev/null 2> /dev/null; then
+  pip2 install pip-review
+else
+  # update all packages installed with pip
+  pip-review --auto
+fi
 
 # Make sure user is signed into the Mac App Store
 if ! mas account > /dev/null; then
