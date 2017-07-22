@@ -89,6 +89,78 @@ if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
 fi
 
+GITHUB_EMAIL="$(git config --global --get user.email)"
+unset gitHubEmailChanged
+if [ -z "$GITHUB_EMAIL" ]; then
+  prompt "Enter your GitHub email address: " GITHUB_EMAIL
+  git config --global user.email "$GITHUB_EMAIL"
+  gitHubEmailChanged=1
+fi
+GITHUB_NAME="$(git config --global --get user.name)"
+unset gitHubNameChanged
+if [ -z "$GITHUB_NAME" ]; then
+  prompt "Enter your full name used on GitHub: " GITHUB_NAME
+  git config --global user.name "$GITHUB_NAME"
+  gitHubNameChanged=1
+fi
+# Generate a new SSH key for GitHub https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
+GITHUB_KEYS_URL="https://github.com/settings/keys"
+if [ -n "$gitHubEmailChanged" ] && askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
+  ssh-keygen -t rsa -b 4096 -C "$GITHUB_EMAIL"
+  # start ssh-agent
+  eval "$(ssh-agent -s)"
+  # automatically load the keys and store passphrases in your keychain
+  echo "Host *
+ AddKeysToAgent yes
+ UseKeychain yes
+ IdentityFile \"$HOME/.ssh/id_rsa\"" > "$HOME/.ssh/config"
+  # add your ssh key to ssh-agent
+  ssh-add -K "$HOME/.ssh/id_rsa"
+  # copy public ssh key to clipboard for pasting on GitHub
+  pbcopy < "$HOME/.ssh/id_rsa.pub"
+  echo "SSH key copied to clipboard. GitHub will be opened next."
+  echo "Click 'New SSH key' on GitHub when it opens and paste in the copied key."
+  prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
+  open "$GITHUB_KEYS_URL"
+  prompt "Hit Enter after the SSH key is saved on GitHub..."
+fi
+if ( [ -n "$gitHubEmailChanged" ] || [ -n "$gitHubNameChanged" ] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
+  stty -echo # do not echo the password
+  promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
+  stty echo # restore echo
+  echo # add newline since enter key was not echoed
+  gpg --batch --gen-key <<EOF
+%echo "Generating a GPG key for signing Git operations...""
+%echo "Learn why here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
+%echo "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: $GITHUB_NAME
+Name-Comment: Git signing key
+Name-Email: $GITHUB_EMAIL
+Expire-Date: 2y
+Passphrase: $GPG_PASSPHRASE
+%commit
+%echo Signing key created.
+EOF
+  unset GPG_PASSPHRASE
+  todaysdate=$(date +"%Y-%m-%d")
+  expr="^sec   4096R\/([[:xdigit:]]{16}) $todaysdate.*"
+  key=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$expr" | sed -E "s/$expr/\1/")
+  # copy the GPG public key for GitHub
+  gpg --armor --export "$key" | pbcopy
+  echo "GPG key copied to clipboard. GitHub will be opened next."
+  echo "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
+  prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
+  open "$GITHUB_KEYS_URL"
+  # enable autos-signing of all the commits
+  git config --global commit.gpgsign true
+  # Silence output about needing a passphrase on each commit
+  # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
+fi
+
 # Pick a default repo root unless one is already set
 if [ -z "${REPO_ROOT+x}" ]; then
   REPO_ROOT="$HOME/repo"
@@ -710,71 +782,6 @@ if askto "set some opinionated starter system settings"; then
   echo "Enable the debug menu in Disk Utility"
   defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
   defaults write com.apple.DiskUtility advanced-image-options -bool true
-fi
-
-GITHUB_KEYS_URL="https://github.com/settings/keys"
-if askto "configure git, create an SSH key for GitHub or a GPG key to sign commits"; then
-  prompt "Enter your GitHub email address: " GITHUB_EMAIL
-  prompt "Enter your full name used on GitHub: " FULL_NAME
-  # configure git
-  git config --global user.name "$FULL_NAME"
-  git config --global user.email "$GITHUB_EMAIL"
-  # Generate a new SSH key for GitHub https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
-  if askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
-    ssh-keygen -t rsa -b 4096 -C "$GITHUB_EMAIL"
-    # start ssh-agent
-    eval "$(ssh-agent -s)"
-    # automatically load the keys and store passphrases in your keychain
-    echo "Host *
- AddKeysToAgent yes
- UseKeychain yes
- IdentityFile \"$HOME/.ssh/id_rsa\"" > "$HOME/.ssh/config"
-    # add your ssh key to ssh-agent
-    ssh-add -K "$HOME/.ssh/id_rsa"
-    # copy public ssh key to clipboard for pasting on GitHub
-    pbcopy < "$HOME/.ssh/id_rsa.pub"
-    echo "SSH key copied to clipboard. GitHub will be opened next."
-    echo "Click 'New SSH key' on GitHub when it opens and paste in the copied key."
-    prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
-    open "$GITHUB_KEYS_URL"
-    prompt "Hit Enter after the SSH key is saved on GitHub..."
-  fi
-  if askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
-    stty -echo # do not echo the password
-    promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
-    stty echo # restore echo
-    echo # add newline since enter key was not echoed
-    gpg --batch --gen-key <<EOF
-%echo "Generating a GPG key for signing Git operations...""
-%echo "Learn why here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
-%echo "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
-Key-Type: RSA
-Key-Length: 4096
-Subkey-Type: RSA
-Subkey-Length: 4096
-Name-Real: $FULL_NAME
-Name-Comment: Git signing key
-Name-Email: $GITHUB_EMAIL
-Expire-Date: 2y
-Passphrase: $GPG_PASSPHRASE
-%commit
-%echo Signing key created.
-EOF
-    unset GPG_PASSPHRASE
-    todaysdate=$(date +"%Y-%m-%d")
-    expr="^sec   4096R\/([[:xdigit:]]{16}) $todaysdate.*"
-    key=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$expr" | sed -E "s/$expr/\1/")
-    # copy the GPG public key for GitHub
-    gpg --armor --export "$key" | pbcopy
-    echo "GPG key copied to clipboard. GitHub will be opened next."
-    echo "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
-    prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
-    open "$GITHUB_KEYS_URL"
-    # enable autos-signing of all the commits
-    git config --global commit.gpgsign true
-    # Silence output about needing a passphrase on each commit
-    # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
-  fi
 fi
 
 if false; then
