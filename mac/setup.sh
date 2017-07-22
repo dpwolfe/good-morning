@@ -186,7 +186,7 @@ cd \"\$REPO_ROOT\"" >> "$HOME/.bash_profile"
 fi
 
 # Install homebrew - https://brew.sh
-if ! type "brew" > /dev/null; then
+if ! type "brew" > /dev/null 2> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
   echo "Updating Homebrew..."
