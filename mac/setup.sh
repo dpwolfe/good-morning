@@ -21,20 +21,22 @@ function decryptFromFile {
 
 function askto {
   echo "Do you want to $1? $3"
-  select yn in "Yes" "No"; do
-    case $yn in
-      Yes ) ${2}; break;;
-      No ) return 1;;
-    esac
-  done
+  read -r -n 1 -p "(y/n) " yn;
+  echo # echo newline after input
+  case $yn in
+    y|Y ) ${2}; return 0;;
+    n|N ) return 1;;
+  esac
 }
 
 function prompt {
   read -r -p "$1" $2 < /dev/tty
+  echo # echo newline after input
 }
 
 function promptsecret {
   read -r -s -p "$1: " $2 < /dev/tty
+  echo # echo newline after input
 }
 
 if [ -e "$passfile" ]; then
@@ -47,7 +49,6 @@ function sudoit {
     p=
     while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
-      echo # echo newline after input
     done
     encryptToFile "$p" "$passfile"
     unset p
@@ -125,10 +126,7 @@ if [ -n "$gitHubEmailChanged" ] && askto "create a GitHub SSH key for $GITHUB_EM
   prompt "Hit Enter after the SSH key is saved on GitHub..."
 fi
 if ( [ -n "$gitHubEmailChanged" ] || [ -n "$gitHubNameChanged" ] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
-  stty -echo # do not echo the password
   promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
-  stty echo # restore echo
-  echo # add newline since enter key was not echoed
   gpg --batch --gen-key <<EOF
 %echo "Generating a GPG key for signing Git operations...""
 %echo "Learn why here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
