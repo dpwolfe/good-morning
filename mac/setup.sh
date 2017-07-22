@@ -29,6 +29,14 @@ function askto {
   done
 }
 
+function prompt {
+  read -r -p "$1" $2 < /dev/tty
+}
+
+function promptsecret {
+  read -r -s -p "$1: " $2 < /dev/tty
+}
+
 if [ -e "$passfile" ]; then
   rm "$passfile"
 fi
@@ -36,7 +44,7 @@ unset passfile
 function sudoit {
   if [ -z "$passfile" ]; then
     passfile="$HOME/.temp_$(randstring32)"
-    read -r -s -p "Password: " p
+    promptsecret "Password" p
     echo # echo newline after input
     encryptToFile "$p" "$passfile"
     unset p
@@ -50,7 +58,7 @@ function masinstall {
     mas install "$1" || \
       open "https://itunes.apple.com/us/app/id$1" && \
       echo "GitHub issue: https://github.com/mas-cli/mas/issues/85" && \
-      read -r -p "Install $2 from the Mac App Store and hit Enter when finished..."
+      prompt "Install $2 from the Mac App Store and hit Enter when finished..."
   fi
 }
 
@@ -249,7 +257,7 @@ if askto "review and install some recommended applications"; then
     echo "3. Set the iTerm buffer scroll back to unlimited in Settings > Profiles > Terminal"
     echo "4. Install the iTerm shell integrations from the File menu"
     echo "5. Use iTerm instead of Terminal from now on."
-    read -r -p "Hit Enter to continue..."
+    prompt "Hit Enter to continue..."
     # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
     # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
   fi
@@ -294,7 +302,7 @@ if askto "review and install some recommended applications"; then
     curl -JL https://www.dropbox.com/download?plat=mac -o "$dmg"
     hdiutil attach "$HOME/Downloads/Dropbox.dmg"
     open "/Volumes/Dropbox Installer/Dropbox.app"
-    read -r -p "Hit Enter when Dropbox has finished installing..."
+    prompt "Hit Enter when Dropbox has finished installing..."
     diskutil unmount "Dropbox Installer"
     rm "$dmg"
   fi
@@ -304,7 +312,7 @@ if askto "review and install some recommended applications"; then
     curl -JL https://swdl.bluejeans.com/desktop/mac/launchers/BlueJeansLauncher_live_168.dmg -o "$dmg"
     hdiutil attach "$dmg"
     open "/Volumes/Blue Jeans Launcher/Blue Jeans Launcher.app"
-    read -r -p "Hit Enter when Blue Jeans has finished installing..."
+    prompt "Hit Enter when Blue Jeans has finished installing..."
     diskutil unmount "Blue Jeans Launcher"
     rm "$dmg"
   fi
@@ -342,9 +350,9 @@ if askto "review and install some recommended applications"; then
   if [ -d "/Applications/Atom.app" ] && ! type "apm" > /dev/null; then
     echo "Please install the Atom shell commands from inside Atom."
     echo "From the Atom menu bar, select Atom > Install Shell Commands."
-    read -r -p "Hit Enter to open Atom..."
+    prompt "Hit Enter to open Atom..."
     open "/Applications/Atom.app"
-    read -r -p "Hit Enter when finished installing the shell commands..."
+    prompt "Select the menu item Atom > Install Shell Commands and hit Enter here when finished..."
     if ! apm list | grep "── vim-mode@" > /dev/null && askto "install Atom vim-mode"; then
       apm install vim-mode ex-mode
     fi
@@ -703,8 +711,8 @@ fi
 
 GITHUB_KEYS_URL="https://github.com/settings/keys"
 if askto "configure git, create an SSH key for GitHub or a GPG key to sign commits"; then
-  read -r -p "Enter your GitHub email address: " GITHUB_EMAIL
-  read -r -p "Enter your full name used on GitHub: " FULL_NAME
+  prompt "Enter your GitHub email address: " GITHUB_EMAIL
+  prompt "Enter your full name used on GitHub: " FULL_NAME
   # configure git
   git config --global user.name "$FULL_NAME"
   git config --global user.email "$GITHUB_EMAIL"
@@ -724,13 +732,13 @@ if askto "configure git, create an SSH key for GitHub or a GPG key to sign commi
     pbcopy < "$HOME/.ssh/id_rsa.pub"
     echo "SSH key copied to clipboard. GitHub will be opened next."
     echo "Click 'New SSH key' on GitHub when it opens and paste in the copied key."
-    read -r -p "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
+    prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
     open "$GITHUB_KEYS_URL"
-    read -r -p "Hit Enter after the SSH key is saved on GitHub..."
+    prompt "Hit Enter after the SSH key is saved on GitHub..."
   fi
   if askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
     stty -echo # do not echo the password
-    read -r -s -p "Enter the passphrase to use for the GPG key: " GPG_PASSPHRASE
+    promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
     stty echo # restore echo
     echo # add newline since enter key was not echoed
     gpg --batch --gen-key <<EOF
@@ -749,6 +757,7 @@ Passphrase: $GPG_PASSPHRASE
 %commit
 %echo Signing key created.
 EOF
+    unset GPG_PASSPHRASE
     todaysdate=$(date +"%Y-%m-%d")
     expr="^sec   4096R\/([[:xdigit:]]{16}) $todaysdate.*"
     key=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$expr" | sed -E "s/$expr/\1/")
@@ -756,7 +765,7 @@ EOF
     gpg --armor --export "$key" | pbcopy
     echo "GPG key copied to clipboard. GitHub will be opened next."
     echo "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
-    read -r -p "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
+    prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
     open "$GITHUB_KEYS_URL"
     # enable autos-signing of all the commits
     git config --global commit.gpgsign true
