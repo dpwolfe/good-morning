@@ -531,7 +531,7 @@ fi
 if ! [ -d /Library/QuickLook/Provisioning.qlgenerator ]; then
   echo "Installing iOS Provisioning Profile Quick Look Generator"
   curl -JL "https://github.com/chockenberry/Provisioning/releases/download/1.0.4/Provisioning-1.0.4.zip" -o "$HOME/Downloads/qlprovisioning.zip"
-  unzip -q "$HOME/Downloads/qlprovisioning.zip"
+  unzip -q "$HOME/Downloads/qlprovisioning.zip" -d "$HOME/Downloads"
   sudoit mv "$HOME/Downloads/Provisioning-1.0.4/Provisioning.qlgenerator" /Library/QuickLook
   rm "$HOME/Downloads/qlprovisioning.zip"
   rm -rf "$HOME/Downloads/Provisioning-1.0.4/"
