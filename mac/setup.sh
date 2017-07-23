@@ -237,8 +237,6 @@ rm "$brewtempfile"
 if ! type "pip-review" > /dev/null 2> /dev/null; then
   pip2 install pip-review
 fi
-# update all packages installed with pip
-pip-review --auto
 
 # Make sure user is signed into the Mac App Store
 if ! mas account > /dev/null; then
@@ -325,6 +323,11 @@ else
   # shellcheck disable=SC2002
   cat "$passfile" | sudo -H -S -p "" pip2 install --upgrade awscli
 fi
+
+echo "Upgrading other pip install packages..."
+# update all packages installed with pip
+# shellcheck disable=SC2002
+cat "$passfile" | sudo -H -S -p "" pip-review --auto
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
   # Install iTerm http://iterm2.com
