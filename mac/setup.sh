@@ -324,7 +324,7 @@ else
   cat "$passfile" | sudo -H -S -p "" pip2 install --upgrade awscli
 fi
 
-echo "Upgrading other pip install packages..."
+echo "Upgrading other pip installed packages..."
 # update all packages installed with pip
 # shellcheck disable=SC2002
 cat "$passfile" | sudo -H -S -p "" pip-review --auto
