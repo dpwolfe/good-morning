@@ -401,7 +401,7 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
     rm "$dmg"
   fi
 
-  if ! [ -d "/Applications/GPG Keychain.app" ] && ! askto "install GPG Suite"; then
+  if ! [ -d "/Applications/GPG Keychain.app" ] && askto "install GPG Suite"; then
     dmg="$HOME/Downloads/GPGSuite.dmg"
     curl -JL https://releases.gpgtools.org/GPG_Suite-2017.1b3-v2.dmg -o "$dmg"
     hdiutil attach "$dmg"
