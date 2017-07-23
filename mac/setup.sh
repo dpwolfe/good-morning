@@ -76,7 +76,7 @@ function dmginstall {
     yes | hdiutil attach "$downloadPath" > /dev/null
     # install in the "all users" location
     sudoit ditto "/Volumes/$3/$1.app" "$appPath"
-    diskutil unmount "$3"
+    diskutil unmount "$3" > /dev/null
     rm "$downloadPath"
   fi
 }
