@@ -794,6 +794,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Enable the debug menu in Disk Utility"
   defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
   defaults write com.apple.DiskUtility advanced-image-options -bool true
+
+  echo "Restart your computer to see all the changes."
 fi
 
 if false; then
