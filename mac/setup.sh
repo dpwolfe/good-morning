@@ -308,26 +308,23 @@ if [[ "$LOCAL_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
 fi
 echo "Node versions are up-to-date."
 
-if ! type "aws" > /dev/null; then
-  echo "Installing AWS CLI..."
-  # call sudoit to ensure password is set
+if ! pip-review | grep "Everything up-to-date" > /dev/null; then
+  echo "Upgrading pip installed packages..."
+  # ensure password for sudo is ready since we want to custom pass using the -H flag
   sudoit printf ""
-  # passing -H instead of using sudoit
+  # call pip-review with python -m to enable updating pip-review itself
   # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" pip2 install awscli
-else
-  echo "Upgrading AWS CLI..."
-  # call sudoit to ensure password is set
-  sudoit printf ""
-  # passing -H instead of using sudoit
-  # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" pip2 install --upgrade awscli
+  cat "$passfile" | sudo -H -S -p "" python -m pip-review --auto
 fi
 
-echo "Upgrading other pip installed packages..."
-# update all packages installed with pip
-# shellcheck disable=SC2002
-cat "$passfile" | sudo -H -S -p "" pip-review --auto
+if ! pip2 freeze | grep "awscli=" > /dev/null; then
+  echo "Installing AWS CLI..."
+  # ensure password for sudo is ready since we want to custom pass using the -H flag
+  sudoit printf ""
+  # passing -H to avoid warnings instead of using sudoit
+  # shellcheck disable=SC2002
+  cat "$passfile" | sudo -H -S -p "" pip2 install awscli
+fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
   # Install iTerm http://iterm2.com
@@ -822,7 +819,7 @@ https://www.adobe.com/go/adobeconnect_9_addin_mac
 # todo: suppress sponsor offers when updating Java from Java settings
 fi
 
-rm "$passfile"
+rm -f "$passfile"
 unset passfile
 unset passphrase
 unset FIRST_RUN
