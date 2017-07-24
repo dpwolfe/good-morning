@@ -314,7 +314,7 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   sudoit printf ""
   # call pip-review with python -m to enable updating pip-review itself
   # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" python -m pip-review --auto
+  cat "$passfile" | sudo -H -S -p "" pip-review --auto
 fi
 
 if ! pip2 freeze | grep "awscli=" > /dev/null; then
