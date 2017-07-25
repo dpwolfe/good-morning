@@ -102,7 +102,7 @@ alias gco='git checkout'
 # create a new SSL cert with Let's Encrypt using certbot and a DNS TXT challenge
 alias letscert='sudo certbot certonly --manual --preferred-challenges dns'
 
-alias good_morning='source $DIR/setup.sh'
+alias good_morning='pushd $DIR > /dev/null && git pull && popd > /dev/null && source $DIR/setup.sh'
 
 export PATH="/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"
 export PS1='\[\033]0;$TITLEPREFIX:${PWD//[^[:ascii:]]/?}\007\]\n\[\033[32m\]\u@\h \[\033[33m\]\w \[\033[36m\](`parse_git_branch`)\[\033[0m\] \[\033[35m\]\t\[\033[0m\]\n$'
