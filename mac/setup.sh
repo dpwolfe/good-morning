@@ -246,7 +246,7 @@ fi
 # Install Xcode - https://itunes.apple.com/us/app/id497799835
 masinstall 497799835 "Xcode"
 
-if ! mas list | grep "441258766" > /dev/null; then
+if [ -n "$FIRST_RUN" ] && ! mas list | grep "441258766" > /dev/null; then
   # Install Magnet https://itunes.apple.com/us/app/id441258766
   echo "Magnet is an add-on for snappy window positioning."
   echo "It is optional, but it is dirt cheap and highly recommended."
