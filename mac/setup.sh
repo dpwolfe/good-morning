@@ -251,7 +251,9 @@ if ! mas list | grep "441258766" > /dev/null; then
   echo "Magnet is an add-on for snappy window positioning."
   echo "It is optional, but it is dirt cheap and highly recommended."
   masinstall 441258766 "Magnet"
-  askto "launch Magnet" "open /Applications/Magnet.app"
+  if [ -d "/Applications/Magnet.app" ]; then
+    askto "launch Magnet" "open /Applications/Magnet.app"
+  fi;
 fi
 
 # Install Slack https://itunes.apple.com/us/app/id803453959
