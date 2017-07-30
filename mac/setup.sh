@@ -126,6 +126,16 @@ if [ -n "$gitHubEmailChanged" ] && askto "create a GitHub SSH key for $GITHUB_EM
   open "$GITHUB_KEYS_URL"
   prompt "Hit Enter after the SSH key is saved on GitHub..."
 fi
+
+if ! [ -d "/Applications/GPG Keychain.app" ]; then
+  dmg="$HOME/Downloads/GPGSuite.dmg"
+  curl -JL https://releases.gpgtools.org/GPG_Suite-2017.1b3-v2.dmg -o "$dmg"
+  hdiutil attach "$dmg"
+  sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
+  diskutil unmount "GPG Suite"
+  rm "$dmg"
+fi
+
 if ( [ -n "$gitHubEmailChanged" ] || [ -n "$gitHubNameChanged" ] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
   promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
   gpg --batch --gen-key <<EOF
@@ -400,15 +410,6 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
     open "/Volumes/Blue Jeans Launcher/Blue Jeans Launcher.app"
     prompt "Hit Enter when Blue Jeans has finished installing..."
     diskutil unmount "Blue Jeans Launcher"
-    rm "$dmg"
-  fi
-
-  if ! [ -d "/Applications/GPG Keychain.app" ] && askto "install GPG Suite"; then
-    dmg="$HOME/Downloads/GPGSuite.dmg"
-    curl -JL https://releases.gpgtools.org/GPG_Suite-2017.1b3-v2.dmg -o "$dmg"
-    hdiutil attach "$dmg"
-    sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
-    diskutil unmount "GPG Suite"
     rm "$dmg"
   fi
 
