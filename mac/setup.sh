@@ -300,6 +300,7 @@ if ! ( type "nvm" && nvm --version | grep "$NVM_VERSION" ) > /dev/null; then
 fi
 
 echo "Checking local versions of node..."
+CURRENT_NODE_VERSION="$(node -v)"
 LOCAL_NODE_LTS_VERSION=$(nvm version lts/*)
 LATEST_NODE_LTS_VERSION=$(nvm version-remote --lts)
 # Install highest Long Term Support build as a recommended "prod" node version
@@ -312,23 +313,34 @@ if [[ "$LOCAL_NODE_LTS_VERSION" != "$LATEST_NODE_LTS_VERSION" ]]; then
   # Update npm in the LTS build
   npm i -g npm
   # install some npm staples
-  npm i -g npm-check-updates create-react-native-app flow-typed
+  npm i -g npm-check-updates
+else
+  # update global packages, including npm for latest LTS
+  nvm use "$LOCAL_NODE_LTS_VERSION"
+  npm update -g
+  nvm use "$CURRENT_NODE_VERSION"
 fi
+echo "Node (LTS) and its global packages are up-to-date."
 # Install latest version of node
-LOCAL_NODE_VERSION=$(nvm version node)
+LOCAL_LATEST_NODE_VERSION=$(nvm version node)
 LATEST_NODE_VERSION=$(nvm version-remote node)
-if [[ "$LOCAL_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
+if [[ "$LOCAL_LATEST_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
   nvm install node
-  if [[ "$LOCAL_NODE_VERSION" != "N/A" ]]; then
-    nvm reinstall-packages "$LOCAL_NODE_VERSION"
-    nvm uninstall "$LOCAL_NODE_VERSION"
+  if [[ "$LOCAL_LATEST_NODE_VERSION" != "N/A" ]]; then
+    nvm reinstall-packages "$LOCAL_LATEST_NODE_VERSION"
+    nvm uninstall "$LOCAL_LATEST_NODE_VERSION"
   fi
   # Update npm in the LTS build
   npm i -g npm
   # install some npm staples
-  npm i -g npm-check-updates create-react-native-app flow-typed
+  npm i -g npm-check-updates
+else
+  # update global packages, including npm for latest
+  nvm use "$LOCAL_LATEST_NODE_VERSION"
+  npm update -g
+  nvm use "$CURRENT_NODE_VERSION"
 fi
-echo "Node versions are up-to-date."
+echo "Node and its global packages are up-to-date."
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
