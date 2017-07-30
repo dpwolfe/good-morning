@@ -230,6 +230,8 @@ caskBrews=(
   microsoft-office
   omnifocus
   omnigraffle
+  onedrive
+  parallels-desktop
   provisionql
   qladdict
   qlcolorcode
@@ -238,6 +240,7 @@ caskBrews=(
   skype
   visual-studio-code
   xmind
+  zoomus
 )
 brew tap caskroom/cask
 brewtempfile="$HOME/brewlist.temp"
