@@ -231,7 +231,6 @@ caskBrews=(
   omnifocus
   omnigraffle
   onedrive
-  parallels-desktop
   provisionql
   qladdict
   qlcolorcode
