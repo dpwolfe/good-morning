@@ -212,12 +212,32 @@ brew doctor
 # Having Homebrew issues? Run this command below.
 # cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
 
-
 # Install cask brews
 caskBrews=(
+  android-studio
   atom
+  beyond-compare
+  blue-jeans-browser-plugin
+  blue-jeans-launcher
+  charles
+  controlplane
+  dropbox
   google-chrome
+  iterm2
   java
+  keeweb
+  keyboard-maestro
+  microsoft-office
+  omnifocus
+  omnigraffle
+  provisionql
+  qladdict
+  qlcolorcode
+  qlmarkdown
+  spotify
+  skype
+  visual-studio-code
+  xmind
 )
 brew tap caskroom/cask
 brewtempfile="$HOME/brewlist.temp"
@@ -233,6 +253,7 @@ done
 # shellcheck disable=SC2034
 brews=(
   certbot # For generating SSL certs with Let's Encrypt
+  docker
   go
   git
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
@@ -244,7 +265,8 @@ brews=(
   transcrypt
   vim
   wget
-  yarn # Recommended install method - https://yarnpkg.com/en/docs/install
+  yarn
+  yubico-piv-tool
 )
 for brew in "${brews[@]}";
 do
@@ -361,93 +383,17 @@ if ! pip2 freeze | grep "awscli=" > /dev/null; then
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
-  # Install iTerm http://iterm2.com
-  if ! [ -d "/Applications/iTerm.app" ]; then
-    echo "Installing iTerm"
-    curl -JL https://iterm2.com/downloads/stable/latest -o "$HOME/Downloads/iTerm.zip"
-    sudoit unzip -q "$HOME/Downloads/iTerm.zip" -d "/Applications"
-    rm "$HOME/Downloads/iTerm.zip"
-    # Install Fixed Solarized iTerm colors https://github.com/yuex/solarized-dark-iterm2
-    curl -JL "https://github.com/yuex/solarized-dark-iterm2/raw/master/Solarized%20Dark%20(Fixed).itermcolors" -o "$HOME/Downloads/SolarizedFixed.itermcolors"
-    echo "Follow these steps to complete the iTerm setup:"
-    echo "1. Import the Solarized Dark (Fixed) iTerm colors into Preferences > Profiles > Colors > Color Presets... > Import"
-    echo "2. Select that imported preset that is now in the drop down list."
-    echo "3. Set the iTerm buffer scroll back to unlimited in Settings > Profiles > Terminal"
-    echo "4. Install the iTerm shell integrations from the File menu"
-    echo "5. Use iTerm instead of Terminal from now on."
-    prompt "Hit Enter to continue..."
-    # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
-    # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
-  fi
-  # Install OmniFocus 2
-  # Beta builds may be available from - https://omnistaging.omnigroup.com/omnifocus-2/
-  dmginstall "OmniFocus" https://www.omnigroup.com/download/latest/omnifocus/ "OmniFocus"
-  # Install OmniGraffle
-  dmginstall "OmniGraffle" https://www.omnigroup.com/download/latest/omnigraffle/ "OmniGraffle"
-  # Install OmniOutliner 5
-  # Beta builds may be available from - https://omnistaging.omnigroup.com/omnioutliner/
-  dmginstall "OmniOutliner" https://www.omnigroup.com/download/latest/omnioutliner/ "OmniOutliner"
-  # Install Google Chrome
-  dmginstall "Google Chrome" https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg "Google Chrome"
-  # Install Spotify
-  dmginstall "Spotify" https://download.spotify.com/Spotify.dmg "Spotify"
-  # Install Docker
-  dmginstall "Docker" https://download.docker.com/mac/stable/Docker.dmg "Docker"
-  # Install Charles
-  dmginstall "Charles" https://www.charlesproxy.com/assets/release/4.1.2/charles-proxy-4.1.2.dmg "Charles Proxy v4.1.2"
-  # Install Skype
-  dmginstall "Skype" https://get.skype.com/go/getskype-macosx "Skype"
-  # Install Android Studio
-  dmginstall "Android Studio" https://dl.google.com/dl/android/studio/install/2.3.1.0/android-studio-ide-162.3871768-mac.dmg "Android Studio 2.3.1"
-  # Install XMind
-  dmginstall "XMind" http://dl2.xmind.net/xmind-downloads/xmind-8-update2-macosx.dmg "XMind"
-  # Install ControlPlane
-  dmginstall "ControlPlane" https://www.dropbox.com/s/lhuyzp1csx3f9cc/ControlPlane-1.6.6.dmg?dl=1 "ControlPlane"
-  # Install Blue Jeans Scheduler
-  dmginstall "Blue Jeans Scheduler for Mac" https://swdl.bluejeans.com/bluejeansformac/Blue+Jeans+Scheduler+for+Mac-1.0.208.dmg "Blue Jeans Scheduler for Mac"
-  # Install KeeWeb
-  dmginstall "KeeWeb" https://github.com/keeweb/keeweb/releases/download/v1.5.4/KeeWeb-1.5.4.mac.dmg "KeeWeb"
-
-  # seeing if Excel is installed as crude check for Office
-  if ! [ -d "/Applications/Microsoft Excel.app" ] && askto "install Microsoft Office"; then
-    curl -JL https://go.microsoft.com/fwlink/?linkid=532572 -o "$HOME/Downloads/InstallOffice.pkg"
-    sudoit installer -pkg "$HOME/Downloads/InstallOffice.pkg" -target /
-    rm "$HOME/Downloads/InstallOffice.pkg"
-  fi
-
-  if ! [ -d "/Applications/Dropbox.app" ] && askto "install Dropbox"; then
-    dmg="$HOME/Downloads/Dropbox.dmg"
-    curl -JL https://www.dropbox.com/download?plat=mac -o "$dmg"
-    hdiutil attach "$HOME/Downloads/Dropbox.dmg"
-    open "/Volumes/Dropbox Installer/Dropbox.app"
-    prompt "Hit Enter when Dropbox has finished installing..."
-    diskutil unmount "Dropbox Installer"
-    rm "$dmg"
-  fi
-
-  if ! [ -d "$HOME/Applications/Blue Jeans.app" ] && askto "install Blue Jeans"; then
-    dmg="$HOME/Downloads/BlueJeans.dmg"
-    curl -JL https://swdl.bluejeans.com/desktop/mac/launchers/BlueJeansLauncher_live_168.dmg -o "$dmg"
-    hdiutil attach "$dmg"
-    open "/Volumes/Blue Jeans Launcher/Blue Jeans Launcher.app"
-    prompt "Hit Enter when Blue Jeans has finished installing..."
-    diskutil unmount "Blue Jeans Launcher"
-    rm "$dmg"
-  fi
-
-  # Install YubiKey PIV Manager to enable unlock with a YubiKey
-  if ! [ -d "/Applications/YubiKey PIV Manager.app" ] && askto "install YubiKey PIV Manager"; then
-    pkg="$HOME/Downloads/YubiKeyPIVManager.pkg"
-    curl -JL https://developers.yubico.com/yubikey-piv-manager/Releases/yubikey-piv-manager-1.4.1-mac.pkg -o "$pkg"
-    sudoit installer -pkg "$pkg" -target /
-    rm "$pkg"
-  fi
-
-  if ! [ -d "/Applications/Keyboard Maestro.app" ] && askto "install Keyboard Maestro"; then
-    curl -JL https://files.stairways.com/keyboardmaestro-731.zip -o "$HOME/Downloads/KeyboardMaestro.zip"
-    sudoit unzip -q "$HOME/Downloads/KeyboardMaestro.zip" -d "/Applications"
-    rm "$HOME/Downloads/KeyboardMaestro.zip"
-  fi
+  # Install Fixed Solarized iTerm colors https://github.com/yuex/solarized-dark-iterm2
+  curl -JL "https://github.com/yuex/solarized-dark-iterm2/raw/master/Solarized%20Dark%20(Fixed).itermcolors" -o "$HOME/Downloads/SolarizedFixed.itermcolors"
+  echo "Follow these steps to complete the iTerm setup:"
+  echo "1. Import the Solarized Dark (Fixed) iTerm colors into Preferences > Profiles > Colors > Color Presets... > Import"
+  echo "2. Select that imported preset that is now in the drop down list."
+  echo "3. Set the iTerm buffer scroll back to unlimited in Settings > Profiles > Terminal"
+  echo "4. Install the iTerm shell integrations from the File menu"
+  echo "5. Use iTerm instead of Terminal from now on."
+  prompt "Hit Enter to continue..."
+  # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
+  # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
 
   # Ensure Atom Shell Commands are installed
   if [ -d "/Applications/Atom.app" ] && ! type "apm" > /dev/null; then
@@ -460,19 +406,6 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
       apm install vim-mode ex-mode
     fi
   fi
-
-  if ! [ -d "$HOME/Applications/Visual Studio Code.app" ] && askto "install Visual Studio Code"; then
-    curl -JL https://go.microsoft.com/fwlink/?LinkID=620882 -o "$HOME/Downloads/VSCode.zip"
-    sudoit unzip -q "$HOME/Downloads/VSCode.zip" -d "$HOME/Applications"
-    rm "$HOME/Downloads/VSCode.zip"
-  fi
-
-  if ! [ -d "$HOME/Applications/Beyond Compare.app" ] && askto "install Beyond Compare"; then
-    curl -JL http://www.scootersoftware.com/BCompareOSX-4.2.2.22384.zip -o "$HOME/Downloads/BeyondCompare.zip"
-    sudoit unzip -q "$HOME/Downloads/BeyondCompare.zip" -d "$HOME/Applications"
-    rm "$HOME/Downloads/BeyondCompare.zip"
-  fi
-
 fi
 
 if [ -n "$FIRST_RUN" ] && ! (defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled && \
@@ -532,16 +465,6 @@ if type "apm" > /dev/null; then
     fi
   done
   rm "$apmtempfile"
-fi
-
-# Quick Look Generators
-if ! [ -d /Library/QuickLook/Provisioning.qlgenerator ]; then
-  echo "Installing iOS Provisioning Profile Quick Look Generator"
-  curl -JL "https://github.com/chockenberry/Provisioning/releases/download/1.0.4/Provisioning-1.0.4.zip" -o "$HOME/Downloads/qlprovisioning.zip"
-  unzip -q "$HOME/Downloads/qlprovisioning.zip" -d "$HOME/Downloads"
-  sudoit mv "$HOME/Downloads/Provisioning-1.0.4/Provisioning.qlgenerator" /Library/QuickLook
-  rm "$HOME/Downloads/qlprovisioning.zip"
-  rm -rf "$HOME/Downloads/Provisioning-1.0.4/"
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
