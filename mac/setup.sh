@@ -82,13 +82,14 @@ function dmginstall {
 }
 
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
+  echo "Setting up Xcode"
+  xcode-select --install
   echo "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
   echo "Installing Xcode command line tools..."
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
-  xcode-select --install
 fi
 
 GITHUB_EMAIL="$(git config --global --get user.email)"
@@ -212,12 +213,25 @@ brew doctor
 # cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
 
 
+# Install cask brews
+caskBrews=(
+  atom
+  google-chrome
+  java
+)
+brew tap caskroom/cask
+brewtempfile="$HOME/brewlist.temp"
+brew cask list > "$brewtempfile"
+for caskBrew in "${caskBrews[@]}";
+do
+  if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
+    brew cask install "$caskBrew"
+  fi
+done
+
 # Install brews
 # shellcheck disable=SC2034
 brews=(
-  # java needs to be installed before maven, so bumping to top
-  caskroom/cask/java # todo: current detection below doesn't see this, fix it
-
   certbot # For generating SSL certs with Let's Encrypt
   go
   git
@@ -226,16 +240,12 @@ brews=(
   python
   python3
   shellcheck # shell script linting
-  shpotify # Spotify shell CLI
   terraform
   transcrypt
   vim
   wget
   yarn # Recommended install method - https://yarnpkg.com/en/docs/install
 )
-brewtempfile="$HOME/brewlist.temp"
-brew list > "$brewtempfile"
-brew tap caskroom/cask
 for brew in "${brews[@]}";
 do
   if ! grep "$brew" "$brewtempfile" > /dev/null; then
@@ -322,20 +332,20 @@ echo "Node versions are up-to-date."
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
-  # ensure password for sudo is ready since we want to custom pass using the -H flag
+  # ensure password for sudo is ready since we want to custom pass it using the -H flag
   sudoit printf ""
   # call pip-review with python -m to enable updating pip-review itself
   # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" pip-review --auto
+  decryptFromFile "$passfile" | sudo -H -S -p "" pip-review --auto
 fi
 
 if ! pip2 freeze | grep "awscli=" > /dev/null; then
   echo "Installing AWS CLI..."
-  # ensure password for sudo is ready since we want to custom pass using the -H flag
+  # ensure password for sudo is ready since we want to custom pass it using the -H flag
   sudoit printf ""
   # passing -H to avoid warnings instead of using sudoit
   # shellcheck disable=SC2002
-  cat "$passfile" | sudo -H -S -p "" pip2 install awscli
+  decryptFromFile "$passfile" | sudo -H -S -p "" pip2 install awscli
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
@@ -427,16 +437,10 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
     rm "$HOME/Downloads/KeyboardMaestro.zip"
   fi
 
-  if ! [ -d "$HOME/Applications/Atom.app" ] && askto "install Atom"; then
-    curl -JL https://atom.io/download/mac -o "$HOME/Downloads/Atom.zip"
-    sudoit unzip -q "$HOME/Downloads/Atom.zip" -d "$HOME/Applications"
-    rm "$HOME/Downloads/Atom.zip"
-  fi
-
   # Ensure Atom Shell Commands are installed
   if [ -d "/Applications/Atom.app" ] && ! type "apm" > /dev/null; then
-    echo "Please install the Atom shell commands from inside Atom."
-    echo "From the Atom menu bar, select Atom > Install Shell Commands."
+    echo "You need to install the Atom shell commands from inside Atom."
+    echo "After Atom opens, go to the Atom menu and select Atom > Install Shell Commands."
     prompt "Hit Enter to open Atom..."
     open "/Applications/Atom.app"
     prompt "Select the menu item Atom > Install Shell Commands and hit Enter here when finished..."
@@ -445,22 +449,10 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
     fi
   fi
 
-  if ! [ -d "$HOME/Applications/Atom Beta.app" ] && askto "install Atom Beta"; then
-    curl -JL https://atom.io/download/mac?channel=beta -o "$HOME/Downloads/AtomBeta.zip"
-    sudoit unzip -q "$HOME/Downloads/AtomBeta.zip" -d "$HOME/Applications"
-    rm "$HOME/Downloads/AtomBeta.zip"
-  fi
-
   if ! [ -d "$HOME/Applications/Visual Studio Code.app" ] && askto "install Visual Studio Code"; then
     curl -JL https://go.microsoft.com/fwlink/?LinkID=620882 -o "$HOME/Downloads/VSCode.zip"
     sudoit unzip -q "$HOME/Downloads/VSCode.zip" -d "$HOME/Applications"
     rm "$HOME/Downloads/VSCode.zip"
-  fi
-
-  if ! [ -d "$HOME/Applications/Visual Studio Code - Insiders.app" ] && askto "install Visual Studio Code Insiders"; then
-    curl -JL https://go.microsoft.com/fwlink/?LinkId=723966 -o "$HOME/Downloads/VSCodeInsiders.zip"
-    sudoit unzip -q "$HOME/Downloads/VSCodeInsiders.zip" -d "$HOME/Applications"
-    rm "$HOME/Downloads/VSCodeInsiders.zip"
   fi
 
   if ! [ -d "$HOME/Applications/Beyond Compare.app" ] && askto "install Beyond Compare"; then
