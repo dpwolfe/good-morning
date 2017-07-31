@@ -236,6 +236,7 @@ caskBrews=(
   qladdict
   qlcolorcode
   qlmarkdown
+  slack
   sourcetree
   spotify
   skype
