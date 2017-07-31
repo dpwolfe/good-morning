@@ -271,6 +271,7 @@ brews=(
   yarn
   yubico-piv-tool
 )
+brew list > "$brewtempfile"
 for brew in "${brews[@]}";
 do
   if ! grep "$brew" "$brewtempfile" > /dev/null; then
