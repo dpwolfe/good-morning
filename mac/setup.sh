@@ -223,6 +223,7 @@ caskBrews=(
   controlplane
   dropbox
   google-chrome
+  google-backup-and-sync
   iterm2
   java
   keeweb
