@@ -251,6 +251,7 @@ for caskBrew in "${caskBrews[@]}";
 do
   if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
     brew cask install "$caskBrew"
+    NEW_BREW_INSTALLS=1
   fi
 done
 
@@ -278,9 +279,17 @@ for brew in "${brews[@]}";
 do
   if ! grep "$brew" "$brewtempfile" > /dev/null; then
     brew install "$brew"
+    NEW_BREW_INSTALLS=1
   fi
 done
 rm "$brewtempfile"
+
+if [ -n "$NEW_BREW_INSTALLS" ]; then
+  # Trigger re-index of Spotlight otherwise brew installed apps are missed
+  sudoit mdutil -a -i off
+  sudoit mdutil -a -i on
+  unset NEW_BREW_INSTALLS
+fi
 
 if ! type "pip-review" > /dev/null 2> /dev/null; then
   pip2 install pip-review
