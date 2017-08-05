@@ -764,6 +764,10 @@ https://www.adobe.com/go/adobeconnect_9_addin_mac
 # todo: suppress sponsor offers when updating Java from Java settings
 fi
 
+if [ -n "$FIRST_RUN" ]; then
+  echo "Use the command good_morning each day to stay up-to-date!"
+fi
+
 rm -f "$passfile"
 unset passfile
 unset passphrase
