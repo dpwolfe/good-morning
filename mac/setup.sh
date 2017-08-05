@@ -326,7 +326,6 @@ if [ -s "$HOME/.nvm/nvm.sh" ]; then
   echo "Loading Node Version Manager..."
   # shellcheck source=/dev/null
   . "$HOME/.nvm/nvm.sh" > /dev/null
-  echo "Node Version Manager Loaded."
 fi
 
 # https://github.com/creationix/nvm#install-script
@@ -336,48 +335,48 @@ if ! ( type "nvm" && nvm --version | grep "$NVM_VERSION" ) > /dev/null; then
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
 fi
 
-echo "Checking local versions of node..."
+echo "Checking versions of Node.js..."
 CURRENT_NODE_VERSION="$(node -v)"
 LOCAL_NODE_LTS_VERSION=$(nvm version lts/*)
 LATEST_NODE_LTS_VERSION=$(nvm version-remote --lts)
 # Install highest Long Term Support build as a recommended "prod" node version
 if [[ "$LOCAL_NODE_LTS_VERSION" != "$LATEST_NODE_LTS_VERSION" ]]; then
+  echo "Installing Node.js v$LATEST_NODE_LTS_VERSION LTS..."
   nvm install --lts
   if [[ "$LOCAL_NODE_LTS_VERSION" != "N/A" ]]; then
     nvm reinstall-packages "$LOCAL_NODE_LTS_VERSION"
     nvm uninstall "$LOCAL_NODE_LTS_VERSION"
   fi
-  # Update npm in the LTS build
+  # Upgrade npm
   npm i -g npm
   # install some npm staples
   npm i -g npm-check-updates
 else
-  # update global packages, including npm for latest LTS
-  nvm use "$LOCAL_NODE_LTS_VERSION"
+  echo "Upgrading Node.js $LOCAL_NODE_LTS_VERSION LTS global npm packages..."
+  nvm use "$LOCAL_NODE_LTS_VERSION" > /dev/null
   npm update -g
-  nvm use "$CURRENT_NODE_VERSION"
+  nvm use "$CURRENT_NODE_VERSION" > /dev/null
 fi
-echo "Node (LTS) and its global packages are up-to-date."
 # Install latest version of node
 LOCAL_LATEST_NODE_VERSION=$(nvm version node)
 LATEST_NODE_VERSION=$(nvm version-remote node)
 if [[ "$LOCAL_LATEST_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
+  echo "Installing Node.js v$LATEST_NODE_VERSION..."
   nvm install node
   if [[ "$LOCAL_LATEST_NODE_VERSION" != "N/A" ]]; then
     nvm reinstall-packages "$LOCAL_LATEST_NODE_VERSION"
     nvm uninstall "$LOCAL_LATEST_NODE_VERSION"
   fi
-  # Update npm in the LTS build
+  # Upgrade npm
   npm i -g npm
   # install some npm staples
   npm i -g npm-check-updates
 else
-  # update global packages, including npm for latest
-  nvm use "$LOCAL_LATEST_NODE_VERSION"
+  echo "Upgrading Node.js $LOCAL_LATEST_NODE_VERSION global npm packages..."
+  nvm use "$LOCAL_LATEST_NODE_VERSION" > /dev/null
   npm update -g
-  nvm use "$CURRENT_NODE_VERSION"
+  nvm use "$CURRENT_NODE_VERSION" > /dev/null
 fi
-echo "Node and its global packages are up-to-date."
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
@@ -468,6 +467,7 @@ apms=(
   split-diff
 )
 if type "apm" > /dev/null; then
+  echo "Upgrading installed Atom packages..."
   # Update all the Atom packages
   yes | apm update -c false
   # Get list of currently installed packages
