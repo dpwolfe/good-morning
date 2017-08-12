@@ -83,15 +83,21 @@ function dmginstall {
   fi
 }
 
+xcode_version=8.3.3
 if ! /usr/bin/xcode-select -p &> /dev/null; then
   echo "Installing Xcode command line tools..."
   curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
   sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
   sudoit gem install --conservative xcode-install < /dev/tty
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
-  xcversion install 8.3.3 < /dev/tty
+  xcversion install $xcode_version < /dev/tty
   xcversion install-cli-tools < /dev/tty
+else
+  echo "Ensuring Xcode is up-to-date..."
+  xcversion install $xcode_version &> /dev/null < /dev/tty
+  xcversion install-cli-tools &> /dev/null < /dev/tty
 fi
+unset xcode_version
 
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   echo "Accepting the Xcode license..."
@@ -469,6 +475,8 @@ if type "apm" > /dev/null; then
   done
   rm "$apmtempfile"
 fi
+# disable language-terraform by default since it causes issues
+apm disable language-terraform > /dev/null
 
 if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
   echo "Modifying System Settings"
