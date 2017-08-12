@@ -80,7 +80,7 @@ function dmginstall {
   fi
 }
 
-if ! /usr/bin/xcode-select -p > /dev/null; then
+if ! /usr/bin/xcode-select -p &> /dev/null; then
   echo "Installing Xcode command line tools..."
   curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
   sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
