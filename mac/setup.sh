@@ -316,17 +316,15 @@ fi
 # Install Node Version Manager
 NVM_VERSION="0.33.2"
 # if nvm is already installed, load it in order to check its version
-if [ -s "$HOME/.nvm/nvm.sh" ]; then
-  echo "Loading Node Version Manager..."
-  # shellcheck source=/dev/null
-  . "$HOME/.nvm/nvm.sh" > /dev/null
-fi
-
-# https://github.com/creationix/nvm#install-script
-if ! ( type "nvm" && nvm --version | grep "$NVM_VERSION" ) > /dev/null; then
+if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/null; then
+  # https://github.com/creationix/nvm#install-script
   echo "Installing Node Version Manager v$NVM_VERSION"
   # run the install script
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
+else
+  echo "Loading Node Version Manager..."
+  # shellcheck source=/dev/null
+  . "$HOME/.nvm/nvm.sh" > /dev/null
 fi
 
 echo "Checking versions of Node.js..."
