@@ -175,6 +175,7 @@ EOF
   echo "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
   prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
   open "$GITHUB_KEYS_URL"
+  prompt "Hit Enter after the GPG key is saved on GitHub to continue..."
   # enable autos-signing of all the commits
   git config --global commit.gpgsign true
   # Silence output about needing a passphrase on each commit
