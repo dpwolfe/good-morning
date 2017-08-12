@@ -46,12 +46,11 @@ unset passfile
 function sudoit {
   if [ -z "$passfile" ]; then
     passfile="$HOME/.temp_$(randstring32)"
-    p=
+    local p=
     while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
     done
     encryptToFile "$p" "$passfile"
-    unset p
   fi
   decryptFromFile "$passfile" | sudo -S -p "" "$@"
 }
@@ -67,9 +66,9 @@ function masinstall {
 }
 
 function dmginstall {
-  appPath="/Applications/$1.app"
-  appPathUser="$HOME/Applications/$1.app"
-  downloadPath="$HOME/Downloads/$1.dmg"
+  local appPath="/Applications/$1.app"
+  local appPathUser="$HOME/Applications/$1.app"
+  local downloadPath="$HOME/Downloads/$1.dmg"
   # only offer to install if not installed in either the user or "all users" locations
   if ! [ -d "$appPath" ] && ! [ -d "$appPathUser" ] && askto "install $1"; then
     curl -JL "$2" -o "$downloadPath"
@@ -81,12 +80,25 @@ function dmginstall {
   fi
 }
 
+function xctoolsinstall {
+  local downloadPath="$HOME/Downloads/CommandLineToolsforXcode8.3.2.dmg"
+  local volumePath="/Volumes/Command Line Developer Tools"
+  curl -JL "https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_8.3.2/CommandLineToolsforXcode8.3.2.dmg" -o "$downloadPath"
+  yes | hdiutil attach "$downloadPath" > /dev/null
+  sudoit installer -pkg "$volumePath/Command Line Tools (macOS Sierra version 10.12).pkg" -target /
+  diskutil unmount "$volumePath" > /dev/null
+  rm "$downloadPath"
+}
+
+if ! /usr/bin/xcode-select -p > /dev/null; then
+  echo "Installing Xcode command line tools..."
+  xctoolsinstall
+fi
+
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
-  echo "Setting up Xcode"
-  xcode-select --install
   echo "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
-  echo "Installing Xcode command line tools..."
+  echo "Installing Xcode packages..."
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
@@ -301,23 +313,32 @@ if ! mas account > /dev/null; then
 fi
 
 # Install Xcode - https://itunes.apple.com/us/app/id497799835
-masinstall 497799835 "Xcode"
+# masinstall 497799835 "Xcode"
 
-if [ -n "$FIRST_RUN" ] && ! mas list | grep "441258766" > /dev/null; then
-  # Install Magnet https://itunes.apple.com/us/app/id441258766
-  echo "Magnet is an add-on for snappy window positioning."
-  echo "It is optional, but it is dirt cheap and highly recommended."
-  masinstall 441258766 "Magnet"
-  if [ -d "/Applications/Magnet.app" ]; then
-    askto "launch Magnet" "open /Applications/Magnet.app"
-  fi;
+# if [ -n "$FIRST_RUN" ] && ! mas list | grep "441258766" > /dev/null; then
+#   # Install Magnet https://itunes.apple.com/us/app/id441258766
+#   echo "Magnet is an add-on for snappy window positioning."
+#   echo "It is optional, but it is dirt cheap and highly recommended."
+#   masinstall 441258766 "Magnet"
+#   if [ -d "/Applications/Magnet.app" ]; then
+#     askto "launch Magnet" "open /Applications/Magnet.app"
+#   fi;
+# fi
+
+function xcinstall {
+  local downloadPath="$HOME/Downloads/xcode.xip"
+  echo "Downloading Xcode..."
+  curl -JL https://download.developer.apple.com/Developer_Tools/Xcode_8.3.3/Xcode8.3.3.xip -o "$downloadPath"
+  echo "Expanding Xcode..."
+  "/System/Library/CoreServices/Applications/Archive Utility.app/Contents/MacOS/Archive Utility" "$downloadPath"
+  echo "Installing Xcode..."
+  sudoit mv "$HOME/Downloads/Xcode.app" "/Applications/Xcode.app"
+  rm "$downloadPath"
+}
+
+if [ -d "/Applications/Xcode.app" ]; then
+  xcinstall
 fi
-
-# Install Slack https://itunes.apple.com/us/app/id803453959
-# Currently using direct download option.
-# masinstall 803453959 "Slack"
-# Install OneDrive https://itunes.apple.com/us/app/id823766827
-# masinstall 823766827 "OneDrive"
 
 # Install Node Version Manager
 NVM_VERSION="0.33.2"
