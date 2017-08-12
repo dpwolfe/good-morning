@@ -30,8 +30,11 @@ function askto {
 }
 
 function prompt {
-  read -r -p "$1" "$2" < /dev/tty
-  echo # echo newline after input
+  if [ -n "$2" ]; then
+    read -r -p "$1" "$2" < /dev/tty
+  else
+    read -r -p "$1" < /dev/tty
+  fi
 }
 
 function promptsecret {
