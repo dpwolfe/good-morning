@@ -80,19 +80,14 @@ function dmginstall {
   fi
 }
 
-function xctoolsinstall {
-  local downloadPath="$HOME/Downloads/CommandLineToolsforXcode8.3.2.dmg"
-  local volumePath="/Volumes/Command Line Developer Tools"
-  curl -JL "https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_8.3.2/CommandLineToolsforXcode8.3.2.dmg" -o "$downloadPath"
-  yes | hdiutil attach "$downloadPath" > /dev/null
-  sudoit installer -pkg "$volumePath/Command Line Tools (macOS Sierra version 10.12).pkg" -target /
-  diskutil unmount "$volumePath" > /dev/null
-  rm "$downloadPath"
-}
-
 if ! /usr/bin/xcode-select -p > /dev/null; then
   echo "Installing Xcode command line tools..."
-  xctoolsinstall
+  curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
+  sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
+  sudoit gem install --conservative xcode-install < /dev/tty
+  rm -f ~/Downloads/domain_name-0.5.99999999.gem
+  xcversion install 8 < /dev/tty
+  xcversion install-cli-tools < /dev/tty
 fi
 
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
@@ -307,38 +302,6 @@ if ! type "pip-review" > /dev/null 2> /dev/null; then
   pip2 install pip-review
 fi
 
-# Make sure user is signed into the Mac App Store
-# if ! mas account > /dev/null; then
-#   mas signin --dialog youremail@example.com
-# fi
-
-# Install Xcode - https://itunes.apple.com/us/app/id497799835
-# masinstall 497799835 "Xcode"
-
-# if [ -n "$FIRST_RUN" ] && ! mas list | grep "441258766" > /dev/null; then
-#   # Install Magnet https://itunes.apple.com/us/app/id441258766
-#   echo "Magnet is an add-on for snappy window positioning."
-#   echo "It is optional, but it is dirt cheap and highly recommended."
-#   masinstall 441258766 "Magnet"
-#   if [ -d "/Applications/Magnet.app" ]; then
-#     askto "launch Magnet" "open /Applications/Magnet.app"
-#   fi;
-# fi
-
-function xcinstall {
-  local downloadPath="$HOME/Downloads/xcode.xip"
-  echo "Downloading Xcode..."
-  curl -JL https://download.developer.apple.com/Developer_Tools/Xcode_8.3.3/Xcode8.3.3.xip -o "$downloadPath"
-  echo "Expanding Xcode..."
-  "/System/Library/CoreServices/Applications/Archive Utility.app/Contents/MacOS/Archive Utility" "$downloadPath"
-  echo "Installing Xcode..."
-  sudoit mv "$HOME/Downloads/Xcode.app" "/Applications/Xcode.app"
-  rm "$downloadPath"
-}
-
-if [ -d "/Applications/Xcode.app" ]; then
-  xcinstall
-fi
 
 # Install Node Version Manager
 NVM_VERSION="0.33.2"
