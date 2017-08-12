@@ -308,9 +308,9 @@ if ! type "pip-review" > /dev/null 2> /dev/null; then
 fi
 
 # Make sure user is signed into the Mac App Store
-if ! mas account > /dev/null; then
-  mas signin --dialog youremail@example.com
-fi
+# if ! mas account > /dev/null; then
+#   mas signin --dialog youremail@example.com
+# fi
 
 # Install Xcode - https://itunes.apple.com/us/app/id497799835
 # masinstall 497799835 "Xcode"
