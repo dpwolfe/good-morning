@@ -421,7 +421,7 @@ if [ -n "$FIRST_RUN" ] && ! (defaults read /Library/Preferences/com.apple.Softwa
   defaults read /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall && \
   defaults read /Library/Preferences/com.apple.commerce AutoUpdate && \
-  defaults read /Library/Preferences/com.apple.commerce AutoUpdateRestartRequired) > /dev/null && \
+  defaults read /Library/Preferences/com.apple.commerce AutoUpdateRestartRequired) &> /dev/null && \
   askto "enable auto download & install of Mac App Store updates and macOS updates"; then
     sudoit defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
     sudoit defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload -bool true
