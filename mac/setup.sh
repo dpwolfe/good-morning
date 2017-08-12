@@ -474,7 +474,7 @@ if type "apm" > /dev/null; then
   rm "$apmtempfile"
 fi
 # disable language-terraform by default since it causes issues
-apm disable language-terraform > /dev/null
+apm disable language-terraform &> /dev/null
 
 if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
   echo "Modifying System Settings"
