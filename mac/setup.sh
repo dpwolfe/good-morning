@@ -257,6 +257,7 @@ caskBrews=(
   sourcetree
   spotify
   skype
+  virtualbox
   visual-studio-code
   xmind
   zoomus
