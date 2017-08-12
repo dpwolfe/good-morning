@@ -89,7 +89,7 @@ if ! /usr/bin/xcode-select -p &> /dev/null; then
   sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
   sudoit gem install --conservative xcode-install < /dev/tty
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
-  xcversion install 8 < /dev/tty
+  xcversion install 8.3.3 < /dev/tty
   xcversion install-cli-tools < /dev/tty
 fi
 
