@@ -94,8 +94,8 @@ if ! /usr/bin/xcode-select -p &> /dev/null; then
   xcversion install-cli-tools < /dev/tty
 else
   echo "Ensuring Xcode is up-to-date..."
-  xcversion install $xcode_version > /dev/null < /dev/tty
-  xcversion install-cli-tools > /dev/null < /dev/tty
+  xcversion install $xcode_version < /dev/tty
+  xcversion install-cli-tools < /dev/tty
 fi
 unset xcode_version
 
