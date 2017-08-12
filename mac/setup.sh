@@ -83,13 +83,17 @@ function dmginstall {
   fi
 }
 
-xcode_version=8.3.3
-if ! /usr/bin/xcode-select -p &> /dev/null; then
-  echo "Installing Xcode command line tools..."
+if ! type xcversion &> /dev/null; then
+  echo "Installing xcversion which will be used to install Xcode..."
   curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
   sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
   sudoit gem install --conservative xcode-install < /dev/tty
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
+fi
+
+xcode_version=8.3.3
+if ! /usr/bin/xcode-select -p &> /dev/null; then
+  echo "Installing Xcode command line tools..."
   xcversion install $xcode_version < /dev/tty
   xcversion install-cli-tools < /dev/tty
 else
@@ -215,7 +219,7 @@ cd \"\$REPO_ROOT\"" >> "$HOME/.bash_profile"
 fi
 
 # Install homebrew - https://brew.sh
-if ! type "brew" > /dev/null 2> /dev/null; then
+if ! type "brew" &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
   echo "Updating Homebrew..."
