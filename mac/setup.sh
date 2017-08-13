@@ -757,8 +757,7 @@ https://www.adobe.com/go/adobeconnect_9_addin_mac
 # todo: mute Skype sounds except messages and calls
 # todo: change energy saver settings to not be so aggressive as it is annoying
 # todo: Install the NDK from Android Studio
-# todo: Clone the Bing desktop image downloader script repo and schedule script
-# for a daily run.
+# todo: Clone the Bing desktop image downloader script repo and schedule script for a daily run.
 # todo: setup daily refresh script
 # todo: use dark menu bar and dock from general settings
 # todo: set sidebar icon size to small
