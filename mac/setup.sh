@@ -100,8 +100,8 @@ if ! /usr/bin/xcode-select -p &> /dev/null; then
   echo "Installing Xcode command line tools..."
   xcversion install $xcode_version < /dev/tty
   xcversion install-cli-tools < /dev/tty
-else
-  echo "Ensuring Xcode is up-to-date..."
+elif ! xcversion selected | grep $xcode_version > /dev/null; then
+  echo "Installing Xcode $xcode_version..."
   xcversion install $xcode_version < /dev/tty
   xcversion install-cli-tools < /dev/tty
 fi
@@ -471,7 +471,7 @@ apms=(
 if type "apm" > /dev/null; then
   echo "Upgrading installed Atom packages..."
   # Update all the Atom packages
-  yes | apm update -c false
+  yes | apm upgrade -c false
   # Get list of currently installed packages
   apmtempfile="$HOME/apmlist.temp"
   apm list > "$apmtempfile"
@@ -768,7 +768,7 @@ https://www.adobe.com/go/adobeconnect_9_addin_mac
 # todo: suppress sponsor offers when updating Java from Java settings
 fi
 
-if [ -n "$FIRST_RUN" ]; then
+if [ -z "$GOOD_MORNING_RUN" ]; then
   echo "Use the command good_morning each day to stay up-to-date!"
 fi
 
@@ -778,6 +778,12 @@ unset passphrase
 unset FIRST_RUN
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
-echo "Almost done! Pulling latest for environment repository..."
-pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
-git pull && popd > /dev/null # DO NOT PUT ANYTHING BELOW THIS LINE
+# This is skipped if the good_morning bash alias was executed, in which case, a pull
+# was made before setup.sh started.
+if [ -z "$GOOD_MORNING_RUN" ]; then
+  echo "Almost done! Pulling latest for environment repository..."
+  pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
+  git pull && popd > /dev/null && exit 0
+else
+  unset GOOD_MORNING_RUN
+fi
