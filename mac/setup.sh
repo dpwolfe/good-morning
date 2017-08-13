@@ -84,7 +84,11 @@ function dmginstall {
 }
 
 if ! type xcversion &> /dev/null; then
-  echo "Installing xcversion which will be used to install Xcode..."
+  echo "Installing xcode-install for managing Xcode..."
+  # https://github.com/KrauseFx/xcode-install
+  # We have to follow the non-standard install instructions since we do not have a working
+  # compiler on the system at this point in the setup. Thankfully, there is a documented
+  # alternative installation method in the README.md for the xcode-install repo.
   curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
   sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
   sudoit gem install --conservative xcode-install < /dev/tty
