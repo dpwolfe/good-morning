@@ -779,10 +779,10 @@ unset FIRST_RUN
 # in the middle of execution will break it.
 # This is skipped if the good_morning bash alias was executed, in which case, a pull
 # was made before setup.sh started.
-if [ -z "$GOOD_MORNING_RUN" ]; then
+if [ -n "$GOOD_MORNING_RUN" ]; then
+  unset GOOD_MORNING_RUN
+else
   echo "Almost done! Pulling latest for environment repository..."
   pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
-  git pull && popd > /dev/null && exit 0
-else
-  unset GOOD_MORNING_RUN
+  git pull && popd > /dev/null
 fi
