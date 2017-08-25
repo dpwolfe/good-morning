@@ -331,11 +331,11 @@ if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/
   echo "Installing Node Version Manager v$NVM_VERSION"
   # run the install script
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
-else
-  echo "Loading Node Version Manager..."
-  # shellcheck source=/dev/null
-  . "$HOME/.nvm/nvm.sh" > /dev/null
 fi
+
+echo "Loading Node Version Manager..."
+# shellcheck source=/dev/null
+. "$HOME/.nvm/nvm.sh" > /dev/null
 
 echo "Checking versions of Node.js..."
 CURRENT_NODE_VERSION="$(node -v)"
