@@ -247,8 +247,8 @@ caskBrews=(
   charles
   controlplane
   dropbox
-  google-chrome
   google-backup-and-sync
+  google-chrome
   iterm2
   java
   keeweb
@@ -261,10 +261,10 @@ caskBrews=(
   qladdict
   qlcolorcode
   qlmarkdown
+  skype
   slack
   sourcetree
   spotify
-  skype
   virtualbox
   visual-studio-code
   xmind
