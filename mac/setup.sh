@@ -265,7 +265,6 @@ caskBrews=(
   sourcetree
   spotify
   skype
-  terragrunt
   virtualbox
   visual-studio-code
   xmind
@@ -296,6 +295,7 @@ brews=(
   python3
   shellcheck # shell script linting
   terraform
+  terragrunt
   transcrypt
   vim
   wget
