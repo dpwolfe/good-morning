@@ -265,6 +265,7 @@ caskBrews=(
   sourcetree
   spotify
   skype
+  terragrunt
   virtualbox
   visual-studio-code
   xmind
