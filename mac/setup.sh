@@ -288,6 +288,7 @@ brews=(
   docker
   go
   git
+  jq
   kubernetes-cli
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
