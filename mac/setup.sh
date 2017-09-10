@@ -743,6 +743,15 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
   defaults write com.apple.DiskUtility advanced-image-options -bool true
 
+  echo "Modifying Energy Settings"
+  echo "Stay on for 60 minutes with battery and 3 hours when plugged in"
+  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "Display Sleep Timer" -int 60
+  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "System Sleep Timer" -int 60
+  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "System Sleep Timer" -int 180
+  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "Display Sleep Timer" -int 180
+  echo "Show battery percentage"
+  defaults write com.apple.menuextra.battery ShowPercent -string "YES"
+
   echo "Restart your computer to see all the changes."
 fi
 
