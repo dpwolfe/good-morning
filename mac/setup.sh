@@ -254,6 +254,7 @@ caskBrews=(
   keeweb
   keyboard-maestro
   microsoft-office
+  obs
   omnifocus
   omnigraffle
   onedrive
