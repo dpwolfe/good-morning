@@ -249,6 +249,7 @@ caskBrews=(
   dropbox
   google-backup-and-sync
   google-chrome
+  handbrake
   iterm2
   java
   keeweb
