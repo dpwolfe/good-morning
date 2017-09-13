@@ -268,6 +268,7 @@ caskBrews=(
   spotify
   virtualbox
   visual-studio-code
+  wavtap
   xmind
   zoomus
 )
