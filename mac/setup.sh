@@ -100,7 +100,7 @@ if ! /usr/bin/xcode-select -p &> /dev/null; then
   echo "Installing Xcode command line tools..."
   xcversion install $xcode_version < /dev/tty
   xcversion install-cli-tools < /dev/tty
-elif ! xcversion selected | grep $xcode_version > /dev/null; then
+elif ! xcversion selected 2>&1 | grep $xcode_version > /dev/null; then
   echo "Installing Xcode $xcode_version..."
   xcversion install $xcode_version < /dev/tty
   xcversion install-cli-tools < /dev/tty
@@ -280,7 +280,7 @@ for caskBrew in "${caskBrews[@]}";
 do
   if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
     brew cask install "$caskBrew"
-    NEW_BREW_INSTALLS=1
+    NEW_BREW_CASK_INSTALLS=1
   fi
 done
 
@@ -311,13 +311,12 @@ for brew in "${brews[@]}";
 do
   if ! grep "$brew" "$brewtempfile" > /dev/null; then
     brew install "$brew"
-    NEW_BREW_INSTALLS=1
   fi
 done
 rm "$brewtempfile"
 
-if [ -n "$NEW_BREW_INSTALLS" ]; then
-  # Trigger re-index of Spotlight otherwise brew installed apps are missed
+if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
+  echo "Trigger re-index of Spotlight search to ensure all newly installed brew apps appear."
   sudoit mdutil -a -i off
   sudoit mdutil -a -i on
   unset NEW_BREW_INSTALLS
