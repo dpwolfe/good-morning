@@ -315,13 +315,6 @@ do
 done
 rm "$brewtempfile"
 
-if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
-  echo "Trigger re-index of Spotlight search to ensure all newly installed brew apps appear."
-  sudoit mdutil -a -i off
-  sudoit mdutil -a -i on
-  unset NEW_BREW_INSTALLS
-fi
-
 if ! type "pip-review" > /dev/null 2> /dev/null; then
   pip2 install pip-review
 fi
@@ -487,8 +480,18 @@ if type "apm" > /dev/null; then
   done
   rm "$apmtempfile"
 fi
-# disable language-terraform by default since it causes issues
+# Disable language-terraform by default since it will cause Atom to lock up after
+# a couple uses. Re-enable it manually as needed.
 apm disable language-terraform &> /dev/null
+
+if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
+  # Moved this lower since it's not important to do this earlier in the script
+  # and it might avoid prompting for the password until more of the work is done.
+  echo "Triggering re-index of Spotlight search for benefit of new brew casks..."
+  sudoit mdutil -a -i off
+  sudoit mdutil -a -i on
+  unset NEW_BREW_INSTALLS
+fi
 
 if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
   echo "Modifying System Settings"
