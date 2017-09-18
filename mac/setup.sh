@@ -295,6 +295,7 @@ brews=(
   kubernetes-cli
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
+  p7zip
   python
   python3
   shellcheck # shell script linting
