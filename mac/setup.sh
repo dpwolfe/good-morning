@@ -599,6 +599,10 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Require password immediately after sleep or screen saver begins"
   defaults write com.apple.screensaver askForPassword -int 1
   defaults write com.apple.screensaver askForPasswordDelay -int 0
+  echo "Top right screen corner starts the screen saver instead of using idle time"
+  defaults write com.apple.dock wvous-tr-corner -int 5
+  defaults write com.apple.dock wvous-tr-modifier -int 0
+  defaults -currentHost write com.apple.screensaver idleTime 0
   echo "Save screenshots to the desktop"
   defaults write com.apple.screencapture location -string "$HOME/Desktop"
   echo "Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
@@ -654,7 +658,7 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Enable AirDrop over Ethernet and on unsupported Macs running Lion"
   defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
 
-  echo "Modifying Dock & Hot Corner Settings"
+  echo "Modifying Dock Settings"
   echo "Enable highlight hover effect for the grid view of a stack (Dock)"
   defaults write com.apple.dock mouse-over-hilte-stack -bool true
   echo "Set the icon size of Dock items to 36 pixels"
@@ -675,9 +679,6 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write com.apple.dock autohide -bool true
   echo "Make Dock icons of hidden applications translucent"
   defaults write com.apple.dock showhidden -bool true
-  echo "Top right screen corner starts the screen saver"
-  defaults write com.apple.dock wvous-tr-corner -int 5
-  defaults write com.apple.dock wvous-tr-modifier -int 0
 
   echo "Modifying Safari & WebKit Settings"
   echo "Set Safari’s home page to about:blank for faster loading"
