@@ -95,7 +95,7 @@ if ! type xcversion &> /dev/null; then
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
-xcode_version=8.3.3
+xcode_version=9.0
 if ! /usr/bin/xcode-select -p &> /dev/null; then
   echo "Installing Xcode command line tools..."
   xcversion install $xcode_version < /dev/tty
