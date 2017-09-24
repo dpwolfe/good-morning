@@ -161,6 +161,41 @@ if ! [ -d "/Applications/GPG Keychain.app" ]; then
   rm "$dmg"
 fi
 
+if ! type rvm &> /dev/null; then
+  echo "Installing RVM..."
+  gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+  curl -sSL https://get.rvm.io | bash -s stable
+  # shellcheck disable=SC1090
+  source "$HOME/.rvm/scripts/rvm"
+  rvm install ruby --default
+  rvm cleanup all
+else
+  CURRENT_RUBY_VERSION="$(ruby --version | sed -E 's/ ([0-9.]+).*/-\1/')"
+  LATEST_RUBY_VERSION="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
+  if [[ "$CURRENT_RUBY_VERSION" != "$LATEST_RUBY_VERSION" ]]; then
+    echo "Upgrading RVM..."
+    rvm get stable --auto
+    echo "Upgrading Ruby from $CURRENT_RUBY_VERSION to $LATEST_RUBY_VERSION..."
+    rvm upgrade $CURRENT_RUBY_VERSION $LATEST_RUBY_VERSION
+    rvm create alias default ruby
+  fi
+fi
+
+rvm use system
+if [ "$(gem outdated)" ]; then
+  echo "Updating system ruby gems..."
+  sudoit gem update
+fi
+rvm default
+if [ "$(gem outdated)" ]; then
+  echo "Updating ruby gems..."
+  gem update
+fi
+if ! gem list --local | grep xcode-install &> /dev/null; then
+  # This replaces version installed with the work-around earlier
+  gem install xcode-install
+fi
+
 if ( [ -n "$gitHubEmailChanged" ] || [ -n "$gitHubNameChanged" ] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
   promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
   gpg --batch --gen-key <<EOF
