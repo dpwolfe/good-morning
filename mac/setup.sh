@@ -161,15 +161,18 @@ if ! [ -d "/Applications/GPG Keychain.app" ]; then
   rm "$dmg"
 fi
 
-if ! type rvm &> /dev/null; then
+
+if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   echo "Installing RVM..."
   gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
   curl -sSL https://get.rvm.io | bash -s stable
-  # shellcheck disable=SC1090
+  # shellcheck source=/dev/null
   source "$HOME/.rvm/scripts/rvm"
   rvm install ruby --default
   rvm cleanup all
 else
+  # shellcheck source=/dev/null
+  source "$HOME/.rvm/scripts/rvm" > /dev/null
   CURRENT_RUBY_VERSION="$(ruby --version | sed -E 's/ ([0-9.]+).*/-\1/')"
   LATEST_RUBY_VERSION="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
   if [[ "$CURRENT_RUBY_VERSION" != "$LATEST_RUBY_VERSION" ]]; then
@@ -178,6 +181,7 @@ else
     echo "Upgrading Ruby from $CURRENT_RUBY_VERSION to $LATEST_RUBY_VERSION..."
     rvm upgrade $CURRENT_RUBY_VERSION $LATEST_RUBY_VERSION
     rvm create alias default ruby
+    rvm cleanup all
   fi
 fi
 
