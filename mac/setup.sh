@@ -185,12 +185,12 @@ else
   fi
 fi
 
-rvm use system
+rvm use system > /dev/null
 if [ "$(gem outdated)" ]; then
   echo "Updating system ruby gems..."
   sudoit gem update
 fi
-rvm default
+rvm default > /dev/null
 if [ "$(gem outdated)" ]; then
   echo "Updating ruby gems..."
   gem update
