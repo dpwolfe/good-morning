@@ -161,7 +161,6 @@ if ! [ -d "/Applications/GPG Keychain.app" ]; then
   rm "$dmg"
 fi
 
-
 if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   echo "Installing RVM..."
   gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
@@ -171,26 +170,26 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   rvm install ruby --default
   rvm cleanup all
 else
-  # shellcheck source=/dev/null
-  source "$HOME/.rvm/scripts/rvm" > /dev/null
   CURRENT_RUBY_VERSION="$(ruby --version | sed -E 's/ ([0-9.]+).*/-\1/')"
   LATEST_RUBY_VERSION="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
   if [[ "$CURRENT_RUBY_VERSION" != "$LATEST_RUBY_VERSION" ]]; then
     echo "Upgrading RVM..."
     rvm get stable --auto
     echo "Upgrading Ruby from $CURRENT_RUBY_VERSION to $LATEST_RUBY_VERSION..."
-    rvm upgrade $CURRENT_RUBY_VERSION $LATEST_RUBY_VERSION
+    rvm upgrade "$CURRENT_RUBY_VERSION" "$LATEST_RUBY_VERSION"
     rvm create alias default ruby
     rvm cleanup all
   fi
+  unset CURRENT_RUBY_VERSION
+  unset LATEST_RUBY_VERSION
 fi
 
-rvm use system > /dev/null
+rvm use system &> /dev/null
 if [ "$(gem outdated)" ]; then
   echo "Updating system ruby gems..."
   sudoit gem update
 fi
-rvm default > /dev/null
+rvm default &> /dev/null
 if [ "$(gem outdated)" ]; then
   echo "Updating ruby gems..."
   gem update
