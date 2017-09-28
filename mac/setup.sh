@@ -326,6 +326,7 @@ done
 # Install brews
 # shellcheck disable=SC2034
 brews=(
+  bash-completion
   certbot # For generating SSL certs with Let's Encrypt
   docker
   go
@@ -344,7 +345,6 @@ brews=(
   wget
   yarn
   yubico-piv-tool
-  bash-completion
 )
 brew list > "$brewtempfile"
 for brew in "${brews[@]}";
