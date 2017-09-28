@@ -326,6 +326,7 @@ done
 # Install brews
 # shellcheck disable=SC2034
 brews=(
+  bash-completion
   certbot # For generating SSL certs with Let's Encrypt
   docker
   go
