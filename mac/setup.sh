@@ -344,6 +344,7 @@ brews=(
   wget
   yarn
   yubico-piv-tool
+  bash-completion
 )
 brew list > "$brewtempfile"
 for brew in "${brews[@]}";
