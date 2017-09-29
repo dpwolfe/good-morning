@@ -356,7 +356,7 @@ done
 rm "$brewtempfile"
 
 if ! type "pip-review" > /dev/null 2> /dev/null; then
-  pip2 install pip-review
+  pip3 install pip-review
 fi
 
 
@@ -426,13 +426,13 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   decryptFromFile "$passfile" | sudo -H -S -p "" pip-review --auto
 fi
 
-if ! pip2 freeze | grep "awscli=" > /dev/null; then
+if ! pip3 freeze | grep "awscli=" > /dev/null; then
   echo "Installing AWS CLI..."
   # ensure password for sudo is ready since we want to custom pass it using the -H flag
   sudoit printf ""
   # passing -H to avoid warnings instead of using sudoit
   # shellcheck disable=SC2002
-  decryptFromFile "$passfile" | sudo -H -S -p "" pip2 install awscli
+  decryptFromFile "$passfile" | sudo -H -S -p "" pip3 install awscli
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
