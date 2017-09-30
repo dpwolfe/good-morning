@@ -264,16 +264,18 @@ fi
 if ! type "brew" &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
+  echo "Updating Homebrew..."
   brew update
+  echo "Running Hombrew Doctor..."
   brew doctor
   echo "Upgrading Homebrew formulas..."
-  brew upgrade --cleanup # Homebrew auto-updates here in more recent versions
+  brew upgrade --cleanup # Homebrew runs 'brew update' automatically in more recent versions
   echo "Checking for outdated Homebrew Casks..."
   for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
     echo "Upgrading $outdatedCask..."
     brew cask reinstall "$outdatedCask"
   done
-  echo "Cleaning up Homebrew cache..."
+  echo "Cleaning up Homebrew..."
   brew cleanup
   brew cask cleanup
 fi
