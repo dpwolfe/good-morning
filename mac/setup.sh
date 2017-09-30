@@ -264,14 +264,19 @@ fi
 if ! type "brew" &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
-  echo "Updating Homebrew..."
   brew update
-  # steps from homebrew-core say to run brew update twice when troubleshooting
-  # brew update
-  echo "Upgrading Homebrew..."
-  brew upgrade --cleanup
+  brew doctor
+  echo "Upgrading Homebrew formulas..."
+  brew upgrade --cleanup # Homebrew auto-updates here in more recent versions
+  echo "Checking for outdated Homebrew Casks..."
+  for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
+    echo "Upgrading $outdatedCask..."
+    brew cask reinstall "$outdatedCask"
+  done
+  echo "Cleaning up Homebrew cache..."
+  brew cleanup
+  brew cask cleanup
 fi
-brew doctor
 # Having Homebrew issues? Run this command below.
 # cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
 
