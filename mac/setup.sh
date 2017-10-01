@@ -268,8 +268,6 @@ if ! type "brew" &> /dev/null; then
 else
   echo "Updating Homebrew..."
   brew update
-  echo "Running Hombrew Doctor..."
-  brew doctor
   echo "Upgrading Homebrew formulas..."
   brew upgrade --cleanup # Homebrew runs 'brew update' automatically in more recent versions
   echo "Checking for outdated Homebrew Casks..."
@@ -278,8 +276,12 @@ else
     brew cask reinstall "$outdatedCask"
   done
   echo "Cleaning up Homebrew..."
-  brew cleanup
-  brew cask cleanup
+  if brew cleanup && brew cask cleanup > /dev/null; then
+    # If there was any output from the cleanup task, assume a formula changed or was installed.
+    # Homebrew Doctor can take a long time to run, so now running only after formula changes...
+    echo "Running Hombrew Doctor..."
+    brew doctor
+  fi
 fi
 # Having Homebrew issues? Run this command below.
 # cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
@@ -391,8 +393,13 @@ LATEST_NODE_LTS_VERSION=$(nvm version-remote --lts)
 if [[ "$LOCAL_NODE_LTS_VERSION" != "$LATEST_NODE_LTS_VERSION" ]]; then
   echo "Installing Node.js $LATEST_NODE_LTS_VERSION LTS..."
   nvm install --lts
+  if [[ "$CURRENT_NODE_VERSION" == "$LOCAL_NODE_LTS_VERSION" ]]; then
+    CURRENT_NODE_VERSION=$LATEST_NODE_LTS_VERSION
+  fi
   if [[ "$LOCAL_NODE_LTS_VERSION" != "N/A" ]]; then
+    echo "Installing Node.js packages from $LOCAL_NODE_LTS_VERSION LTS to $LATEST_NODE_LTS_VERSION LTS..."
     nvm reinstall-packages "$LOCAL_NODE_LTS_VERSION"
+    echo "Uninstalling Node.js $LOCAL_NODE_LTS_VERSION LTS..."
     nvm uninstall "$LOCAL_NODE_LTS_VERSION"
   fi
   # Upgrade npm
@@ -411,8 +418,13 @@ LATEST_NODE_VERSION=$(nvm version-remote node)
 if [[ "$LOCAL_LATEST_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
   echo "Installing Node.js $LATEST_NODE_VERSION..."
   nvm install node
+  if [[ "$CURRENT_NODE_VERSION" == "$LOCAL_LATEST_NODE_VERSION" ]]; then
+    CURRENT_NODE_VERSION=$LATEST_NODE_VERSION
+  fi
   if [[ "$LOCAL_LATEST_NODE_VERSION" != "N/A" ]]; then
+    echo "Installing Node.js packages from $LOCAL_LATEST_NODE_VERSION to $LATEST_NODE_VERSION..."
     nvm reinstall-packages "$LOCAL_LATEST_NODE_VERSION"
+    echo "Uninstalling Node.js $LOCAL_LATEST_NODE_VERSION..."
     nvm uninstall "$LOCAL_LATEST_NODE_VERSION"
   fi
   # Upgrade npm
