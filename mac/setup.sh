@@ -97,8 +97,10 @@ fi
 
 xcode_version=9
 if ! /usr/bin/xcode-select -p &> /dev/null; then
-  echo "Installing Xcode command line tools..."
+  echo "Installing Xcode $xcode_version..."
+  xcversion update
   xcversion install $xcode_version < /dev/tty
+  echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
 elif ! xcversion selected 2>&1 | grep $xcode_version > /dev/null; then
   echo "Installing Xcode $xcode_version..."
