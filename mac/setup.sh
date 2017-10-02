@@ -187,17 +187,19 @@ else
 fi
 
 rvm use system &> /dev/null
+echo "Checking system ruby gem versions..."
 if [ "$(gem outdated)" ]; then
   echo "Updating system ruby gems..."
   sudoit gem update
 fi
 rvm default &> /dev/null
+echo "Checking rvm ruby gem versions..."
 if [ "$(gem outdated)" ]; then
   echo "Updating ruby gems..."
   gem update
 fi
 if ! gem list --local | grep xcode-install &> /dev/null; then
-  # This replaces version installed with the work-around earlier
+  echo "Replacing xcode-install gem that was installed using a work-around..."
   gem install xcode-install
 fi
 
@@ -268,20 +270,21 @@ if ! type "brew" &> /dev/null; then
 else
   echo "Updating Homebrew..."
   brew update
-  echo "Upgrading Homebrew formulas..."
-  brew upgrade --cleanup # Homebrew runs 'brew update' automatically in more recent versions
-  echo "Checking for outdated Homebrew Casks..."
-  for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
-    echo "Upgrading $outdatedCask..."
-    brew cask reinstall "$outdatedCask"
-  done
-  echo "Cleaning up Homebrew..."
-  if brew cleanup && brew cask cleanup > /dev/null; then
+  echo "Checking for outdated Homebrew formulas..."
+  if brew upgrade; then # Homebrew runs 'brew update' automatically in more recent versions
+    echo "Cleaning up Homebrew formula cache..."
+    brew cleanup # works better than adding --cleanup
     # If there was any output from the cleanup task, assume a formula changed or was installed.
     # Homebrew Doctor can take a long time to run, so now running only after formula changes...
     echo "Running Hombrew Doctor..."
     brew doctor
   fi
+  echo "Checking for outdated Homebrew Casks..."
+  for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
+    echo "Upgrading $outdatedCask..."
+    brew cask reinstall "$outdatedCask"
+    BREW_CASK_UPGRADES=1
+  done
 fi
 # Having Homebrew issues? Run this command below.
 # cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
@@ -333,6 +336,12 @@ do
     NEW_BREW_CASK_INSTALLS=1
   fi
 done
+
+if [ -n "$NEW_BREW_CASK_INSTALLS" ] || [ -n "$BREW_CASK_UPGRADES" ]; then
+  unset BREW_CASK_UPGRADES;
+  echo "Cleaning up Homebrew Cask cache..."
+  brew cask cleanup
+fi
 
 # Install brews
 # shellcheck disable=SC2034
@@ -413,7 +422,7 @@ function upgradenode {
     # Install avn, avn-nvm and avn-n to enable automatic 'nvm use' when a .nvmrc is present
     npm i -g avn avn-nvm avn-n
   else
-    echo "Upgrading Node.js $installed_version global npm packages..."
+    echo "Checking Node.js $installed_version global npm package versions..."
     nvm use "$installed_version" > /dev/null
     npm update -g
   fi
@@ -515,9 +524,9 @@ apms=(
   split-diff
 )
 if type "apm" > /dev/null; then
-  echo "Upgrading installed Atom packages..."
+  echo "Checking installed Atom package versions..."
   # Update all the Atom packages
-  yes | apm upgrade -c false
+  yes | apm upgrade --no-confirm
   # Get list of currently installed packages
   apmtempfile="$HOME/apmlist.temp"
   apm list > "$apmtempfile"
@@ -534,12 +543,12 @@ fi
 apm disable language-terraform &> /dev/null
 
 if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
+  unset NEW_BREW_CASK_INSTALLS
   # Moved this lower since it's not important to do this earlier in the script
   # and it might avoid prompting for the password until more of the work is done.
   echo "Triggering re-index of Spotlight search for benefit of new brew casks..."
   sudoit mdutil -a -i off
   sudoit mdutil -a -i on
-  unset NEW_BREW_INSTALLS
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
