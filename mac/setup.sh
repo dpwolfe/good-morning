@@ -385,58 +385,46 @@ echo "Loading Node Version Manager..."
 # shellcheck source=/dev/null
 . "$HOME/.nvm/nvm.sh" > /dev/null
 
-echo "Checking versions of Node.js..."
-CURRENT_NODE_VERSION="$(node -v)"
-LOCAL_NODE_LTS_VERSION=$(nvm version lts/*)
-LATEST_NODE_LTS_VERSION=$(nvm version-remote --lts)
-# Install highest Long Term Support build as a recommended "prod" node version
-if [[ "$LOCAL_NODE_LTS_VERSION" != "$LATEST_NODE_LTS_VERSION" ]]; then
-  echo "Installing Node.js $LATEST_NODE_LTS_VERSION LTS..."
-  nvm install --lts
-  if [[ "$CURRENT_NODE_VERSION" == "$LOCAL_NODE_LTS_VERSION" ]]; then
-    CURRENT_NODE_VERSION=$LATEST_NODE_LTS_VERSION
+
+function upgradenode {
+  local installed_version="$1"
+  local latest_version="$2"
+  local active_version
+  active_version="$(node -v)"
+  # Install highest Long Term Support build as a recommended "prod" node version
+  if [[ "$installed_version" != "$latest_version" ]]; then
+    echo "Installing Node.js $latest_version..."
+    nvm install --lts
+    local old_version=$installed_version # rename for readability
+    if [[ "$active_version" == "$old_version" ]]; then
+      # just uninstalled the version that was active, so track the new one as the active_version
+      active_version=$latest_version
+    fi
+    if [[ "$old_version" != "N/A" ]]; then
+      echo "Installing Node.js packages from $old_version to $latest_version..."
+      nvm reinstall-packages "$old_version"
+      echo "Uninstalling Node.js $old_version..."
+      nvm uninstall "$old_version"
+    fi
+    # Upgrade npm
+    npm i -g npm
+    # Install some staples used with great frequency
+    npm i -g npm-check-updates
+    # Install avn, avn-nvm and avn-n to enable automatic 'nvm use' when a .nvmrc is present
+    npm i -g avn avn-nvm avn-n
+  else
+    echo "Upgrading Node.js $installed_version global npm packages..."
+    nvm use "$installed_version" > /dev/null
+    npm update -g
   fi
-  if [[ "$LOCAL_NODE_LTS_VERSION" != "N/A" ]]; then
-    echo "Installing Node.js packages from $LOCAL_NODE_LTS_VERSION LTS to $LATEST_NODE_LTS_VERSION LTS..."
-    nvm reinstall-packages "$LOCAL_NODE_LTS_VERSION"
-    echo "Uninstalling Node.js $LOCAL_NODE_LTS_VERSION LTS..."
-    nvm uninstall "$LOCAL_NODE_LTS_VERSION"
-  fi
-  # Upgrade npm
-  npm i -g npm
-  # install some npm staples
-  npm i -g npm-check-updates
-else
-  echo "Upgrading Node.js $LOCAL_NODE_LTS_VERSION LTS global npm packages..."
-  nvm use "$LOCAL_NODE_LTS_VERSION" > /dev/null
-  npm update -g
-  nvm use "$CURRENT_NODE_VERSION" > /dev/null
-fi
-# Install latest version of node
-LOCAL_LATEST_NODE_VERSION=$(nvm version node)
-LATEST_NODE_VERSION=$(nvm version-remote node)
-if [[ "$LOCAL_LATEST_NODE_VERSION" != "$LATEST_NODE_VERSION" ]]; then
-  echo "Installing Node.js $LATEST_NODE_VERSION..."
-  nvm install node
-  if [[ "$CURRENT_NODE_VERSION" == "$LOCAL_LATEST_NODE_VERSION" ]]; then
-    CURRENT_NODE_VERSION=$LATEST_NODE_VERSION
-  fi
-  if [[ "$LOCAL_LATEST_NODE_VERSION" != "N/A" ]]; then
-    echo "Installing Node.js packages from $LOCAL_LATEST_NODE_VERSION to $LATEST_NODE_VERSION..."
-    nvm reinstall-packages "$LOCAL_LATEST_NODE_VERSION"
-    echo "Uninstalling Node.js $LOCAL_LATEST_NODE_VERSION..."
-    nvm uninstall "$LOCAL_LATEST_NODE_VERSION"
-  fi
-  # Upgrade npm
-  npm i -g npm
-  # install some npm staples
-  npm i -g npm-check-updates
-else
-  echo "Upgrading Node.js $LOCAL_LATEST_NODE_VERSION global npm packages..."
-  nvm use "$LOCAL_LATEST_NODE_VERSION" > /dev/null
-  npm update -g
-  nvm use "$CURRENT_NODE_VERSION" > /dev/null
-fi
+  # Switch back to previously active node version in case it changed.
+  nvm use "$active_version" > /dev/null
+}
+
+echo "Checking version of installed Node.js..."
+upgradenode "$(nvm version node)" "$(nvm version-remote node)"
+echo "Checking version of installed Node.js LTS..."
+upgradenode "$(nvm version lts/*)" "$(nvm version-remote --lts)"
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
