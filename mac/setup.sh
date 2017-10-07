@@ -375,13 +375,30 @@ do
 done
 rm "$brewtempfile"
 
-if ! type "pip-review" > /dev/null 2> /dev/null; then
-  pip3 install pip-review
+function pickbin {
+  local versions="$1"
+  for version in $versions; do
+    if type $version &> /dev/null; then
+      echo "$version"
+      return
+    fi
+  done
+}
+
+function findpip {
+  echo "$(pickbin 'pip pip2 pip2.7 pip3 pip3.6')"
+}
+
+function pipinstall {
+  $(findpip) install "$1"
+}
+
+if ! type "pip-review" &> /dev/null; then
+  pipinstall pip-review
 fi
 
-
 # Install Node Version Manager
-NVM_VERSION="0.33.2"
+NVM_VERSION="0.33.5"
 # if nvm is already installed, load it in order to check its version
 if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/null; then
   # https://github.com/creationix/nvm#install-script
@@ -393,7 +410,6 @@ fi
 echo "Loading Node Version Manager..."
 # shellcheck source=/dev/null
 . "$HOME/.nvm/nvm.sh" > /dev/null
-
 
 function upgradenode {
   local installed_version="$1"
@@ -444,13 +460,13 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   decryptFromFile "$passfile" | sudo -H -S -p "" pip-review --auto
 fi
 
-if ! pip3 freeze | grep "awscli=" > /dev/null; then
+if ! $(findpip) freeze | grep "awscli=" > /dev/null; then
   echo "Installing AWS CLI..."
   # ensure password for sudo is ready since we want to custom pass it using the -H flag
   sudoit printf ""
   # passing -H to avoid warnings instead of using sudoit
   # shellcheck disable=SC2002
-  decryptFromFile "$passfile" | sudo -H -S -p "" pip3 install awscli
+  decryptFromFile "$passfile" | sudo -H -S -p "" "$(findpip)" install awscli
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
