@@ -723,7 +723,7 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Turn off Finder sounds"
   defaults write com.apple.finder 'FinderSounds' -bool false
   echo "Making ~/Library visible"
-  /usr/bin/chflags nohidden $HOME/Library
+  /usr/bin/chflags nohidden "$HOME/Library"
   echo "Disabling '<App> is an application downloaded from the internet. Are you sure you want to open it?"
   defaults write com.apple.LaunchServices LSQuarantine -bool false
 
