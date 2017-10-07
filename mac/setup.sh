@@ -715,6 +715,17 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write com.apple.finder EmptyTrashSecurely -bool true
   echo "Enable AirDrop over Ethernet and on unsupported Macs running Lion"
   defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
+  echo "Display all file sizes in Finder windows"
+  /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Delete "StandardViewSettings:ExtendedListViewSettings:calculateAllSizes" bool'
+  /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Add "StandardViewSettings:ExtendedListViewSettings:calculateAllSizes" bool true'
+  /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Delete "StandardViewSettings:ListViewSettings:calculateAllSizes" bool'
+  /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Add "StandardViewSettings:ListViewSettings:calculateAllSizes" bool true'
+  echo "Turn off Finder sounds"
+  defaults write com.apple.finder 'FinderSounds' -bool false
+  echo "Making ~/Library visible"
+  /usr/bin/chflags nohidden $HOME/Library
+  echo "Disabling '<App> is an application downloaded from the internet. Are you sure you want to open it?"
+  defaults write com.apple.LaunchServices LSQuarantine -bool false
 
   echo "Modifying Dock Settings"
   echo "Enable highlight hover effect for the grid view of a stack (Dock)"
