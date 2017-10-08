@@ -191,13 +191,13 @@ rvm use system &> /dev/null
 echo "Checking system ruby gem versions..."
 if [ "$(gem outdated)" ]; then
   echo "Updating system ruby gems..."
-  sudoit gem update
+  sudoit gem update --force
 fi
 rvm default &> /dev/null
 echo "Checking rvm ruby gem versions..."
 if [ "$(gem outdated)" ]; then
   echo "Updating ruby gems..."
-  gem update
+  gem update --force
 fi
 if ! gem list --local | grep xcode-install &> /dev/null; then
   echo "Replacing xcode-install gem that was installed using a work-around..."
