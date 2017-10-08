@@ -297,7 +297,9 @@ caskBrews=(
   blue-jeans-launcher
   charles
   controlplane
+  cord
   dropbox
+  framer
   google-backup-and-sync
   google-chrome
   handbrake
@@ -314,6 +316,7 @@ caskBrews=(
   qladdict
   qlcolorcode
   qlmarkdown
+  sketch
   skype
   slack
   sourcetree
@@ -323,6 +326,7 @@ caskBrews=(
   visual-studio-code
   wavtap
   xmind
+  zeplin
   zoomus
 )
 brew tap caskroom/cask
@@ -846,26 +850,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
 fi
 
 if false; then
-# todo: setup ControlPlane
-open "/Applications/ControlPlane.app"
-# todo: install Adobe Connect
-https://www.adobe.com/go/adobeconnect_9_addin_mac
-# adobeconnectaddin-installer.pkg
-# todo: Install CoRD
-# todo: Install Sketch
-# todo: Install SourceTree
-# todo: Install Framer
-# todo: mute Skype sounds except messages and calls
-# todo: change energy saver settings to not be so aggressive as it is annoying
-# todo: Install the NDK from Android Studio
-# todo: Clone the Bing desktop image downloader script repo and schedule script for a daily run.
-# todo: setup daily refresh script
-# todo: use dark menu bar and dock from general settings
-# todo: set sidebar icon size to small
-# todo: change setting show scroll bars when scrolling
-# todo: turn off indicators for open apps since only open apps appear
-# todo: turn off the slightly dim effect when disconnecting from power, this is more annoying than useful
-# todo: suppress sponsor offers when updating Java from Java settings
+  # todo: setup ControlPlane
+  open "/Applications/ControlPlane.app"
 fi
 
 if [ -z "$GOOD_MORNING_RUN" ]; then
