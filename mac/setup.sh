@@ -413,19 +413,11 @@ if ! type "pip-review" &> /dev/null; then
   pipinstall pip-review
 fi
 
-# Install Node Version Manager
-NVM_VERSION="0.33.5"
-# if nvm is already installed, load it in order to check its version
-if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/null; then
-  # https://github.com/creationix/nvm#install-script
-  echo "Installing Node Version Manager v$NVM_VERSION"
-  # run the install script
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
-fi
-
-echo "Loading Node Version Manager..."
-# shellcheck source=/dev/null
-. "$HOME/.nvm/nvm.sh" > /dev/null
+function loadnvm {
+  echo "Loading Node Version Manager..."
+  # shellcheck source=/dev/null
+  . "$HOME/.nvm/nvm.sh" > /dev/null
+}
 
 function upgradenode {
   local installed_version="$1"
@@ -462,10 +454,28 @@ function upgradenode {
   nvm use "$active_version" > /dev/null
 }
 
-echo "Checking version of installed Node.js..."
-upgradenode "$(nvm version node)" "$(nvm version-remote node)"
-echo "Checking version of installed Node.js LTS..."
-upgradenode "$(nvm version lts/*)" "$(nvm version-remote --lts)"
+# Install Node Version Manager
+NVM_VERSION="0.33.5"
+# if nvm is already installed, load it in order to check its version
+if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/null; then
+  # https://github.com/creationix/nvm#install-script
+  echo "Installing Node Version Manager v$NVM_VERSION"
+  # run the install script
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
+  loadnvm
+  echo "Installing latest Node.js..."
+  upgradenode "N/A" "$(nvm version-remote node)"
+  echo "Installing latest Node.js LTS..."
+  upgradenode "N/A" "$(nvm version-remote --lts)"
+  nvm alias default node
+else
+  loadnvm
+  echo "Checking version of installed Node.js..."
+  upgradenode "$(nvm version node)" "$(nvm version-remote node)"
+  echo "Checking version of installed Node.js LTS..."
+  upgradenode "$(nvm version lts/*)" "$(nvm version-remote --lts)"
+fi
+
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
