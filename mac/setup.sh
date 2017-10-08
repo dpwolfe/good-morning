@@ -223,7 +223,7 @@ Passphrase: $GPG_PASSPHRASE
 %echo Signing key created.
 EOF
   unset GPG_PASSPHRASE
-  todaysdate=$(date +"%Y-%m-%d")
+  todaysdate=$(date -u +"%Y-%m-%d")
   expr="^sec   4096R\/([[:xdigit:]]{16}) $todaysdate.*"
   key=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$expr" | sed -E "s/$expr/\1/")
   # copy the GPG public key for GitHub
