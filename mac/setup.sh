@@ -172,6 +172,9 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   PATH=$PATH:"$HOME/.rvm/bin/"
   rvm install ruby --default
   rvm cleanup all
+elif [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
+  rvm install ruby --default
+  rvm cleanup all
 else
   CURRENT_RUBY_VERSION="$(ruby --version | sed -E 's/ ([0-9.]+).*/-\1/')"
   LATEST_RUBY_VERSION="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
