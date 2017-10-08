@@ -366,9 +366,12 @@ fi
 # Install brews
 # shellcheck disable=SC2034
 brews=(
+  ansible
   bash-completion
   certbot # For generating SSL certs with Let's Encrypt
   docker
+  fd # https://github.com/sharkdp/fd
+  fzf # https://github.com/junegunn/fzf
   go
   git
   jq
@@ -388,8 +391,7 @@ brews=(
   yubico-piv-tool
 )
 brew list > "$brewtempfile"
-for brew in "${brews[@]}";
-do
+for brew in "${brews[@]}"; do
   if ! grep "$brew" "$brewtempfile" > /dev/null; then
     brew install "$brew"
   fi
@@ -410,13 +412,18 @@ function findpip {
   echo "$(pickbin 'pip pip2 pip2.7 pip3 pip3.6')"
 }
 
-function pipinstall {
-  $(findpip) install "$1"
-}
-
-if ! type "pip-review" &> /dev/null; then
-  pipinstall pip-review
-fi
+# Install pips
+# shellcheck disable=SC2034
+pips=(
+  pip-review
+  glances
+  pycurl
+)
+for pip in "${pips[@]}"; do
+  if ! type "$pip" &> /dev/null; then
+    $(findpip) install "$pip"
+  fi
+done
 
 function loadnvm {
   echo "Loading Node Version Manager..."
