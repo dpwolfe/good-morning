@@ -165,12 +165,9 @@ fi
 if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   echo "Installing RVM..."
   gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-  curl -sSL https://get.rvm.io | bash -s stable
+  curl -sSL https://get.rvm.io | bash -s stable --ruby
   # shellcheck source=/dev/null
-  source "$HOME/.rvm/scripts/rvm"
-  # add rvm to the PATH for this terminal session
-  PATH=$PATH:"$HOME/.rvm/bin/"
-  rvm install ruby --default
+  source "$HOME/.profile" # load rvm
   rvm cleanup all
 elif [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
   rvm install ruby --default
@@ -260,9 +257,12 @@ if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
 source \"\$REPO_ROOT/environment/mac/.bash_profile\"
 cd \"\$REPO_ROOT\"
 export NVM_DIR=\"$HOME/.nvm\"
-[ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\"  # This loads nvm
-[ -s \"$NVM_DIR/bash_completion\" ] && \. \"$NVM_DIR/bash_completion\"  # This loads nvm bash_completion
-[ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion" >> "$HOME/.bash_profile"
+[ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\"  # load nvm
+[ -s \"$NVM_DIR/bash_completion\" ] && \. \"$NVM_DIR/bash_completion\"  # load nvm bash_completion
+[ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion
+# RVM is sourced from the .profile file, make sure this happens last or RVM will complain
+[ -s \"$HOME/.profile\" ] && source \"$HOME/.profile\"
+" >> "$HOME/.bash_profile"
 
   # copy some starter shell environment files
   cp "$ENVIRONMENT_REPO_ROOT/mac/.inputrc" "$HOME/.inputrc"
@@ -377,6 +377,7 @@ brews=(
   maven
   python
   python3
+  ruby
   shellcheck # shell script linting
   terraform
   terragrunt
