@@ -271,7 +271,7 @@ else
   echo "Updating Homebrew..."
   brew update
   echo "Checking for outdated Homebrew formulas..."
-  if brew upgrade; then # Homebrew runs 'brew update' automatically in more recent versions
+  if [ "$(brew upgrade)" != "" ]; then
     echo "Cleaning up Homebrew formula cache..."
     brew cleanup # works better than adding --cleanup
     # If there was any output from the cleanup task, assume a formula changed or was installed.
