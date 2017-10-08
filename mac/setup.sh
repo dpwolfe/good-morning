@@ -168,6 +168,8 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   curl -sSL https://get.rvm.io | bash -s stable
   # shellcheck source=/dev/null
   source "$HOME/.rvm/scripts/rvm"
+  # add rvm to the PATH for this terminal session
+  PATH=$PATH:"$HOME/.rvm/bin/"
   rvm install ruby --default
   rvm cleanup all
 else
