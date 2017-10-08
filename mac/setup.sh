@@ -331,14 +331,22 @@ caskBrews=(
 )
 brew tap caskroom/cask
 brewtempfile="$HOME/brewlist.temp"
+caskcollisionfile="$HOME/caskcollision.temp"
 brew cask list > "$brewtempfile"
 for caskBrew in "${caskBrews[@]}";
 do
   if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
-    brew cask install "$caskBrew"
+    brew cask install "$caskBrew" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$caskcollisionfile"
+    if [ -s "$caskcollisionfile" ]; then
+      # Remove non-brew installed version of app and retry.
+      sudoit rm -rf "$(cat $caskcollisionfile)"
+      rm "$caskcollisionfile"
+      brew cask install "$caskBrew"
+    fi
     NEW_BREW_CASK_INSTALLS=1
   fi
 done
+unset caskcollisionfile
 
 if [ -n "$NEW_BREW_CASK_INSTALLS" ] || [ -n "$BREW_CASK_UPGRADES" ]; then
   unset BREW_CASK_UPGRADES;
