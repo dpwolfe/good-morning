@@ -155,7 +155,7 @@ fi
 
 if ! [ -d "/Applications/GPG Keychain.app" ]; then
   dmg="$HOME/Downloads/GPGSuite.dmg"
-  curl -JL https://releases.gpgtools.org/GPG_Suite-2017.1b3-v2.dmg -o "$dmg"
+  curl -JL https://releases.gpgtools.org/GPG_Suite-2017.1.dmg -o "$dmg"
   hdiutil attach "$dmg"
   sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
   diskutil unmount "GPG Suite"
