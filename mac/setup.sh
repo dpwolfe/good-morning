@@ -389,6 +389,8 @@ brews=(
   wget
   yarn
   yubico-piv-tool
+  zsh
+  zsh-completions
 )
 brew list > "$brewtempfile"
 for brew in "${brews[@]}"; do
@@ -432,22 +434,25 @@ function loadnvm {
 }
 
 function upgradenode {
-  local installed_version="$1"
-  local latest_version="$2"
+  local old_version="$1"
+  local new_version="$2"
   local active_version
-  active_version="$(node -v)"
+  active_version="$(if type node &> /dev/null; then node -v; else echo "N/A"; fi)"
   # Install highest Long Term Support build as a recommended "prod" node version
-  if [[ "$installed_version" != "$latest_version" ]]; then
-    echo "Installing Node.js $latest_version..."
-    nvm install --lts
-    local old_version=$installed_version # rename for readability
+  if [[ "$old_version" != "$new_version" ]]; then
+    echo "Installing Node.js $new_version..."
+    nvm install "$new_version"
     if [[ "$active_version" == "$old_version" ]]; then
-      # just uninstalled the version that was active, so track the new one as the active_version
-      active_version=$latest_version
+      # will uninstall the version that was active, so track the new one as the active_version
+      active_version="$new_version"
+    fi
+    local reinstall_version
+    reinstall_version="$(if [[ \"$old_version\" == \"N/A\" ]]; then echo "$active_version"; else echo "$old_version"; fi)"
+    if [[ "$reinstall_version" != "N/A" ]]; then
+      echo "Installing global Node.js packages used by $reinstall_version into $new_version..."
+      nvm reinstall-packages "$reinstall_version"
     fi
     if [[ "$old_version" != "N/A" ]]; then
-      echo "Installing Node.js packages from $old_version to $latest_version..."
-      nvm reinstall-packages "$old_version"
       echo "Uninstalling Node.js $old_version..."
       nvm uninstall "$old_version"
     fi
@@ -458,12 +463,15 @@ function upgradenode {
     # Install avn, avn-nvm and avn-n to enable automatic 'nvm use' when a .nvmrc is present
     npm i -g avn avn-nvm avn-n
   else
-    echo "Checking Node.js $installed_version global npm package versions..."
-    nvm use "$installed_version" > /dev/null
+    local current_version="$old_version" # rename for readability
+    echo "Checking Node.js $current_version global npm package versions..."
+    nvm use "$current_version" > /dev/null
     npm update -g
   fi
-  # Switch back to previously active node version in case it changed.
-  nvm use "$active_version" > /dev/null
+  if [[ "$active_version" != "N/A" ]]; then
+    # Switch to the node version in use before any install or 'nvm use' command executed
+    nvm use "$active_version" > /dev/null
+  fi
 }
 
 # Install Node Version Manager
