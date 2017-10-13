@@ -235,6 +235,7 @@ EOF
   prompt "Hit Enter after the GPG key is saved on GitHub to continue..."
   # enable autos-signing of all the commits
   git config --global commit.gpgsign true
+  git config --global user.signingkey "$key"
   # Silence output about needing a passphrase on each commit
   # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
 fi
