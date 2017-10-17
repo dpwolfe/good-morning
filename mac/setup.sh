@@ -416,6 +416,8 @@ function findpip {
 }
 
 # Install pips
+piptempfile="$HOME/pipfreeze.temp"
+$(findpip) freeze > "$piptempfile"
 # shellcheck disable=SC2034
 pips=(
   pip-review
@@ -423,10 +425,11 @@ pips=(
   pycurl
 )
 for pip in "${pips[@]}"; do
-  if ! type "$pip" &> /dev/null; then
+  if ! grep -i "$pip==" "$piptempfile" > /dev/null; then
     $(findpip) install "$pip"
   fi
 done
+rm $piptempfile
 
 function loadnvm {
   echo "Loading Node Version Manager..."
