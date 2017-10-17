@@ -257,12 +257,12 @@ if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
   echo "export REPO_ROOT=\"\$HOME/repo\"
 source \"\$REPO_ROOT/environment/mac/.bash_profile\"
 cd \"\$REPO_ROOT\"
-export NVM_DIR=\"$HOME/.nvm\"
-[ -s \"$NVM_DIR/nvm.sh\" ] && \. \"$NVM_DIR/nvm.sh\"  # load nvm
-[ -s \"$NVM_DIR/bash_completion\" ] && \. \"$NVM_DIR/bash_completion\"  # load nvm bash_completion
+export NVM_DIR=\"\$HOME/.nvm\"
+[ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"  # load nvm
+[ -s \"\$NVM_DIR/bash_completion\" ] && \. \"\$NVM_DIR/bash_completion\"  # load nvm bash_completion
 [ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion
 # RVM is sourced from the .profile file, make sure this happens last or RVM will complain
-[ -s \"$HOME/.profile\" ] && source \"$HOME/.profile\"
+[ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\"
 " >> "$HOME/.bash_profile"
 
   # copy some starter shell environment files
