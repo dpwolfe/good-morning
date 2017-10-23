@@ -187,14 +187,7 @@ else
   unset LATEST_RUBY_VERSION
 fi
 
-rvm use system &> /dev/null
-echo "Checking system ruby gem versions..."
-if [ "$(gem outdated)" ]; then
-  echo "Updating system ruby gems..."
-  sudoit gem update --force
-fi
-rvm default &> /dev/null
-echo "Checking rvm ruby gem versions..."
+echo "Checking ruby gem versions..."
 if [ "$(gem outdated)" ]; then
   echo "Updating ruby gems..."
   gem update --force
@@ -339,6 +332,10 @@ caskBrews=(
   virtualbox
   visual-studio-code
   wavtap
+  # To use WavTap you'll need to take some extra steps that shall not be automated.
+  # Run this from the Recovery terminal: csrutil disable
+  # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
+  # Reboot again and WavTap should appear in the sound devices menu.
   xmind
   zeplin
   zoomus
