@@ -254,6 +254,10 @@ ENVIRONMENT_REPO_ROOT="$REPO_ROOT/environment"
 if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
   echo "Cloning environment repository..."
   git clone git@github.com:dpwolfe/environment.git "$ENVIRONMENT_REPO_ROOT"
+  if [ -s "$HOME\.bash_profile" ]; then
+    echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
+    mv "$HOME\.bash_profile" "$HOME\.old_bash_profile"
+  fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
 source \"\$REPO_ROOT/environment/mac/.bash_profile\"
 cd \"\$REPO_ROOT\"
@@ -263,7 +267,7 @@ export NVM_DIR=\"\$HOME/.nvm\"
 [ -f /usr/local/etc/bash_completion ] && \. /usr/local/etc/bash_completion
 # RVM is sourced from the .profile file, make sure this happens last or RVM will complain
 [ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\"
-" >> "$HOME/.bash_profile"
+" > "$HOME/.bash_profile"
 
   # copy some starter shell environment files
   cp "$ENVIRONMENT_REPO_ROOT/mac/.inputrc" "$HOME/.inputrc"
