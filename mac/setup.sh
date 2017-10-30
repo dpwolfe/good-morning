@@ -380,8 +380,8 @@ brews=(
   go
   git
   jq
-  kubernetes-cli
   kops
+  kubernetes-cli
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
   python
