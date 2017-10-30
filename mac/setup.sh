@@ -373,6 +373,7 @@ brews=(
   ansible
   bash-completion
   certbot # For generating SSL certs with Let's Encrypt
+  direnv
   docker
   fd # https://github.com/sharkdp/fd
   fzf # https://github.com/junegunn/fzf
@@ -380,6 +381,7 @@ brews=(
   git
   jq
   kubernetes-cli
+  kops
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
   python
