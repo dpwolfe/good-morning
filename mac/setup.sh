@@ -349,7 +349,7 @@ brew cask list > "$brewtempfile"
 for caskBrew in "${brewCasks[@]}";
 do
   if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
-    echo "Installing $caskBrew from brew cask..."
+    echo "Installing $caskBrew with Homebrew..."
     brew cask install "$caskBrew" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$caskcollisionfile"
     if [ -s "$caskcollisionfile" ]; then
       # Remove non-brew installed version of app and retry.
