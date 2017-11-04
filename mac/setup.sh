@@ -295,8 +295,8 @@ fi
 # Having Homebrew issues? Run this command below.
 # cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
 
-# Install cask brews
-caskBrews=(
+# Install Homebrew casks
+brewCasks=(
   android-studio
   atom
   beyond-compare
@@ -307,6 +307,7 @@ caskBrews=(
   cord
   dropbox
   framer
+  gimp
   google-backup-and-sync
   google-chrome
   handbrake
@@ -345,7 +346,7 @@ brew tap caskroom/cask
 brewtempfile="$HOME/brewlist.temp"
 caskcollisionfile="$HOME/caskcollision.temp"
 brew cask list > "$brewtempfile"
-for caskBrew in "${caskBrews[@]}";
+for caskBrew in "${brewCasks[@]}";
 do
   if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
     echo "Installing $caskBrew from brew cask..."
