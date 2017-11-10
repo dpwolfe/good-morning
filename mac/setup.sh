@@ -343,6 +343,7 @@ brewCasks=(
   zoomus
 )
 brew tap caskroom/cask
+brew tap wata727/tflint
 brewtempfile="$HOME/brewlist.temp"
 caskcollisionfile="$HOME/caskcollision.temp"
 brew cask list > "$brewtempfile"
@@ -391,6 +392,7 @@ brews=(
   shellcheck # shell script linting
   terraform
   terragrunt
+  tflint
   transcrypt
   vim
   wget
