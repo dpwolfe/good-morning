@@ -343,7 +343,6 @@ brewCasks=(
   zoomus
 )
 brew tap caskroom/cask
-brew tap wata727/tflint
 brewtempfile="$HOME/brewlist.temp"
 caskcollisionfile="$HOME/caskcollision.temp"
 brew cask list > "$brewtempfile"
@@ -370,6 +369,7 @@ if [ -n "$NEW_BREW_CASK_INSTALLS" ] || [ -n "$BREW_CASK_UPGRADES" ]; then
 fi
 
 # Install brews
+brew tap wata727/tflint # tflint - https://github.com/wata727/tflint
 # shellcheck disable=SC2034
 brews=(
   ansible
