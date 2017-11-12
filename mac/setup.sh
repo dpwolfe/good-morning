@@ -305,6 +305,7 @@ brewCasks=(
   charles
   controlplane
   cord
+  docker
   dropbox
   framer
   gimp
