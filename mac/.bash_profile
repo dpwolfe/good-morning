@@ -23,6 +23,16 @@ npm-exec() {
     # shellcheck disable=SC2068
     "$(npm bin)/$bin" $@
 }
+kill-function() {
+    local pid
+    pid="$(pgrep $1 | tr '\n' ' ')"
+    if [ -n "$pid" ]; then
+        kill -s KILL $pid;
+        echo "Killed $1 $pid"
+    else
+        echo "No proc to kill with the name '$1'"
+    fi
+}
 
 alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
 alias ls='ls -G'
@@ -71,12 +81,12 @@ alias mv='mv -i'
 alias cp='cp -i'
 alias ln='ln -i'
 
-alias k='kill -s KILL'
-alias kg='kill -s KILL $(pgrep grunt)'
-alias ks='kill -s KILL $(pgrep Safari)'
-alias kc='kill -s KILL $(pgrep Chrome)'
-alias kf='kill -s KILL $(pgrep firefox)'
-alias kn='kill -s KILL $(pgrep node)'
+alias k=kill-function
+alias kg='kill-function grunt'
+alias ks='kill-function safari'
+alias kc='kill-function chrome'
+alias kf='kill-function firefox'
+alias kn='kill-function node'
 
 alias s='source $HOME/.bash_profile'
 alias eb='vim $HOME/.bash_profile'
