@@ -455,6 +455,8 @@ function upgradenode {
   if [[ "$old_version" != "$new_version" ]]; then
     echo "Installing Node.js $new_version..."
     nvm install "$new_version"
+    echo "Clearing Node Version Manager cache..."
+    nvm cache clear > /dev/null
     if [[ "$active_version" == "$old_version" ]]; then
       # will uninstall the version that was active, so track the new one as the active_version
       active_version="$new_version"
@@ -500,7 +502,8 @@ if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/
   upgradenode "N/A" "$(nvm version-remote node)"
   echo "Installing latest Node.js LTS..."
   upgradenode "N/A" "$(nvm version-remote --lts)"
-  nvm alias default node
+  echo "Setting default Node.js version as LTS..."
+  nvm alias default lts/*
 else
   loadnvm
   echo "Checking version of installed Node.js..."
