@@ -10,13 +10,15 @@ function randstring32 {
   env LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1
 }
 
-passphrase=randstring32
+if [ -z "$GOOD_MORNING_PASSPHRASE" ]; then
+  GOOD_MORNING_PASSPHRASE=randstring32
+fi
 function encryptToFile {
-  echo "$1" | openssl enc -aes-256-cbc -k $passphrase > "$2"
+  echo "$1" | openssl enc -aes-256-cbc -k $GOOD_MORNING_PASSPHRASE > "$2"
 }
 
 function decryptFromFile {
-  openssl enc -aes-256-cbc -d -k $passphrase < "$1"
+  openssl enc -aes-256-cbc -d -k $GOOD_MORNING_PASSPHRASE < "$1"
 }
 
 function askto {
@@ -42,20 +44,40 @@ function promptsecret {
   echo # echo newline after input
 }
 
-if [ -e "$passfile" ]; then
-  rm "$passfile"
-fi
-unset passfile
+GOOD_MORNING_CONFIG_FILE="$HOME/.good_morning"
+function getConfigValue {
+  local val
+  val="$( (grep -E "^$1=" -m 1 "$GOOD_MORNING_CONFIG_FILE" 2> /dev/null || echo "$1=$2") | head -n 1 | cut -d '=' -f 2-)"
+  printf -- "%s" "$val"
+}
+
+function setConfigValue {
+  # macOS uses Bash 3.x which does not support associative arrays yet
+  # faking it is not worth the added complexity
+  local keep_pass_for_session
+  keep_pass_for_session="$(getConfigValue "keep_pass_for_session" "not-asked")" # "not-asked", "no" or "yes"
+  local tempfile="$GOOD_MORNING_CONFIG_FILE.temp"
+  # crude validation
+  if [[ "$1" == "keep_pass_for_session" ]]; then
+    export $1="$2"
+  else
+    echo "Warning: Tried to set an unknown config key: $1"
+  fi
+  echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
+  mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
+}
+
+GOOD_MORNING_PASS_FILE_PREFIX="$HOME/.good_morning_temp_"
 function sudoit {
-  if [ -z "$passfile" ]; then
-    passfile="$HOME/.temp_$(randstring32)"
+  if ! [ -e "$GOOD_MORNING_PASS_FILE" ] || ! decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -S -p "" printf ""; then
+    GOOD_MORNING_PASS_FILE="$GOOD_MORNING_PASS_FILE_PREFIX$(randstring32)"
     local p=
     while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
     done
-    encryptToFile "$p" "$passfile"
+    encryptToFile "$p" "$GOOD_MORNING_PASS_FILE"
   fi
-  decryptFromFile "$passfile" | sudo -S -p "" "$@"
+  decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -S -p "" "$@"
 }
 
 function masinstall {
@@ -94,19 +116,21 @@ if ! type xcversion &> /dev/null; then
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
-xcode_version=9.1
-if ! /usr/bin/xcode-select -p &> /dev/null; then
-  echo "Installing Xcode $xcode_version..."
-  xcversion update < /dev/tty
-  xcversion install $xcode_version < /dev/tty
-  echo "Installing Xcode command line tools..."
-  xcversion install-cli-tools < /dev/tty
-elif ! xcversion selected 2>&1 | grep $xcode_version > /dev/null; then
-  echo "Installing Xcode $xcode_version..."
-  xcversion install $xcode_version < /dev/tty
-  xcversion install-cli-tools < /dev/tty
-fi
-unset xcode_version
+function installXcode {
+  local xcode_version=9.1
+  if ! /usr/bin/xcode-select -p &> /dev/null; then
+    echo "Installing Xcode $xcode_version..."
+    xcversion update < /dev/tty
+    xcversion install $xcode_version < /dev/tty
+    echo "Installing Xcode command line tools..."
+    xcversion install-cli-tools < /dev/tty
+  elif ! xcversion selected 2>&1 | grep $xcode_version > /dev/null; then
+    echo "Installing Xcode $xcode_version..."
+    xcversion install $xcode_version < /dev/tty
+    xcversion install-cli-tools < /dev/tty
+  fi
+}
+installXcode
 
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   echo "Accepting the Xcode license..."
@@ -159,7 +183,8 @@ if ! [ -d "/Applications/GPG Keychain.app" ]; then
   hdiutil attach "$dmg"
   sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
   diskutil unmount "GPG Suite"
-  rm "$dmg"
+  rm -f "$dmg"
+  unset dmg
 fi
 
 if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
@@ -173,18 +198,18 @@ elif [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
   rvm install ruby --default
   rvm cleanup all
 else
-  CURRENT_RUBY_VERSION="$(ruby --version | sed -E 's/ ([0-9.]+).*/-\1/')"
-  LATEST_RUBY_VERSION="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
-  if [[ "$CURRENT_RUBY_VERSION" != "$LATEST_RUBY_VERSION" ]]; then
+  current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+).*/-\1/')"
+  latest_ruby_version="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
+  if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
     echo "Upgrading RVM..."
     rvm get stable --auto
-    echo "Upgrading Ruby from $CURRENT_RUBY_VERSION to $LATEST_RUBY_VERSION..."
-    rvm upgrade "$CURRENT_RUBY_VERSION" "$LATEST_RUBY_VERSION"
+    echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
+    rvm upgrade "$current_ruby_version" "$latest_ruby_version"
     rvm create alias default ruby
     rvm cleanup all
   fi
-  unset CURRENT_RUBY_VERSION
-  unset LATEST_RUBY_VERSION
+  unset current_ruby_version
+  unset latest_ruby_version
 fi
 
 echo "Checking ruby gem versions..."
@@ -216,11 +241,11 @@ Passphrase: $GPG_PASSPHRASE
 %echo Signing key created.
 EOF
   unset GPG_PASSPHRASE
-  todaysdate=$(date -u +"%Y-%m-%d")
-  expr="^sec   4096R\/([[:xdigit:]]{16}) $todaysdate.*"
-  key=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$expr" | sed -E "s/$expr/\1/")
+  gpg_todays_date=$(date -u +"%Y-%m-%d")
+  gpg_expr="^sec   4096R\/([[:xdigit:]]{16}) $gpg_todays_date.*"
+  gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
   # copy the GPG public key for GitHub
-  gpg --armor --export "$key" | pbcopy
+  gpg --armor --export "$gpg_key_id" | pbcopy
   echo "GPG key copied to clipboard. GitHub will be opened next."
   echo "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
   prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
@@ -228,7 +253,7 @@ EOF
   prompt "Hit Enter after the GPG key is saved on GitHub to continue..."
   # enable autos-signing of all the commits
   git config --global commit.gpgsign true
-  git config --global user.signingkey "$key"
+  git config --global user.signingkey "$gpg_key_id"
   # Silence output about needing a passphrase on each commit
   # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
 fi
@@ -344,24 +369,25 @@ brewCasks=(
   zoomus
 )
 brew tap caskroom/cask
-brewtempfile="$HOME/brewlist.temp"
-caskcollisionfile="$HOME/caskcollision.temp"
-brew cask list > "$brewtempfile"
-for caskBrew in "${brewCasks[@]}";
+brew_list_temp_file="$HOME/brewlist.temp"
+cask_collision_file="$HOME/caskcollision.temp"
+brew cask list > "$brew_list_temp_file"
+for cask in "${brewCasks[@]}";
 do
-  if ! grep "$caskBrew" "$brewtempfile" > /dev/null; then
-    echo "Installing $caskBrew with Homebrew..."
-    brew cask install "$caskBrew" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$caskcollisionfile"
-    if [ -s "$caskcollisionfile" ]; then
+  if ! grep "$cask" "$brew_list_temp_file" > /dev/null; then
+    echo "Installing $cask with Homebrew..."
+    brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
+    if [ -s "$cask_collision_file" ]; then
       # Remove non-brew installed version of app and retry.
-      sudoit rm -rf "$(cat $caskcollisionfile)"
-      rm "$caskcollisionfile"
-      brew cask install "$caskBrew"
+      sudoit rm -rf "$(cat $cask_collision_file)"
+      rm "$cask_collision_file"
+      brew cask install "$cask"
     fi
     NEW_BREW_CASK_INSTALLS=1
   fi
 done
-unset caskcollisionfile
+unset cask_collision_file
+unset brewCasks
 
 if [ -n "$NEW_BREW_CASK_INSTALLS" ] || [ -n "$BREW_CASK_UPGRADES" ]; then
   unset BREW_CASK_UPGRADES;
@@ -402,13 +428,15 @@ brews=(
   zsh
   zsh-completions
 )
-brew list > "$brewtempfile"
+brew list > "$brew_list_temp_file"
 for brew in "${brews[@]}"; do
-  if ! grep "$brew" "$brewtempfile" > /dev/null; then
+  if ! grep "$brew" "$brew_list_temp_file" > /dev/null; then
     brew install "$brew"
   fi
 done
-rm "$brewtempfile"
+rm -f "$brew_list_temp_file"
+unset brews
+unset brew_list_temp_file
 
 function pickbin {
   local versions="$1"
@@ -438,7 +466,8 @@ for pip in "${pips[@]}"; do
     $(findpip) install "$pip"
   fi
 done
-rm $piptempfile
+rm -f $piptempfile
+unset piptempfile
 
 function loadnvm {
   echo "Loading Node Version Manager..."
@@ -450,7 +479,7 @@ function upgradenode {
   local old_version="$1"
   local new_version="$2"
   local active_version
-  active_version="$(if type node &> /dev/null; then node -v; else echo "N/A"; fi)"
+  active_version="$(if type node &> /dev/null; then node --version; else echo "N/A"; fi)"
   # Install highest Long Term Support build as a recommended "prod" node version
   if [[ "$old_version" != "$new_version" ]]; then
     echo "Installing Node.js $new_version..."
@@ -472,7 +501,12 @@ function upgradenode {
       nvm uninstall "$old_version"
     fi
     # Upgrade npm
-    npm i -g npm
+    if [[ "$(echo "$new_version" | cut -c1-3)" != "v9." ]]; then
+      npm i -g npm
+    else
+      # Install npm's canary until npm officially supports v9
+      npm i -g npmc
+    fi
     # Install some staples used with great frequency
     npm i -g npm-check-updates
     # Install avn, avn-nvm and avn-n to enable automatic 'nvm use' when a .nvmrc is present
@@ -490,13 +524,13 @@ function upgradenode {
 }
 
 # Install Node Version Manager
-NVM_VERSION="0.33.5"
+nvm_version="0.33.6"
 # if nvm is already installed, load it in order to check its version
-if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$NVM_VERSION" > /dev/null; then
+if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$nvm_version" > /dev/null; then
   # https://github.com/creationix/nvm#install-script
-  echo "Installing Node Version Manager v$NVM_VERSION"
+  echo "Installing Node Version Manager v$nvm_version"
   # run the install script
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh | bash
+  curl -o- https://raw.githubusercontent.com/creationix/nvm/v$nvm_version/install.sh | bash
   loadnvm
   echo "Installing latest Node.js..."
   upgradenode "N/A" "$(nvm version-remote node)"
@@ -511,7 +545,7 @@ else
   echo "Checking version of installed Node.js LTS..."
   upgradenode "$(nvm version lts/*)" "$(nvm version-remote --lts)"
 fi
-
+unset nvm_version
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
@@ -519,7 +553,7 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   sudoit printf ""
   # call pip-review with python -m to enable updating pip-review itself
   # shellcheck disable=SC2002
-  decryptFromFile "$passfile" | sudo -H -S -p "" pip-review --auto
+  decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -H -S -p "" pip-review --auto
 fi
 
 if ! $(findpip) freeze | grep "awscli=" > /dev/null; then
@@ -528,7 +562,7 @@ if ! $(findpip) freeze | grep "awscli=" > /dev/null; then
   sudoit printf ""
   # passing -H to avoid warnings instead of using sudoit
   # shellcheck disable=SC2002
-  decryptFromFile "$passfile" | sudo -H -S -p "" "$(findpip)" install awscli
+  decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install awscli
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
@@ -614,8 +648,10 @@ if type "apm" > /dev/null; then
       apm install "$pkg"
     fi
   done
-  rm "$apmtempfile"
+  rm -f "$apmtempfile"
+  unset apmtempfile
 fi
+unset apms
 # Disable language-terraform by default since it will cause Atom to lock up after
 # a couple uses. Re-enable it manually as needed.
 apm disable language-terraform &> /dev/null
@@ -917,16 +953,41 @@ if [ -z "$GOOD_MORNING_RUN" ]; then
   echo "Use the command good_morning each day to stay up-to-date!"
 fi
 
-rm -f "$passfile"
-unset passfile
-unset passphrase
+# Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
+if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
+  mv "$GOOD_MORNING_PASS_FILE" "$HOME/good_morning_encrypted_pass_file.temp"
+fi
+# A glob file deletion is about to happen, proceed with excessive caution.
+if [[ "$GOOD_MORNING_PASS_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
+  rm -f "$GOOD_MORNING_PASS_FILE_PREFIX"*
+else
+  echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
+fi
+# Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
+if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]]; then
+  mv "$HOME/good_morning_encrypted_pass_file.temp" "$GOOD_MORNING_PASS_FILE"
+else
+  unset GOOD_MORNING_PASS_FILE
+  unset GOOD_MORNING_PASSPHRASE
+fi
 unset FIRST_RUN
+unset GITHUB_EMAIL
+unset GITHUB_KEYS_URL
+unset GITHUB_NAME
+unset GOOD_MORNING_PASS_FILE_PREFIX
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
 # This is skipped if the good_morning bash alias was executed, in which case, a pull
 # was made before setup.sh started.
 if [ -n "$GOOD_MORNING_RUN" ]; then
   unset GOOD_MORNING_RUN
+  if [[ "$(getConfigValue "keep_pass_for_session" "not-asked")" == "not-asked" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
+    if askto "always be prompted for your password if needed when you run good_morning again in the same session"; then
+      setConfigValue "keep_pass_for_session" "no"
+    else
+      setConfigValue "keep_pass_for_session" "yes"
+    fi
+  fi
 else
   echo "Almost done! Pulling latest for environment repository..."
   pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
