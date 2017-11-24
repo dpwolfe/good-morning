@@ -412,6 +412,7 @@ brew tap wata727/tflint # tflint - https://github.com/wata727/tflint
 # shellcheck disable=SC2034
 brews=(
   ansible
+  azure-cli
   bash-completion
   certbot # For generating SSL certs with Let's Encrypt
   direnv
@@ -976,7 +977,7 @@ else
   echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
 fi
 # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
-if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]]; then
+if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
   mv "$HOME/good_morning_encrypted_pass_file.temp" "$GOOD_MORNING_PASS_FILE"
 else
   unset GOOD_MORNING_PASS_FILE
