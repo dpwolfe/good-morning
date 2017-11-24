@@ -217,10 +217,23 @@ if [ "$(gem outdated)" ]; then
   echo "Updating ruby gems..."
   gem update --force
 fi
-if ! gem list --local | grep xcode-install &> /dev/null; then
-  echo "Replacing xcode-install gem that was installed using a work-around..."
-  gem install xcode-install
-fi
+
+function installGems {
+  local gem_list_temp_file="$HOME/gemlist.temp"
+  local gems=(
+    terraform_landscape
+    xcode-install # Will also replace the other xcode-install gem that was installed via a work-around...
+  )
+  gem list --local > "$gem_list_temp_file"
+  for gem in "${gems[@]}"; do
+    if ! grep "$gem" "$gem_list_temp_file" > /dev/null; then
+      echo "Installing $gem..."
+      gem install "$gem"
+    fi
+  done
+  rm -f "$gem_list_temp_file"
+}
+installGems
 
 if ( [ -n "$gitHubEmailChanged" ] || [ -n "$gitHubNameChanged" ] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
   promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
@@ -372,8 +385,7 @@ brew tap caskroom/cask
 brew_list_temp_file="$HOME/brewlist.temp"
 cask_collision_file="$HOME/caskcollision.temp"
 brew cask list > "$brew_list_temp_file"
-for cask in "${brewCasks[@]}";
-do
+for cask in "${brewCasks[@]}"; do
   if ! grep "$cask" "$brew_list_temp_file" > /dev/null; then
     echo "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
