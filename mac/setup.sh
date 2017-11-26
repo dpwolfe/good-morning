@@ -11,7 +11,7 @@ function randstring32 {
 }
 
 if [ -z "$GOOD_MORNING_PASSPHRASE" ]; then
-  GOOD_MORNING_PASSPHRASE=randstring32
+  GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
 function encryptToFile {
   echo "$1" | openssl enc -aes-256-cbc -k $GOOD_MORNING_PASSPHRASE > "$2"
@@ -56,21 +56,22 @@ function setConfigValue {
   # faking it is not worth the added complexity
   local keep_pass_for_session
   keep_pass_for_session="$(getConfigValue "keep_pass_for_session" "not-asked")" # "not-asked", "no" or "yes"
-  local tempfile="$GOOD_MORNING_CONFIG_FILE.temp"
+  local tempfile="$GOOD_MORNING_CONFIG_FILE""_temp"
   # crude validation
   if [[ "$1" == "keep_pass_for_session" ]]; then
     export $1="$2"
   else
     echo "Warning: Tried to set an unknown config key: $1"
   fi
+  echo "# This file saves user preferences for running the good_morning script." >> "$tempfile"
   echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
   mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
 }
 
-GOOD_MORNING_PASS_FILE_PREFIX="$HOME/.good_morning_temp_"
+GOOD_MORNING_TEMP_FILE_PREFIX="$GOOD_MORNING_CONFIG_FILE""_temp_"
 function sudoit {
   if ! [ -e "$GOOD_MORNING_PASS_FILE" ] || ! decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -S -p "" printf ""; then
-    GOOD_MORNING_PASS_FILE="$GOOD_MORNING_PASS_FILE_PREFIX$(randstring32)"
+    GOOD_MORNING_PASS_FILE="$GOOD_MORNING_TEMP_FILE_PREFIX$(randstring32)"
     local p=
     while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
@@ -101,7 +102,7 @@ function dmginstall {
     # install in the "all users" location
     sudoit ditto "/Volumes/$3/$1.app" "$appPath"
     diskutil unmount "$3" > /dev/null
-    rm "$downloadPath"
+    rm -f "$downloadPath"
   fi
 }
 
@@ -219,7 +220,7 @@ if [ "$(gem outdated)" ]; then
 fi
 
 function installGems {
-  local gem_list_temp_file="$HOME/gemlist.temp"
+  local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
     terraform_landscape
     xcode-install # Will also replace the other xcode-install gem that was installed via a work-around...
@@ -382,8 +383,8 @@ brewCasks=(
   zoomus
 )
 brew tap caskroom/cask
-brew_list_temp_file="$HOME/brewlist.temp"
-cask_collision_file="$HOME/caskcollision.temp"
+brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
+cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
 brew cask list > "$brew_list_temp_file"
 for cask in "${brewCasks[@]}"; do
   if ! grep "$cask" "$brew_list_temp_file" > /dev/null; then
@@ -392,12 +393,13 @@ for cask in "${brewCasks[@]}"; do
     if [ -s "$cask_collision_file" ]; then
       # Remove non-brew installed version of app and retry.
       sudoit rm -rf "$(cat $cask_collision_file)"
-      rm "$cask_collision_file"
+      rm -f "$cask_collision_file"
       brew cask install "$cask"
     fi
     NEW_BREW_CASK_INSTALLS=1
   fi
 done
+rm -f "$cask_collision_file"
 unset cask_collision_file
 unset brewCasks
 
@@ -653,16 +655,16 @@ if type "apm" > /dev/null; then
   # Update all the Atom packages
   yes | apm upgrade --no-confirm
   # Get list of currently installed packages
-  apmtempfile="$HOME/apmlist.temp"
-  apm list > "$apmtempfile"
+  apm_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""apm_list"
+  apm list > "$apm_list_temp_file"
   for pkg in "${apms[@]}";
   do
-    if ! grep "── $pkg@" "$apmtempfile" > /dev/null; then
+    if ! grep "── $pkg@" "$apm_list_temp_file" > /dev/null; then
       apm install "$pkg"
     fi
   done
-  rm -f "$apmtempfile"
-  unset apmtempfile
+  rm -f "$apm_list_temp_file"
+  unset apm_list_temp_file
 fi
 unset apms
 # Disable language-terraform by default since it will cause Atom to lock up after
@@ -966,19 +968,20 @@ if [ -z "$GOOD_MORNING_RUN" ]; then
   echo "Use the command good_morning each day to stay up-to-date!"
 fi
 
+GOOD_MORNING_PASS_FILE_TEMP="temp.$GOOD_MORNING_TEMP_FILE_PREFIX""pass_file"
 # Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
 if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
-  mv "$GOOD_MORNING_PASS_FILE" "$HOME/good_morning_encrypted_pass_file.temp"
+  mv "$GOOD_MORNING_PASS_FILE" "$GOOD_MORNING_PASS_FILE_TEMP"
 fi
 # A glob file deletion is about to happen, proceed with excessive caution.
-if [[ "$GOOD_MORNING_PASS_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
-  rm -f "$GOOD_MORNING_PASS_FILE_PREFIX"*
+if [[ "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
+  rm -f "$GOOD_MORNING_TEMP_FILE_PREFIX"*
 else
   echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
 fi
 # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
-if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
-  mv "$HOME/good_morning_encrypted_pass_file.temp" "$GOOD_MORNING_PASS_FILE"
+if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE_TEMP" ]; then
+  mv "$GOOD_MORNING_PASS_FILE_TEMP" "$GOOD_MORNING_PASS_FILE"
 else
   unset GOOD_MORNING_PASS_FILE
   unset GOOD_MORNING_PASSPHRASE
@@ -987,7 +990,8 @@ unset FIRST_RUN
 unset GITHUB_EMAIL
 unset GITHUB_KEYS_URL
 unset GITHUB_NAME
-unset GOOD_MORNING_PASS_FILE_PREFIX
+unset GOOD_MORNING_TEMP_FILE_PREFIX
+unset GOOD_MORNING_PASS_FILE_TEMP
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
 # This is skipped if the good_morning bash alias was executed, in which case, a pull
