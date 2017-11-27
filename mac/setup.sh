@@ -70,15 +70,15 @@ function setConfigValue {
 
 GOOD_MORNING_TEMP_FILE_PREFIX="$GOOD_MORNING_CONFIG_FILE""_temp_"
 function sudoit {
-  if ! [ -e "$GOOD_MORNING_PASS_FILE" ] || ! decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -S -p "" printf ""; then
-    GOOD_MORNING_PASS_FILE="$GOOD_MORNING_TEMP_FILE_PREFIX$(randstring32)"
+  if ! [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ] || ! decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" printf ""; then
+    GOOD_MORNING_ENCRYPTED_PASS_FILE="$GOOD_MORNING_TEMP_FILE_PREFIX$(randstring32)"
     local p=
     while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
     done
-    encryptToFile "$p" "$GOOD_MORNING_PASS_FILE"
+    encryptToFile "$p" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
   fi
-  decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -S -p "" "$@"
+  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" "$@"
 }
 
 function masinstall {
@@ -568,7 +568,7 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   sudoit printf ""
   # call pip-review with python -m to enable updating pip-review itself
   # shellcheck disable=SC2002
-  decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -H -S -p "" pip-review --auto
+  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" pip-review --auto
 fi
 
 if ! $(findpip) freeze | grep "awscli=" > /dev/null; then
@@ -577,7 +577,7 @@ if ! $(findpip) freeze | grep "awscli=" > /dev/null; then
   sudoit printf ""
   # passing -H to avoid warnings instead of using sudoit
   # shellcheck disable=SC2002
-  decryptFromFile "$GOOD_MORNING_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install awscli
+  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install awscli
 fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
@@ -959,46 +959,43 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Restart your computer to see all the changes."
 fi
 
-if false; then
-  # todo: setup ControlPlane
-  open "/Applications/ControlPlane.app"
-fi
-
 if [ -z "$GOOD_MORNING_RUN" ]; then
   echo "Use the command good_morning each day to stay up-to-date!"
 fi
 
-GOOD_MORNING_PASS_FILE_TEMP="temp.$GOOD_MORNING_TEMP_FILE_PREFIX""pass_file"
-# Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
-if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
-  mv "$GOOD_MORNING_PASS_FILE" "$GOOD_MORNING_PASS_FILE_TEMP"
-fi
-# A glob file deletion is about to happen, proceed with excessive caution.
-if [[ "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
-  rm -f "$GOOD_MORNING_TEMP_FILE_PREFIX"*
-else
-  echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
-fi
-# Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
-if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_PASS_FILE_TEMP" ]; then
-  mv "$GOOD_MORNING_PASS_FILE_TEMP" "$GOOD_MORNING_PASS_FILE"
-else
-  unset GOOD_MORNING_PASS_FILE
-  unset GOOD_MORNING_PASSPHRASE
-fi
+function cleanupTempFiles {
+  local good_morning_pass_file_temp="$HOME/.good_morning_pass_file" # lacks 'temp' in name to bypass deletion if kept
+  # Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
+  if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
+    mv "$GOOD_MORNING_ENCRYPTED_PASS_FILE" "$good_morning_pass_file_temp"
+  fi
+  # A glob file deletion is about to happen, proceed with excessive caution.
+  if [[ "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
+    rm -f "$GOOD_MORNING_TEMP_FILE_PREFIX"*
+  else
+    echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
+  fi
+  # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
+  if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$good_morning_pass_file_temp" ]; then
+    mv "$good_morning_pass_file_temp" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
+  else
+    unset GOOD_MORNING_ENCRYPTED_PASS_FILE
+    unset GOOD_MORNING_PASSPHRASE
+  fi
+}
+
 unset FIRST_RUN
 unset GITHUB_EMAIL
 unset GITHUB_KEYS_URL
 unset GITHUB_NAME
 unset GOOD_MORNING_TEMP_FILE_PREFIX
-unset GOOD_MORNING_PASS_FILE_TEMP
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
 # This is skipped if the good_morning bash alias was executed, in which case, a pull
 # was made before setup.sh started.
 if [ -n "$GOOD_MORNING_RUN" ]; then
   unset GOOD_MORNING_RUN
-  if [[ "$(getConfigValue "keep_pass_for_session" "not-asked")" == "not-asked" ]] && [ -e "$GOOD_MORNING_PASS_FILE" ]; then
+  if [[ "$(getConfigValue "keep_pass_for_session" "not-asked")" == "not-asked" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
     if askto "always be prompted for your password if needed when you run good_morning again in the same session"; then
       setConfigValue "keep_pass_for_session" "no"
     else
