@@ -983,6 +983,7 @@ function cleanupTempFiles {
     unset GOOD_MORNING_PASSPHRASE
   fi
 }
+cleanupTempFiles
 
 unset FIRST_RUN
 unset GITHUB_EMAIL
