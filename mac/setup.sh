@@ -985,11 +985,16 @@ function cleanupTempFiles {
 }
 cleanupTempFiles
 
-unset FIRST_RUN
-unset GITHUB_EMAIL
-unset GITHUB_KEYS_URL
-unset GITHUB_NAME
-unset GOOD_MORNING_TEMP_FILE_PREFIX
+function cleanupEnvVars {
+  unset FIRST_RUN
+  unset GITHUB_EMAIL
+  unset GITHUB_KEYS_URL
+  unset GITHUB_NAME
+  unset GOOD_MORNING_CONFIG_FILE
+  unset GOOD_MORNING_TEMP_FILE_PREFIX
+  unset ENVIRONMENT_REPO_ROOT
+}
+
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
 # This is skipped if the good_morning bash alias was executed, in which case, a pull
@@ -1003,8 +1008,9 @@ if [ -n "$GOOD_MORNING_RUN" ]; then
       setConfigValue "keep_pass_for_session" "yes"
     fi
   fi
+  cleanupEnvVars
 else
   echo "Almost done! Pulling latest for environment repository..."
   pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
-  git pull && popd > /dev/null
+  cleanupEnvVars && git pull && popd > /dev/null
 fi
