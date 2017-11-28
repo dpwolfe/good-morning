@@ -832,6 +832,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
   echo "Finder: show hidden files by default"
   defaults write com.apple.finder AppleShowAllFiles -bool true
+  echo "Finder: show path bar"
+  defaults write com.apple.finder ShowPathbar -bool true
   echo "Finder: show all filename extensions"
   defaults write -g AppleShowAllExtensions -bool true
   echo "Finder: show status bar"
