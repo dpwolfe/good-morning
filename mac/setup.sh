@@ -484,52 +484,40 @@ done
 rm -f $piptempfile
 unset piptempfile
 
-function loadnvm {
-  echo "Loading Node Version Manager..."
-  # shellcheck source=/dev/null
-  . "$HOME/.nvm/nvm.sh" > /dev/null
-}
-
-function upgradenode {
-  local old_version="$1"
+function upgradeNode {
+  local local_version="$1"
   local new_version="$2"
-  local active_version
-  active_version="$(if type node &> /dev/null; then node --version; else echo "N/A"; fi)"
+  local active_version # version user currently has active in then terminal
+  active_version="$(nvm current)"
+  if [[ "$(echo "$active_version" | cut -c1)" != "v" ]]; then
+    active_version="N/A"
+  fi
   # Install highest Long Term Support build as a recommended "prod" node version
-  if [[ "$old_version" != "$new_version" ]]; then
-    echo "Installing Node.js $new_version..."
+  if [[ "$local_version" != "$new_version" ]]; then
+    local old_version="$local_version" # rename for readability
     nvm install "$new_version"
     echo "Clearing Node Version Manager cache..."
     nvm cache clear > /dev/null
     if [[ "$active_version" == "$old_version" ]]; then
-      # will uninstall the version that was active, so track the new one as the active_version
+      # In this case, the version that was active will be uninstalled.
+      # Track the new one as the active_version
       active_version="$new_version"
     fi
     local reinstall_version
     reinstall_version="$(if [[ \"$old_version\" == \"N/A\" ]]; then echo "$active_version"; else echo "$old_version"; fi)"
-    if [[ "$reinstall_version" != "N/A" ]]; then
+    if [[ "$reinstall_version" != "N/A" ]] && [[ "$reinstall_version" != "$new_version" ]]; then
       echo "Installing global Node.js packages used by $reinstall_version into $new_version..."
       nvm reinstall-packages "$reinstall_version"
     fi
-    if [[ "$old_version" != "N/A" ]]; then
-      echo "Uninstalling Node.js $old_version..."
-      nvm uninstall "$old_version"
-    fi
-    # Upgrade npm
-    if [[ "$(echo "$new_version" | cut -c1-3)" != "v9." ]]; then
-      npm i -g npm
-    else
-      # Install npm's canary until npm officially supports v9
-      npm i -g npmc
-    fi
+    # Upgrade global packages including npm and npx
+    npm update -g
     # Install some staples used with great frequency
     npm i -g npm-check-updates
     # Install avn, avn-nvm and avn-n to enable automatic 'nvm use' when a .nvmrc is present
     npm i -g avn avn-nvm avn-n
   else
-    local current_version="$old_version" # rename for readability
-    echo "Checking Node.js $current_version global npm package versions..."
-    nvm use "$current_version" > /dev/null
+    echo "Checking Node.js $local_version global npm package versions..."
+    nvm use "$local_version" > /dev/null
     npm update -g
   fi
   if [[ "$active_version" != "N/A" ]]; then
@@ -540,27 +528,58 @@ function upgradenode {
 
 # Install Node Version Manager
 nvm_version="0.33.6"
-# if nvm is already installed, load it in order to check its version
+# The following vars are populated after NVM is loaded
+nvm_local_node=
+nvm_latest_node=
+nvm_local_lts=
+nvm_latest_lts=
+function loadNVM {
+  echo "Loading Node Version Manager..."
+  # shellcheck source=/dev/null
+  . "$HOME/.nvm/nvm.sh" > /dev/null
+  echo "Getting Node.js version information..."
+  # cached because calling nvm version-remote takes a noticeable amount of time
+  nvm_local_node="$(nvm version node)"
+  nvm_latest_node="$(nvm version-remote node)"
+  nvm_local_lts="$(nvm version lts/*)"
+  nvm_latest_lts="$(nvm version-remote --lts)"
+}
+
+function checkNodeVersion {
+  local local_version="$1"
+  local latest_version="$2"
+  upgradeNode "$local_version" "$latest_version"
+  if [[ "$local_version" != "N/A" ]] && \
+    [[ "$local_version" != "$latest_version" ]] && \
+    [[ "$local_version" != "$nvm_latest_lts" ]]; then
+      echo "Uninstalling Node.js $local_version..."
+      nvm uninstall "$local_version"
+  fi
+}
+
 if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$nvm_version" > /dev/null; then
   # https://github.com/creationix/nvm#install-script
   echo "Installing Node Version Manager v$nvm_version"
-  # run the install script
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$nvm_version/install.sh | bash
-  loadnvm
+  loadNVM
   echo "Installing latest Node.js..."
-  upgradenode "N/A" "$(nvm version-remote node)"
+  checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
   echo "Installing latest Node.js LTS..."
-  upgradenode "N/A" "$(nvm version-remote --lts)"
-  echo "Setting default Node.js version as LTS..."
+  checkNodeVersion "$nvm_local_lts" "$nvm_latest_lts"
+  echo "Setting default Node.js version to be the latest LTS..."
   nvm alias default lts/*
 else
-  loadnvm
+  loadNVM
   echo "Checking version of installed Node.js..."
-  upgradenode "$(nvm version node)" "$(nvm version-remote node)"
+  checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
   echo "Checking version of installed Node.js LTS..."
-  upgradenode "$(nvm version lts/*)" "$(nvm version-remote --lts)"
+  checkNodeVersion "$nvm_local_lts" "$nvm_latest_lts"
 fi
 unset nvm_version
+unset nvm_local_node
+unset nvm_latest_node
+unset nvm_local_lts
+unset nvm_latest_lts
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
