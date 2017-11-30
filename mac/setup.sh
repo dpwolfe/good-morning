@@ -378,7 +378,7 @@ brewCasks=(
   # Run this from the Recovery terminal: csrutil disable
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
   # Reboot again and WavTap should appear in the sound devices menu.
-  xmind
+  xmind-zen
   zeplin
   zoomus
 )
