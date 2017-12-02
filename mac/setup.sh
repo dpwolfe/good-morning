@@ -472,9 +472,11 @@ piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
 # shellcheck disable=SC2034
 pips=(
-  pip-review
+  gitpython
   glances
+  pip-review
   pycurl
+  requests
 )
 for pip in "${pips[@]}"; do
   if ! grep -i "$pip==" "$piptempfile" > /dev/null; then
