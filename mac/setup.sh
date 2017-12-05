@@ -222,6 +222,7 @@ fi
 function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
+    elm_install
     terraform_landscape
     xcode-install # Will also replace the other xcode-install gem that was installed via a work-around...
   )
@@ -378,7 +379,7 @@ brewCasks=(
   # Run this from the Recovery terminal: csrutil disable
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
   # Reboot again and WavTap should appear in the sound devices menu.
-  xmind
+  # xmind-zen
   zeplin
   zoomus
 )
