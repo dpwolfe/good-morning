@@ -468,6 +468,26 @@ function findpip {
   echo "$(pickbin 'pip pip2 pip2.7 pip3 pip3.6')"
 }
 
+localpip="$(findpip)"
+if [[ "$localpip" != "pip" ]]; then
+  if [ -n "$localpip" ]; then
+    echo "$localpip exists, but the alias of pip does not. Attempting to fix with a reinstall of pip..."
+  else
+    echo "Installing pip..."
+  fi
+  sudoit easy_install pip
+fi
+unset localpip
+
+if ! pip-review | grep "Everything up-to-date" > /dev/null; then
+  echo "Upgrading pip installed packages..."
+  # ensure password for sudo is ready since we want to custom pass it using the -H flag
+  sudoit printf ""
+  # call pip-review with python -m to enable updating pip-review itself
+  # shellcheck disable=SC2002
+  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" pip-review --auto
+fi
+
 # Install pips
 piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
@@ -484,6 +504,20 @@ for pip in "${pips[@]}"; do
     $(findpip) install "$pip"
   fi
 done
+sudopips=(
+  awscli
+  boto
+)
+for pip in "${sudopips[@]}"; do
+  if ! grep -i "$pip==" "$piptempfile" > /dev/null; then
+    # ensure password for sudo is ready since we want to custom pass it using the -H flag
+    sudoit printf ""
+    # passing -H to avoid warnings instead of using sudoit
+    # shellcheck disable=SC2002
+    decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install "$pip"
+  fi
+done
+unset sudopips
 rm -f $piptempfile
 unset piptempfile
 
@@ -516,8 +550,8 @@ function upgradeNode {
     npm update -g
     # Install some staples used with great frequency
     npm i -g npm-check-updates
-    # Install avn, avn-nvm and avn-n to enable automatic 'nvm use' when a .nvmrc is present
-    npm i -g avn avn-nvm avn-n
+    # Install avn and avn-nvm to enable automatic 'nvm use' when a .nvmrc is present
+    npm i -g avn avn-nvm
   else
     echo "Checking Node.js $local_version global npm package versions..."
     nvm use "$local_version" > /dev/null
@@ -583,24 +617,6 @@ unset nvm_local_node
 unset nvm_latest_node
 unset nvm_local_lts
 unset nvm_latest_lts
-
-if ! pip-review | grep "Everything up-to-date" > /dev/null; then
-  echo "Upgrading pip installed packages..."
-  # ensure password for sudo is ready since we want to custom pass it using the -H flag
-  sudoit printf ""
-  # call pip-review with python -m to enable updating pip-review itself
-  # shellcheck disable=SC2002
-  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" pip-review --auto
-fi
-
-if ! $(findpip) freeze | grep "awscli=" > /dev/null; then
-  echo "Installing AWS CLI..."
-  # ensure password for sudo is ready since we want to custom pass it using the -H flag
-  sudoit printf ""
-  # passing -H to avoid warnings instead of using sudoit
-  # shellcheck disable=SC2002
-  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install awscli
-fi
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
   # Install Fixed Solarized iTerm colors https://github.com/yuex/solarized-dark-iterm2
