@@ -388,7 +388,7 @@ brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
 brew cask list > "$brew_list_temp_file"
 for cask in "${brewCasks[@]}"; do
-  if ! grep "$cask" "$brew_list_temp_file" > /dev/null; then
+  if ! grep "^$cask\$" "$brew_list_temp_file" > /dev/null; then
     echo "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [ -s "$cask_collision_file" ]; then
@@ -429,8 +429,9 @@ brews=(
   kubernetes-cli
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
-  python
-  python3
+  openssl
+  openssl@1.1
+  pyenv
   ruby
   shellcheck # shell script linting
   terraform
@@ -446,13 +447,38 @@ brews=(
 )
 brew list > "$brew_list_temp_file"
 for brew in "${brews[@]}"; do
-  if ! grep "$brew" "$brew_list_temp_file" > /dev/null; then
+  if ! grep "^$brew\$" "$brew_list_temp_file" > /dev/null; then
     brew install "$brew"
+  fi
+done
+# Uninstall brews that conflict with this script
+# but may have been previously installed.
+nobrews=(
+  python
+  python3
+)
+for brew in "${nobrews[@]}"; do
+  if grep "^$brew\$" "$brew_list_temp_file" > /dev/null; then
+    brew uninstall "$brew"
   fi
 done
 rm -f "$brew_list_temp_file"
 unset brews
+unset nobrews
 unset brew_list_temp_file
+
+# prototype pyenv install code
+if ! pyenv versions | grep "2\.7\.14" &> /dev/null; then
+  CFLAGS="-I$(brew --prefix openssl)/include" \
+  LDFLAGS="-L$(brew --prefix openssl)/lib" \
+  pyenv install 2.7.14;
+  pyenv global 2.7.14;
+fi
+if ! pyenv versions | grep "3\.6\.3" &> /dev/null; then
+  CFLAGS="-I$(brew --prefix openssl)/include" \
+  LDFLAGS="-L$(brew --prefix openssl)/lib" \
+  pyenv install 3.6.3;
+fi
 
 function pickbin {
   local versions="$1"
@@ -475,9 +501,36 @@ if [[ "$localpip" != "pip" ]]; then
   else
     echo "Installing pip..."
   fi
-  sudoit easy_install pip
+  wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
+  sudoit python ~/get-pip.py
+  rm -f ~/get-pip.py
 fi
 unset localpip
+
+# Install pips
+piptempfile="$HOME/pipfreeze.temp"
+$(findpip) freeze > "$piptempfile"
+pips=(
+  awscli
+  boto
+  gitpython
+  glances
+  pip-review
+  pycurl
+  requests
+)
+for pip in "${pips[@]}"; do
+  if ! grep -i "$pip==" "$piptempfile" &> /dev/null; then
+    # ensure password for sudo is ready since we want to custom pass it using the -H flag
+    sudoit printf ""
+    # passing -H to avoid warnings instead of using sudoit
+    # shellcheck disable=SC2002
+    decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install "$pip"
+  fi
+done
+unset pips
+rm -f $piptempfile
+unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
@@ -487,39 +540,6 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   # shellcheck disable=SC2002
   decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" pip-review --auto
 fi
-
-# Install pips
-piptempfile="$HOME/pipfreeze.temp"
-$(findpip) freeze > "$piptempfile"
-# shellcheck disable=SC2034
-pips=(
-  gitpython
-  glances
-  pip-review
-  pycurl
-  requests
-)
-for pip in "${pips[@]}"; do
-  if ! grep -i "$pip==" "$piptempfile" > /dev/null; then
-    $(findpip) install "$pip"
-  fi
-done
-sudopips=(
-  awscli
-  boto
-)
-for pip in "${sudopips[@]}"; do
-  if ! grep -i "$pip==" "$piptempfile" > /dev/null; then
-    # ensure password for sudo is ready since we want to custom pass it using the -H flag
-    sudoit printf ""
-    # passing -H to avoid warnings instead of using sudoit
-    # shellcheck disable=SC2002
-    decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install "$pip"
-  fi
-done
-unset sudopips
-rm -f $piptempfile
-unset piptempfile
 
 function upgradeNode {
   local local_version="$1"
