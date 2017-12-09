@@ -550,8 +550,6 @@ function upgradeNode {
     npm update -g
     # Install some staples used with great frequency
     npm i -g npm-check-updates
-    # Install avn and avn-nvm to enable automatic 'nvm use' when a .nvmrc is present
-    npm i -g avn avn-nvm
   else
     echo "Checking Node.js $local_version global npm package versions..."
     nvm use "$local_version" > /dev/null
