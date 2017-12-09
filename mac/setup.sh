@@ -459,7 +459,7 @@ nobrews=(
 )
 for brew in "${nobrews[@]}"; do
   if grep "^$brew\$" "$brew_list_temp_file" > /dev/null; then
-    brew uninstall "$brew"
+    brew uninstall --ignore-dependencies "$brew"
   fi
 done
 rm -f "$brew_list_temp_file"
