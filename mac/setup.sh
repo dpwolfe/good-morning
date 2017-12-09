@@ -494,13 +494,10 @@ function findpip {
   echo "$(pickbin 'pip pip2 pip2.7 pip3 pip3.6')"
 }
 
+echo "Checking pip install..."
 localpip="$(findpip)"
-if [[ "$localpip" != "pip" ]]; then
-  if [ -n "$localpip" ]; then
-    echo "$localpip exists, but the alias of pip does not. Attempting to fix with a reinstall of pip..."
-  else
-    echo "Installing pip..."
-  fi
+if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
+  echo "Installing pip..."
   wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
   sudoit python ~/get-pip.py
   rm -f ~/get-pip.py
