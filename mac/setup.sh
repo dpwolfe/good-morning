@@ -70,6 +70,12 @@ function setConfigValue {
 
 GOOD_MORNING_TEMP_FILE_PREFIX="$GOOD_MORNING_CONFIG_FILE""_temp_"
 function sudoit {
+  local sudoOpt
+  # allow passing a flag or combination to sudo (example: -H)
+  if [[ "$(echo '$1' | cut -c1)" == "-" ]]; then
+    sudoOpt="$1"
+    shift
+  fi
   if ! [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ] || ! decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" printf ""; then
     GOOD_MORNING_ENCRYPTED_PASS_FILE="$GOOD_MORNING_TEMP_FILE_PREFIX$(randstring32)"
     local p=
@@ -78,7 +84,7 @@ function sudoit {
     done
     encryptToFile "$p" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
   fi
-  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" "$@"
+  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo $sudoOpt -S -p "" "$@"
 }
 
 function masinstall {
@@ -499,7 +505,7 @@ localpip="$(findpip)"
 if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
   echo "Installing pip..."
   wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
-  sudoit python ~/get-pip.py
+  sudoit -H python ~/get-pip.py
   rm -f ~/get-pip.py
 fi
 unset localpip
@@ -518,11 +524,7 @@ pips=(
 )
 for pip in "${pips[@]}"; do
   if ! grep -i "$pip==" "$piptempfile" &> /dev/null; then
-    # ensure password for sudo is ready since we want to custom pass it using the -H flag
-    sudoit printf ""
-    # passing -H to avoid warnings instead of using sudoit
-    # shellcheck disable=SC2002
-    decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" "$(findpip)" install "$pip"
+    sudoit -H "$(findpip)" install "$pip"
   fi
 done
 unset pips
@@ -531,11 +533,7 @@ unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
-  # ensure password for sudo is ready since we want to custom pass it using the -H flag
-  sudoit printf ""
-  # call pip-review with python -m to enable updating pip-review itself
-  # shellcheck disable=SC2002
-  decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -H -S -p "" pip-review --auto
+  sudoit -H pip-review --auto
 fi
 
 function upgradeNode {
