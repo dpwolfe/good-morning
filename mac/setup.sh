@@ -477,14 +477,14 @@ unset brew_list_temp_file
 if ! pyenv versions | grep "2\.7\.14" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
-  pyenv install 2.7.14;
-  pyenv global 2.7.14;
+  pyenv install 2.7.14
 fi
 if ! pyenv versions | grep "3\.6\.3" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
-  pyenv install 3.6.3;
+  pyenv install 3.6.3
 fi
+pyenv global 2.7.14
 
 function pickbin {
   local versions="$1"
@@ -510,17 +510,21 @@ if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
 fi
 unset localpip
 
-# Install pips
+# Install pips in Python2
 piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
 pips=(
+  aws-shell
   awscli
   boto
   gitpython
   glances
+  packaging
+  pipenv
   pip-review
   pycurl
   requests
+  virtualenv
 )
 for pip in "${pips[@]}"; do
   if ! grep -i "$pip==" "$piptempfile" &> /dev/null; then
@@ -577,7 +581,7 @@ function upgradeNode {
 }
 
 # Install Node Version Manager
-nvm_version="0.33.6"
+nvm_version="$(curl 'https://api.github.com/repos/creationix/nvm/releases?per_page=1' 2> /dev/null | grep '"tag_name"' | sed -E 's/.*"v([0-9.]+).*/\1/')"
 # The following vars are populated after NVM is loaded
 nvm_local_node=
 nvm_latest_node=
