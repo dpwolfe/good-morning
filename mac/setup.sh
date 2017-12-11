@@ -394,7 +394,7 @@ brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
 brew cask list > "$brew_list_temp_file"
 for cask in "${brewCasks[@]}"; do
-  if ! grep "^$cask\$" "$brew_list_temp_file" > /dev/null; then
+  if ! grep -E "(^| )$cask($| )" "$brew_list_temp_file" > /dev/null; then
     echo "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [ -s "$cask_collision_file" ]; then
@@ -453,7 +453,7 @@ brews=(
 )
 brew list > "$brew_list_temp_file"
 for brew in "${brews[@]}"; do
-  if ! grep "^$brew\$" "$brew_list_temp_file" > /dev/null; then
+  if ! grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
     brew install "$brew"
   fi
 done
@@ -464,7 +464,7 @@ nobrews=(
   python3
 )
 for brew in "${nobrews[@]}"; do
-  if grep "^$brew\$" "$brew_list_temp_file" > /dev/null; then
+  if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
     brew uninstall --ignore-dependencies "$brew"
   fi
 done
