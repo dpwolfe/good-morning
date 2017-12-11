@@ -113,13 +113,13 @@ alias gco='git checkout'
 alias certonly='sudo certbot certonly --manual --preferred-challenges dns'
 
 gmfunction() {
-  pushd "$DIR" > /dev/null;
-  echo "Pulling latest for environment repository...";
-  git pull > /dev/null;
-  export GOOD_MORNING_RUN=1;
-  popd > /dev/null;
+  pushd "$DIR" > /dev/null || return
+  echo "Pulling latest for environment repository..."
+  git pull > /dev/null
+  export GOOD_MORNING_RUN=1
+  popd > /dev/null || return
   # shellcheck disable=SC1090
-  source "$DIR/setup.sh";
+  source "$DIR/setup.sh"
 }
 alias good_morning='gmfunction'
 
