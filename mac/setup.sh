@@ -124,7 +124,7 @@ if ! type xcversion &> /dev/null; then
 fi
 
 function installXcode {
-  local xcode_version=9.1
+  local xcode_version=9.2
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     echo "Installing Xcode $xcode_version..."
     xcversion update < /dev/tty
