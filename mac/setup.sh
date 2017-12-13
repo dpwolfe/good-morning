@@ -433,6 +433,7 @@ brews=(
   jq
   kops
   kubernetes-cli
+  kubernetes-helm
   mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
   openssl
