@@ -131,8 +131,12 @@ function installXcode {
     xcversion install $xcode_version < /dev/tty
     echo "Installing Xcode command line tools..."
     xcversion install-cli-tools < /dev/tty
-  elif ! xcversion selected 2>&1 | grep $xcode_version > /dev/null; then
+  elif ! xcversion selected 2>&1 | grep -E "$xcode_version$" > /dev/null; then
     echo "Installing Xcode $xcode_version..."
+    if ! xcversion list 2>&1 | grep -E "$xcode_version$" > /dev/null; then
+      echo "Updating list of available versions. You will be asked to login with your Apple Developer account..."
+      xcversion update < /dev/tty
+    fi
     xcversion install $xcode_version < /dev/tty
     xcversion install-cli-tools < /dev/tty
   fi
