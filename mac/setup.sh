@@ -112,7 +112,10 @@ function dmginstall {
   fi
 }
 
-if ! type xcversion &> /dev/null; then
+if type rvm &> /dev/null; then
+  rvm use default > /dev/null
+fi
+if ! gem list --local | grep "xcode-install" > /dev/null; then
   echo "Installing xcode-install for managing Xcode..."
   # https://github.com/KrauseFx/xcode-install
   # The alternative install instructions must be used since there is not a working
@@ -124,24 +127,31 @@ if ! type xcversion &> /dev/null; then
 fi
 
 function installXcode {
-  local xcode_version=9.2
-  if ! /usr/bin/xcode-select -p &> /dev/null; then
-    echo "Installing Xcode $xcode_version..."
-    xcversion update < /dev/tty
-    xcversion install $xcode_version < /dev/tty
-    echo "Installing Xcode command line tools..."
-    xcversion install-cli-tools < /dev/tty
-  elif ! xcversion selected 2>&1 | grep -E "$xcode_version$" > /dev/null; then
-    echo "Installing Xcode $xcode_version..."
-    if ! xcversion list 2>&1 | grep -E "$xcode_version$" > /dev/null; then
-      echo "Updating list of available versions. You will be asked to login with your Apple Developer account..."
-      xcversion update < /dev/tty
-    fi
-    xcversion install $xcode_version < /dev/tty
-    xcversion install-cli-tools < /dev/tty
-  fi
+  local xcode_version="$1"
+  echo "Installing Xcode $xcode_version..."
+  xcversion update < /dev/tty
+  xcversion install $xcode_version < /dev/tty
+  xcversion select $xcode_version < /dev/tty
+  echo "Installing Xcode command line tools..."
+  xcversion install-cli-tools < /dev/tty
 }
-installXcode
+
+function checkXcodeVersion {
+  local xcode_version=9.2
+  local old_version
+  if ! /usr/bin/xcode-select -p &> /dev/null; then
+    installXcode "$xcode_version"
+  elif ! xcversion selected 2>&1 | grep -E "$xcode_version$" > /dev/null; then
+    old_version="$(xcversion selected | grep 'Xcode' | sed -E 's/Xcode ([0-9|.]*)/\1/')"
+    installXcode "$xcode_version"
+    if [ -n "$old_version" ]; then
+      echo "Uninstalling Xcode $old_version..."
+      xcversion uninstall "$old_version" < /dev/tty
+    fi
+  fi
+  xcversion cleanup
+}
+checkXcodeVersion
 
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   echo "Accepting the Xcode license..."
@@ -223,11 +233,16 @@ else
   unset latest_ruby_version
 fi
 
-echo "Checking ruby gem versions..."
-if [ "$(gem outdated)" ]; then
-  echo "Updating ruby gems..."
-  gem update --force
-fi
+function updateGems {
+  echo "Checking system ruby gem versions..."
+  if [ "$(gem outdated)" ]; then
+    echo "Updating ruby gems..."
+    gem update --force
+  fi
+}
+
+rvm use default > /dev/null
+updateGems
 
 function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
@@ -430,6 +445,8 @@ brews=(
   certbot # For generating SSL certs with Let's Encrypt
   direnv
   docker
+  docker-compose
+  docker-machine
   fd # https://github.com/sharkdp/fd
   fzf # https://github.com/junegunn/fzf
   go
