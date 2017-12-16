@@ -453,6 +453,7 @@ brews=(
   fzf # https://github.com/junegunn/fzf
   go
   git
+  haskell-stack
   jq
   kops
   kubernetes-cli
