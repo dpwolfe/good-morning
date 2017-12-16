@@ -383,6 +383,7 @@ brewCasks=(
   keeweb
   keyboard-maestro
   microsoft-office
+  nix
   obs
   omnifocus
   omnigraffle
