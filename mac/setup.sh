@@ -112,6 +112,7 @@ function dmginstall {
   fi
 }
 
+echo "Checking Xcode version..."
 if type rvm &> /dev/null; then
   rvm use default > /dev/null
 fi
