@@ -496,6 +496,7 @@ brews=(
   openssl
   openssl@1.1
   pyenv
+  ruby
   shellcheck # shell script linting
   terraform
   terragrunt
@@ -520,7 +521,6 @@ done
 nobrews=(
   python # managed by pyenv
   python3 # managed by pyenv
-  ruby # managed by rvm
 )
 for brew in "${nobrews[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
