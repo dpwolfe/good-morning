@@ -128,15 +128,20 @@ function checkPerms {
     /usr/local/lib/pkgconfig
     /usr/local/lib/python2.7/site-packages
     /usr/local/opt
+    /usr/local/sbin
     /usr/local/share
     /usr/local/share/locale
     /usr/local/share/man
     /usr/local/var
     /usr/local/var/homebrew
+    # Needed for pip installs without requiring sudo
+    /Library/Python/2.7/site-packages
+    /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
+    /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
-    if ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
+    if [ -d "$dir" ] && ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
       echo "Setting ownership of $dir to $USER..."
       sudoit chown -R "$userPerm" "$dir"
     fi
@@ -154,8 +159,8 @@ if ! gem list --local | grep "xcode-install" > /dev/null; then
   # The alternative install instructions must be used since there is not a working
   # compiler on the system at this point in the setup.
   curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
-  sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
-  sudoit gem install --conservative xcode-install < /dev/tty
+  gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
+  gem install --conservative xcode-install < /dev/tty
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
@@ -391,8 +396,6 @@ else
     BREW_CASK_UPGRADES=1
   done
 fi
-# Having Homebrew issues? Run this command below.
-# cd /usr/local && sudoit chown -R "$(whoami)" bin etc include lib sbin share var Frameworks
 
 # Install Homebrew casks
 brewCasks=(
@@ -564,7 +567,7 @@ localpip="$(findpip)"
 if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
   echo "Installing pip..."
   wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
-  sudoit -H python ~/get-pip.py
+  python ~/get-pip.py --user
   rm -f ~/get-pip.py
 fi
 unset localpip
@@ -587,7 +590,7 @@ pips=(
 )
 for pip in "${pips[@]}"; do
   if ! grep -i "$pip==" "$piptempfile" &> /dev/null; then
-    sudoit -H "$(findpip)" install "$pip"
+    "$(findpip)" install "$pip"
   fi
 done
 unset pips
@@ -596,7 +599,7 @@ unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   echo "Upgrading pip installed packages..."
-  sudoit -H pip-review --auto
+  pip-review --auto
 fi
 
 function upgradeNode {
