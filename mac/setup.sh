@@ -500,6 +500,7 @@ brews=(
   terraform
   terragrunt
   tflint
+  tmux
   transcrypt
   vim
   wget
