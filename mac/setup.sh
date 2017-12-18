@@ -112,6 +112,38 @@ function dmginstall {
   fi
 }
 
+function checkPerms {
+  echo "Checking directory permissions..."
+  local dirs=(
+    # Block of dirs that Homebrew needs the user to own for successful operation.
+    # The redundancy of lower dirs is left here intentionally.
+    /usr/local/bin
+    /usr/local/Caskroom
+    /usr/local/Cellar
+    /usr/local/etc
+    /usr/local/Frameworks
+    /usr/local/Homebrew
+    /usr/local/include
+    /usr/local/lib
+    /usr/local/lib/pkgconfig
+    /usr/local/lib/python2.7/site-packages
+    /usr/local/opt
+    /usr/local/share
+    /usr/local/share/locale
+    /usr/local/share/man
+    /usr/local/var
+    /usr/local/var/homebrew
+  )
+  local userPerm="$USER:wheel"
+  for dir in "${dirs[@]}"; do
+    if ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
+      echo "Setting ownership of $dir to $USER..."
+      sudoit chown -R "$userPerm" "$dir"
+    fi
+  done
+}
+checkPerms
+
 echo "Checking Xcode version..."
 if type rvm &> /dev/null; then
   rvm use default > /dev/null
@@ -234,6 +266,9 @@ else
   unset latest_ruby_version
 fi
 
+# ensure we are not using the system version
+rvm use default > /dev/null
+
 function updateGems {
   echo "Checking system ruby gem versions..."
   if [ "$(gem outdated)" ]; then
@@ -241,8 +276,6 @@ function updateGems {
     gem update --force
   fi
 }
-
-rvm use default > /dev/null
 updateGems
 
 function installGems {
@@ -463,7 +496,6 @@ brews=(
   openssl
   openssl@1.1
   pyenv
-  ruby
   shellcheck # shell script linting
   terraform
   terragrunt
@@ -485,12 +517,13 @@ done
 # Uninstall brews that conflict with this script
 # but may have been previously installed.
 nobrews=(
-  python
-  python3
+  python # managed by pyenv
+  python3 # managed by pyenv
+  ruby # managed by rvm
 )
 for brew in "${nobrews[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
-    brew uninstall --ignore-dependencies "$brew"
+    brew uninstall --force --ignore-dependencies "$brew"
   fi
 done
 rm -f "$brew_list_temp_file"
@@ -1048,7 +1081,7 @@ fi
 function cleanupTempFiles {
   local good_morning_pass_file_temp="$HOME/.good_morning_pass_file" # lacks 'temp' in name to bypass deletion if kept
   # Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
-  if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
+  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
     mv "$GOOD_MORNING_ENCRYPTED_PASS_FILE" "$good_morning_pass_file_temp"
   fi
   # A glob file deletion is about to happen, proceed with excessive caution.
@@ -1058,14 +1091,10 @@ function cleanupTempFiles {
     echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
   fi
   # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
-  if [[ "$(getConfigValue "keep_pass_for_session")" == "yes" ]] && [ -e "$good_morning_pass_file_temp" ]; then
+  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$good_morning_pass_file_temp" ]; then
     mv "$good_morning_pass_file_temp" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
-  else
-    unset GOOD_MORNING_ENCRYPTED_PASS_FILE
-    unset GOOD_MORNING_PASSPHRASE
   fi
 }
-cleanupTempFiles
 
 function cleanupEnvVars {
   unset FIRST_RUN
@@ -1075,24 +1104,36 @@ function cleanupEnvVars {
   unset GOOD_MORNING_CONFIG_FILE
   unset GOOD_MORNING_TEMP_FILE_PREFIX
   unset ENVIRONMENT_REPO_ROOT
+
+  if [[ "$(getConfigValue 'keep_pass_for_session')" != "yes" ]]; then
+    unset GOOD_MORNING_ENCRYPTED_PASS_FILE
+    unset GOOD_MORNING_PASSPHRASE
+  fi
 }
 
 # Update the environment repository last since a change to this script while
 # in the middle of execution will break it.
 # This is skipped if the good_morning bash alias was executed, in which case, a pull
 # was made before setup.sh started.
-if [ -n "$GOOD_MORNING_RUN" ]; then
-  unset GOOD_MORNING_RUN
-  if [[ "$(getConfigValue "keep_pass_for_session" "not-asked")" == "not-asked" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
-    if askto "always be prompted for your password if needed when you run good_morning again in the same session"; then
-      setConfigValue "keep_pass_for_session" "no"
-    else
-      setConfigValue "keep_pass_for_session" "yes"
+function cleanupGoodMorning {
+  if [ -n "$GOOD_MORNING_RUN" ]; then
+    unset GOOD_MORNING_RUN
+    local keep_pass_for_session
+    keep_pass_for_session="$(getConfigValue 'keep_pass_for_session' 'not-asked')"
+    if ( [ -z "$keep_pass_for_session" ] || [[ "$keep_pass_for_session" == "not-asked" ]] ) && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
+      if askto "always be prompted for your password if needed when you run good_morning again in the same session"; then
+        setConfigValue "keep_pass_for_session" "no"
+      else
+        setConfigValue "keep_pass_for_session" "yes"
+      fi
     fi
+    cleanupTempFiles
+    cleanupEnvVars
+  else
+    echo "Almost done! Pulling latest for environment repository..."
+    cleanupTempFiles
+    pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
+    cleanupEnvVars && git pull && popd > /dev/null
   fi
-  cleanupEnvVars
-else
-  echo "Almost done! Pulling latest for environment repository..."
-  pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
-  cleanupEnvVars && git pull && popd > /dev/null
-fi
+}
+cleanupGoodMorning
