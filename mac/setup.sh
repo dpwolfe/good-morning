@@ -116,7 +116,7 @@ function checkPerms {
   echo "Checking directory permissions..."
   local dirs=(
     # Block of dirs that Homebrew needs the user to own for successful operation.
-    # The redundancy of lower dirs is left here intentionally.
+    # The redundancy of nested dirs is left here intentionally even though we use -R.
     /usr/local/bin
     /usr/local/Caskroom
     /usr/local/Cellar
@@ -138,6 +138,7 @@ function checkPerms {
     /Library/Python/2.7/site-packages
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
+    "$HOME/.pyenv"
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
