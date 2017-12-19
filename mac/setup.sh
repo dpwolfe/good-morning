@@ -742,16 +742,24 @@ fi
 # Install atom packages
 apms=(
   atom-typescript
+  autocomplete-haskell
   busy-signal
   circle-ci
   docblockr
   file-icons
   git-plus
   git-time-machine
+  haskell-debug
+  haskell-ghc-mod
   highlight-selected
+  ide-haskell
+  ide-haskell-cabal
+  ide-haskell-hoogle
+  ide-haskell-repl
   intentions
   jumpy
   language-docker
+  language-haskell
   language-terraform # this caused freezes for me, uninstall and reinstall if that happens
   last-cursor-position
   linter
