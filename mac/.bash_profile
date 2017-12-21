@@ -6,24 +6,23 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=git-completion.bash
 source "$DIR/git-completion.bash"
 
-rgfunction() { grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *; }
-findfunction() { find . -name "$1"; }
-unix2dos() {
+function rgfunction { grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *; }
+function findfunction { find . -name "$1"; }
+function unix2dos {
     sed "s/$/$(printf '\r')/" "$1" > "$1.new";
     rm "$1";
     mv "$1.new" "$1";
 }
-
-parse_git_branch() {
+function parse_git_branch {
     git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
 }
-npm-exec() {
+function npm-exec {
     bin="$1"
     shift
     # shellcheck disable=SC2068
     "$(npm bin)/$bin" $@
 }
-kill-function() {
+function kill-function {
     local pid
     pid="$(pgrep $1 | tr '\n' ' ')"
     if [ -n "$pid" ]; then
@@ -32,6 +31,40 @@ kill-function() {
     else
         echo "No proc to kill with the name '$1'"
     fi
+}
+function vpn-connect {
+  if [[ -n "$1" ]]; then
+    osascript <<-EOF
+tell application "System Events"
+  tell current location of network preferences
+    set VPN to service "$1"
+    if exists VPN then connect VPN
+      repeat while (current configuration of VPN is not connected)
+      delay 1
+    end repeat
+  end tell
+end tell
+EOF
+  else
+    scutil --nc list | grep --color=never "\(Disconnected\)"
+    echo "Provide the name of one of the connections above."
+  fi
+}
+function vpn-disconnect {
+  if [[ -n "$1" ]]; then
+    osascript <<-EOF
+tell application "System Events"
+  tell current location of network preferences
+    set VPN to service "$1"
+    if exists VPN then disconnect VPN
+  end tell
+end tell
+return
+EOF
+  else
+    scutil --nc list | grep --color=never "\(Connected\)"
+    echo "Provide the name of one of the connections above."
+  fi
 }
 
 alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
@@ -123,12 +156,11 @@ gmfunction() {
 }
 alias good_morning='gmfunction'
 
-export PATH="$HOME/.local/bin:/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"
-export PS1='\[\033]0;$TITLEPREFIX:${PWD//[^[:ascii:]]/?}\007\]\n\[\033[32m\]\u@\h \[\033[33m\]\w \[\033[36m\](`parse_git_branch`)\[\033[0m\] \[\033[35m\]\t\[\033[0m\]\n$'
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
+export PATH="$PYENV_ROOT/bin:$HOME/.local/bin:/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"
+export PS1='\[\033]0;$TITLEPREFIX:${PWD//[^[:ascii:]]/?}\007\]\n\[\033[32m\]\u@\h \[\033[33m\]\w \[\033[36m\](`parse_git_branch`)\[\033[0m\] \[\033[35m\]\t\[\033[0m\]\n$'
 
 if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
-# shellcheck source=/dev/null
-. "$(brew --prefix)/etc/bash_completion"
+  # shellcheck source=/dev/null
+  . "$(brew --prefix)/etc/bash_completion"
 fi
