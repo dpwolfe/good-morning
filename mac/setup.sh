@@ -177,15 +177,17 @@ function installXcode {
 
 function checkXcodeVersion {
   local xcode_version=9.2
-  local old_version
+  local local_version
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
-  elif ! xcversion selected 2>&1 | grep -E "$xcode_version$" > /dev/null; then
-    old_version="$(xcversion selected | grep 'Xcode' | sed -E 's/Xcode ([0-9|.]*)/\1/')"
-    installXcode "$xcode_version"
-    if [ -n "$old_version" ]; then
-      echo "Uninstalling Xcode $old_version..."
-      xcversion uninstall "$old_version" < /dev/tty
+  else
+    local_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/')"
+    if [[ "$local_version" != "$xcode_version" ]]; then
+      installXcode "$xcode_version"
+      if [ -n "$local_version" ]; then
+        echo "Uninstalling Xcode $local_version..."
+        xcversion uninstall "$local_version" < /dev/tty
+      fi
     fi
   fi
   xcversion cleanup
