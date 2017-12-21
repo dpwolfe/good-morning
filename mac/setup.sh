@@ -299,6 +299,7 @@ function installGems {
     fi
   done
   rm -f "$gem_list_temp_file"
+  gem cleanup
 }
 installGems
 
