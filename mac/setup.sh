@@ -239,9 +239,11 @@ if [ -n "$gitHubEmailChanged" ] && askto "create a GitHub SSH key for $GITHUB_EM
   prompt "Hit Enter after the SSH key is saved on GitHub..."
 fi
 
+# This install is an artifact for first-run that is overridden by the brew cask install
+# Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
 if ! [ -d "/Applications/GPG Keychain.app" ]; then
   dmg="$HOME/Downloads/GPGSuite.dmg"
-  curl -JL https://releases.gpgtools.org/GPG_Suite-2017.1.dmg -o "$dmg"
+  curl -JL https://releases.gpgtools.org/GPG_Suite-2017.3.dmg -o "$dmg"
   hdiutil attach "$dmg"
   sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
   diskutil unmount "GPG Suite"
@@ -417,6 +419,7 @@ brewCasks=(
   gimp
   google-backup-and-sync
   google-chrome
+  gpg-suite
   handbrake
   iterm2
   java
@@ -441,12 +444,12 @@ brewCasks=(
   the-unarchiver
   virtualbox
   visual-studio-code
-  wavtap
+  wavtap # https://github.com/pje/WavTap
   # To use WavTap you'll need to take some extra steps that shall not be automated.
-  # Run this from the Recovery terminal: csrutil disable
+  # Run this from the Recovery terminal: csrutil disable && reboot
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
   # Reboot again and WavTap should appear in the sound devices menu.
-  # xmind-zen
+  xmind-zen
   zeplin
   zoomus
 )
@@ -478,7 +481,7 @@ if [ -n "$NEW_BREW_CASK_INSTALLS" ] || [ -n "$BREW_CASK_UPGRADES" ]; then
 fi
 
 # Install brews
-brew tap wata727/tflint # tflint - https://github.com/wata727/tflint
+brew tap wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
 # shellcheck disable=SC2034
 brews=(
   ansible
@@ -614,7 +617,7 @@ function upgradeNode {
   if [[ "$(echo "$active_version" | cut -c1)" != "v" ]]; then
     active_version="N/A"
   fi
-  # Install highest Long Term Support build as a recommended "prod" node version
+  # Install highest Long Term Support (LTS) build as a recommended "prod" node version
   if [[ "$local_version" != "$new_version" ]]; then
     local old_version="$local_version" # rename for readability
     nvm install "$new_version"
