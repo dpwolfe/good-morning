@@ -413,6 +413,7 @@ brewCasks=(
   charles
   controlplane
   cord
+  discord
   docker
   dropbox
   framer
