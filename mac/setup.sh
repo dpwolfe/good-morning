@@ -414,7 +414,6 @@ brewCasks=(
   controlplane
   cord
   discord
-  docker
   dropbox
   firefox
   framer
