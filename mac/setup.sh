@@ -416,6 +416,7 @@ brewCasks=(
   discord
   docker
   dropbox
+  firefox
   framer
   gimp
   google-backup-and-sync
