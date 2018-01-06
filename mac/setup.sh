@@ -432,6 +432,7 @@ brewCasks=(
   omnifocus
   omnigraffle
   onedrive
+  opera
   parallels
   provisionql
   qladdict
