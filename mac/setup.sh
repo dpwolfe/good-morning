@@ -291,6 +291,7 @@ updateGems
 function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
+    cocoapods
     elm_install
     terraform_landscape
     xcode-install # Will also replace the other xcode-install gem that was installed via a work-around...
@@ -422,6 +423,7 @@ brewCasks=(
   google-chrome
   gpg-suite
   handbrake
+  insomniax
   iterm2
   java
   keeweb
@@ -517,6 +519,7 @@ brews=(
   tmux
   transcrypt
   vim
+  watchman
   wget
   yarn
   yubico-piv-tool
