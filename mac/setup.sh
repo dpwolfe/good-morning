@@ -425,7 +425,7 @@ brewCasks=(
   handbrake
   insomniax
   iterm2
-  java
+  java8
   keeweb
   keyboard-maestro
   microsoft-office
@@ -459,6 +459,7 @@ brewCasks=(
   zoomus
 )
 brew tap caskroom/cask
+brew tap caskroom/versions
 brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
 brew cask list > "$brew_list_temp_file"
