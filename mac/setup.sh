@@ -410,15 +410,12 @@ brewCasks=(
   android-studio
   atom
   beyond-compare
-  blue-jeans-browser-plugin
-  blue-jeans-launcher
   charles
   controlplane
   cord
   discord
   dropbox
   firefox
-  framer
   gimp
   google-backup-and-sync
   google-chrome
@@ -430,8 +427,6 @@ brewCasks=(
   keeweb
   keyboard-maestro
   microsoft-office
-  nix
-  obs
   omnifocus
   omnigraffle
   onedrive
@@ -456,7 +451,6 @@ brewCasks=(
   # Reboot again and WavTap should appear in the sound devices menu.
   wireshark
   xmind-zen
-  zeplin
   zoomus
 )
 brew tap caskroom/cask
@@ -503,12 +497,10 @@ brews=(
   fzf # https://github.com/junegunn/fzf
   go
   git
-  haskell-stack
   jq
   kops
   kubernetes-cli
   kubernetes-helm
-  mas # Mac App Store command line interface - https://github.com/mas-cli/mas
   maven
   openssl
   openssl@1.1
@@ -519,12 +511,10 @@ brews=(
   terragrunt
   tflint
   tmux
-  transcrypt
   vim
   watchman
   wget
   yarn
-  yubico-piv-tool
   zsh
   zsh-completions
 )
