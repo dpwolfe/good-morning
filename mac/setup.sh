@@ -328,7 +328,7 @@ Passphrase: $GPG_PASSPHRASE
 EOF
   unset GPG_PASSPHRASE
   gpg_todays_date=$(date -u +"%Y-%m-%d")
-  gpg_expr="^sec   4096R\/([[:xdigit:]]{16}) $gpg_todays_date.*"
+  gpg_expr="sec.*4096.*\/([[:xdigit:]]{16}) $gpg_todays_date.*"
   gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
   # copy the GPG public key for GitHub
   gpg --armor --export "$gpg_key_id" | pbcopy
