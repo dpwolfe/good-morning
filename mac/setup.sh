@@ -160,8 +160,8 @@ if ! gem list --local | grep "xcode-install" > /dev/null; then
   # The alternative install instructions must be used since there is not a working
   # compiler on the system at this point in the setup.
   curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
-  gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
-  gem install --conservative xcode-install < /dev/tty
+  sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem < /dev/tty
+  sudoit gem install --conservative xcode-install < /dev/tty
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
