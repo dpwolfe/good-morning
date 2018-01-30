@@ -342,6 +342,8 @@ EOF
   git config --global user.signingkey "$gpg_key_id"
   # Silence output about needing a passphrase on each commit
   # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
+  echo "Finishing up GPG setup with a test..."
+  echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
 fi
 
 # Pick a default repo root unless one is already set
