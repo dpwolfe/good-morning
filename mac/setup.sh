@@ -409,6 +409,8 @@ fi
 
 # Install Homebrew casks
 brewCasks=(
+  android-platform-tools
+  android-sdk
   android-studio
   atom
   beyond-compare
