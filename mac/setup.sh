@@ -589,6 +589,7 @@ pips=(
   boto
   gitpython
   glances
+  gsutil # for programmatic access to Google Play Console reports
   packaging
   pipenv
   pip-review
