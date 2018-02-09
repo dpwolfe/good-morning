@@ -410,7 +410,6 @@ fi
 # Install Homebrew casks
 brewCasks=(
   android-platform-tools
-  android-sdk
   android-studio
   atom
   beyond-compare
@@ -639,7 +638,7 @@ function upgradeNode {
     # Upgrade global packages including npm and npx
     npm update -g
     # Install some staples used with great frequency
-    npm i -g npm-check-updates
+    npm i -g npm-check-updates lerna
   else
     echo "Checking Node.js $local_version global npm package versions..."
     nvm use "$local_version" > /dev/null
