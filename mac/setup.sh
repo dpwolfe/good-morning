@@ -291,6 +291,7 @@ updateGems
 function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
+    bundler
     cocoapods
     elm_install
     terraform_landscape
@@ -500,6 +501,7 @@ brews=(
   fzf # https://github.com/junegunn/fzf
   go
   git
+  git-lfs
   jq
   kops
   kubernetes-cli
