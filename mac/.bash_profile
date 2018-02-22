@@ -142,6 +142,10 @@ alias pushs='git push --set-upstream origin $(parse_git_branch)'
 alias cm='git checkout master'
 alias gco='git checkout'
 
+alias lrna='npx lerna'
+alias ncu='npx npm-check-updates'
+alias yul='yarn upgrade-interactive --latest'
+
 # create a new SSL cert with Let's Encrypt using certbot and a DNS TXT challenge
 alias certonly='sudo certbot certonly --manual --preferred-challenges dns'
 
