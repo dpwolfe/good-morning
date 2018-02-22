@@ -640,8 +640,6 @@ function upgradeNode {
     fi
     # Upgrade global packages including npm and npx
     npm update -g
-    # Install some staples used with great frequency
-    npm i -g npm-check-updates lerna
   else
     echo "Checking Node.js $local_version global npm package versions..."
     nvm use "$local_version" > /dev/null
@@ -806,6 +804,16 @@ unset apms
 # Disable language-terraform by default since it will cause Atom to lock up after
 # a couple uses. Re-enable it manually as needed.
 apm disable language-terraform &> /dev/null
+
+# Surface some hidden utility apps that are not available in Spotlight Search
+function linkUtil {
+  local linkPath="/Applications/Utilities/$(echo "$1" | sed -E "s/.*\/(.*\.app)/\1/")"
+  if [ -d "$1" ] && ! [ -L "$linkPath" ]; then
+    echo "Creating $linkPath symlink..."
+    sudoit ln -s "$1" "$linkPath"
+  fi
+}
+linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
 if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
   unset NEW_BREW_CASK_INSTALLS
