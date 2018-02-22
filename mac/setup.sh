@@ -651,7 +651,7 @@ function upgradeNode {
   fi
 }
 
-# Install Node Version Manager
+# Install or Upgrade Node Version Manager. Start by getting the version number of the latest release.
 nvm_version="$(curl 'https://api.github.com/repos/creationix/nvm/releases?per_page=1' 2> /dev/null | grep '"tag_name"' | sed -E 's/.*"v([0-9.]+).*/\1/')"
 # The following vars are populated after NVM is loaded
 nvm_local_node=
