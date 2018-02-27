@@ -358,9 +358,9 @@ if ! [ -d "$REPO_ROOT" ]; then
 fi
 # Setup clone of environment repository
 ENVIRONMENT_REPO_ROOT="$REPO_ROOT/environment"
-if ! [ -d "$ENVIRONMENT_REPO_ROOT" ]; then
+if ! [ -d "$ENVIRONMENT_REPO_ROOT/.git" ]; then
   echo "Cloning environment repository..."
-  git clone git@github.com:dpwolfe/environment.git "$ENVIRONMENT_REPO_ROOT"
+  git clone https://github.com/dpwolfe/environment.git "$ENVIRONMENT_REPO_ROOT"
   if [ -s "$HOME\.bash_profile" ]; then
     echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
     mv "$HOME\.bash_profile" "$HOME\.old_bash_profile"
