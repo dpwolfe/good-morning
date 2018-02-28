@@ -428,6 +428,7 @@ brewCasks=(
   insomniax
   iterm2
   java8
+  joplin
   keeweb
   keyboard-maestro
   microsoft-office
