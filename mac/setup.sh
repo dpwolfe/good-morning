@@ -707,14 +707,11 @@ unset nvm_local_lts
 unset nvm_latest_lts
 
 if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
-  # Install Fixed Solarized iTerm colors https://github.com/yuex/solarized-dark-iterm2
-  curl -JL "https://github.com/yuex/solarized-dark-iterm2/raw/master/Solarized%20Dark%20(Fixed).itermcolors" -o "$HOME/Downloads/SolarizedFixed.itermcolors"
   echo "Follow these steps to complete the iTerm setup:"
-  echo "1. Import the Solarized Dark (Fixed) iTerm colors into Preferences > Profiles > Colors > Color Presets... > Import"
-  echo "2. Select that imported preset that is now in the drop down list."
-  echo "3. Set the iTerm buffer scroll back to unlimited in Settings > Profiles > Terminal"
-  echo "4. Install the iTerm shell integrations from the File menu"
-  echo "5. Use iTerm instead of Terminal from now on."
+  echo "1. In Preferences > Profiles > Colors and select Tango Dark from the Color Presets... drop down."
+  echo "2. In Prefernces > Profiles > Terminal, set the iTerm buffer scroll back to 100000."
+  echo "3. Run the Install Shell Integration command from the iTerm2 menu."
+  echo "4. Use iTerm instead of Terminal from now on. Learn more here: https://iterm2.com/"
   prompt "Hit Enter to continue..."
   # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
   # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
@@ -838,6 +835,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write -g com.apple.trackpad.scaling 2
   echo "Turn off the annoying auto-capitalize while typing"
   defaults write -g NSAutomaticCapitalizationEnabled -bool false
+  echo "Turn off dash substitution"
+  defaults write -g NSAutomaticDashSubstitutionEnabled -bool false
   echo "Set beep volume to 0"
   defaults write -g com.apple.sound.beep.volume -int 0
   echo "Turn off the cursor location assist that will grow the cursor size when shaken"
@@ -880,6 +879,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write -g NSDisableAutomaticTermination -bool true
   echo "Disable automatic period substitution as it’s annoying when typing code"
   defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
+  echo "Disable automatic quote substitution as it inevitably happens when writing JavaScript or JSON"
+  defaults write -g NSAutomaticQuoteSubstitutionEnabled -bool false
   echo "Disable the crash reporter"
   defaults write com.apple.CrashReporter DialogType -string "none"
   echo "Set Help Viewer windows to non-floating mode"
@@ -925,6 +926,9 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write -g AppleMetricUnits -bool false
   echo "Disable auto-correct"
   defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
+  defaults write -g WebAutomaticSpellingCorrectionEnabled -bool false
+  echo "Turn off typing suggestions in the touch bar"
+  defaults write -g NSAutomaticTextCompletionEnabled -bool false
 
   echo "Modifying Screen Settings"
   echo "Require password immediately after sleep or screen saver begins"
@@ -1101,6 +1105,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "Display Sleep Timer" -int 180
   echo "Show battery percentage"
   defaults write com.apple.menuextra.battery ShowPercent -string "YES"
+  echo "Turn off the boot sound effect"
+  sudoit nvram SystemAudioVolume=" "
 
   echo "Restart your computer to see all the changes."
 fi
