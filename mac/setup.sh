@@ -510,6 +510,7 @@ brews=(
   openssl
   openssl@1.1
   pyenv
+  python # vim was failing load without this even though we have pyenv - 3/2/2018
   ruby
   shellcheck # shell script linting
   terraform
@@ -532,8 +533,7 @@ done
 # Uninstall brews that conflict with this script
 # but may have been previously installed.
 nobrews=(
-  python # managed by pyenv
-  python3 # managed by pyenv
+  # There are currently no known brews that should be forced to uninstall
 )
 for brew in "${nobrews[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
