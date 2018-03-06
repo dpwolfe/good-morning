@@ -176,6 +176,8 @@ function installXcode {
   xcversion select $xcode_version < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
+  echo "Open up the App Store and install any updates."
+  prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
 }
 
 function checkXcodeVersion {
