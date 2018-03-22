@@ -2,6 +2,9 @@
 Setup a vanilla machine quickly instead of wasting half a day.
 
 ## macOS Instructions
+
+Open the App Store and install any available updates.
+
 Run this command in a Terminal window:
 
 ```
