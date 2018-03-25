@@ -453,6 +453,7 @@ brewCasks=(
   sourcetree
   spotify
   the-unarchiver
+  tunnelblick
   virtualbox
   visual-studio-code
   wavtap # https://github.com/pje/WavTap
