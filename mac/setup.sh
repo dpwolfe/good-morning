@@ -510,6 +510,7 @@ brews=(
   go
   git
   git-lfs
+  httpie # https://github.com/jakubroztocil/httpie
   jq
   kops
   kubernetes-cli
