@@ -571,13 +571,17 @@ fi
 pyenv global 2.7.14
 
 function checkOhMyFish {
-  if ! type "omf" > /dev/null; then
-    echo "Installing oh-my-fish, The Fishshell Framework..."
-    curl -L https://get.oh-my.fish | fish
+  if ! type "omf" &> /dev/null; then
+    local temp_omf_install_file="$HOME/.good_morning_omf_install.temp"
+    curl -L https://get.oh-my.fish > "$temp_omf_install_file"
+    fish "$temp_omf_install_file" < /dev/tty
+    rm -f "$temp_omf_install_file"
+  else
+    omf update
   fi
-  omf update
 }
-checkOhMyFish
+# checkOhMyFish - Need to find a way to avoid it immediately entering fish
+# and stopping the rest of the script. Might try creating a process fork for this.
 
 function pickbin {
   local versions="$1"
