@@ -506,6 +506,7 @@ brews=(
   docker-compose
   docker-machine
   fd # https://github.com/sharkdp/fd
+  fish
   fzf # https://github.com/junegunn/fzf
   go
   git
@@ -553,6 +554,8 @@ rm -f "$brew_list_temp_file"
 unset brews
 unset nobrews
 unset brew_list_temp_file
+# Run this to set your shell to use fish (user, not rood)
+# chsh -s `which fish`
 
 # prototype pyenv install code
 if ! pyenv versions | grep "2\.7\.14" &> /dev/null; then
@@ -560,12 +563,21 @@ if ! pyenv versions | grep "2\.7\.14" &> /dev/null; then
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pyenv install 2.7.14
 fi
-if ! pyenv versions | grep "3\.6\.3" &> /dev/null; then
+if ! pyenv versions | grep "3\.6\.4" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
-  pyenv install 3.6.3
+  pyenv install 3.6.4
 fi
 pyenv global 2.7.14
+
+function checkOhMyFish {
+  if ! type "omf" > /dev/null; then
+    echo "Installing oh-my-fish, The Fishshell Framework..."
+    curl -L https://get.oh-my.fish | fish
+  fi
+  omf update
+}
+checkOhMyFish
 
 function pickbin {
   local versions="$1"
