@@ -168,10 +168,10 @@ fi
 function installXcode {
   local xcode_version="$1"
   echo "Installing Xcode $xcode_version..."
-  if [ -z "$FASTLANE_USERNAME" ]; then
-    prompt "Enter your Apple Developer ID: " fastlane_user
-    export FASTLANE_USERNAME="$FASTLANE_USERNAME"
-  fi
+  # if [ -z "$FASTLANE_USERNAME" ]; then
+  #   prompt "Enter your Apple Developer ID: " fastlane_user
+  #   export FASTLANE_USERNAME="$FASTLANE_USERNAME"
+  # fi
   xcversion update < /dev/tty
   xcversion install $xcode_version < /dev/tty
   xcversion select $xcode_version < /dev/tty
