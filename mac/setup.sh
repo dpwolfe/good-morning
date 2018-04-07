@@ -500,6 +500,7 @@ brews=(
   ansible
   azure-cli
   bash-completion
+  caddy
   certbot # For generating SSL certs with Let's Encrypt
   direnv
   docker
