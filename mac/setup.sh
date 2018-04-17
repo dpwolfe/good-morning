@@ -520,6 +520,7 @@ brews=(
   maven
   openssl
   openssl@1.1
+  p7zip # provides 7z command
   pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
   ruby
