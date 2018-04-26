@@ -123,7 +123,7 @@ alias kn='kill-function node'
 
 alias s='source $HOME/.bash_profile'
 alias eb='vim $HOME/.bash_profile'
-alias ebpub='vim $HOME/repo/environment/mac/.bash_profile'
+alias ebpub='vim $HOME/repo/goodmorning/dotfiles/.bash_profile'
 
 alias u2d=unix2dos
 alias f=findfunction
@@ -151,14 +151,14 @@ alias certonly='sudo certbot certonly --manual --preferred-challenges dns'
 
 gmfunction() {
   pushd "$DIR" > /dev/null || return
-  echo "Pulling latest for environment repository..."
+  echo "Pulling latest from goodmorning remote repository..."
   git pull > /dev/null
   export GOOD_MORNING_RUN=1
   popd > /dev/null || return
   # shellcheck disable=SC1090
-  source "$DIR/setup.sh"
+  source "$DIR/../goodmorning.sh"
 }
-alias good_morning='gmfunction'
+alias goodmorning='gmfunction'
 
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$HOME/.local/bin:/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"

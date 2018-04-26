@@ -1,17 +1,12 @@
-# Shared Engineering Environment Files
-Setup a vanilla machine quickly instead of wasting half a day.
+# Good Morning
 
-## macOS Instructions
+First thing to run on a new MacBook and every morning thereafter to keep it up to date.
 
-Open the App Store and install any available updates.
+## Installation Instructions
 
-Run this command in a Terminal window:
+1. Open the App Store and install any available updates.
+1. Open up the Terminal app and run this command:
 
+```sh
+curl -sL https://raw.githubusercontent.com/dpwolfe/goodmorning/master/goodmorning.sh | sh
 ```
-curl -sL https://raw.githubusercontent.com/dpwolfe/environment/master/mac/setup.sh | sh
-```
-
-## Windows users
-There are some unmaintained artifacts in the source that you can check out.
-
-Contributors interested in enabling the Windows bash support for using the macOS aliases is greatly appreciated.
