@@ -917,7 +917,7 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Check for software updates daily, not just once per week"
   defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 
-  echo "Modifying Mouse Settings"
+  echo "Modifying Mouse & Trackpad Settings"
   echo "Trackpad: enable tap to click for this user and for the login screen"
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
   defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
@@ -931,6 +931,10 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
   defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerHorizSwipeGesture -int 1
+  echo "Trackpad: 'Tap with three fingers' instead of 'Force click with one finger' for 'Look up' feature"
+  defaults -currentHost write -g com.apple.trackpad.forceClick -int 0
+  defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 2
+
   echo "Increase sound quality for Bluetooth headphones/headsets"
   defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
   echo "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
