@@ -560,10 +560,10 @@ if ! pyenv versions | grep "2\.7\.14" &> /dev/null; then
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pyenv install 2.7.14
 fi
-if ! pyenv versions | grep "3\.6\.4" &> /dev/null; then
+if ! pyenv versions | grep "3\.6\.5" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
-  pyenv install 3.6.4
+  pyenv install 3.6.5
 fi
 pyenv global 2.7.14
 
