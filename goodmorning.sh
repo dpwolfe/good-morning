@@ -363,17 +363,17 @@ if ! [ -d "$REPO_ROOT" ]; then
   echo "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
-# Setup clone of environment repository
-ENVIRONMENT_REPO_ROOT="$REPO_ROOT/environment"
-if ! [ -d "$ENVIRONMENT_REPO_ROOT/.git" ]; then
-  echo "Cloning environment repository..."
-  git clone https://github.com/dpwolfe/environment.git "$ENVIRONMENT_REPO_ROOT"
+# Setup clone of goodmorning repository
+GOODMORNING_REPO_ROOT="$REPO_ROOT/goodmorning"
+if ! [ -d "$GOODMORNING_REPO_ROOT/.git" ]; then
+  echo "Cloning goodmorning repository..."
+  git clone https://github.com/dpwolfe/goodmorning.git "$GOODMORNING_REPO_ROOT"
   if [ -s "$HOME\.bash_profile" ]; then
     echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
     mv "$HOME\.bash_profile" "$HOME\.old_bash_profile"
   fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
-source \"\$REPO_ROOT/environment/dotfiles/.bash_profile\"
+source \"\$REPO_ROOT/goodmorning/dotfiles/.bash_profile\"
 cd \"\$REPO_ROOT\"
 export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"  # load nvm
@@ -384,10 +384,10 @@ if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
 [ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\"
 " > "$HOME/.bash_profile"
 
-  # copy some starter shell environment files
-  cp "$ENVIRONMENT_REPO_ROOT/dotfiles/.inputrc" "$HOME/.inputrc"
-  cp "$ENVIRONMENT_REPO_ROOT/dotfiles/.vimrc" "$HOME/.vimrc"
-  cp -rf "$ENVIRONMENT_REPO_ROOT/dotfiles/.vim" "$HOME/.vim"
+  # copy some starter shell dot files
+  cp "$GOODMORNING_REPO_ROOT/dotfiles/.inputrc" "$HOME/.inputrc"
+  cp "$GOODMORNING_REPO_ROOT/dotfiles/.vimrc" "$HOME/.vimrc"
+  cp -rf "$GOODMORNING_REPO_ROOT/dotfiles/.vim" "$HOME/.vim"
   # set flag to indicate this is the first run to turn on additional setup features
   FIRST_RUN=1
 fi
@@ -1108,7 +1108,7 @@ function cleanupEnvVars {
   unset GITHUB_NAME
   unset GOOD_MORNING_CONFIG_FILE
   unset GOOD_MORNING_TEMP_FILE_PREFIX
-  unset ENVIRONMENT_REPO_ROOT
+  unset GOODMORNING_REPO_ROOT
 
   if [[ "$(getConfigValue 'keep_pass_for_session')" != "yes" ]]; then
     unset GOOD_MORNING_ENCRYPTED_PASS_FILE
@@ -1116,7 +1116,7 @@ function cleanupEnvVars {
   fi
 }
 
-# Update the environment repository last since a change to this script while
+# Update the goodmorning repository last since a change to this script while
 # in the middle of execution will break it.
 # This is skipped if the goodmorning bash alias was executed, in which case, a pull
 # was made before goodmorning.sh started.
@@ -1135,9 +1135,9 @@ function cleanupGoodMorning {
     cleanupTempFiles
     cleanupEnvVars
   else
-    echo "Almost done! Pulling latest for environment repository..."
+    echo "Almost done! Pulling latest for goodmorning repository..."
     cleanupTempFiles
-    pushd "$ENVIRONMENT_REPO_ROOT" > /dev/null
+    pushd "$GOODMORNING_REPO_ROOT" > /dev/null
     cleanupEnvVars && git pull && popd > /dev/null
   fi
 }
