@@ -419,15 +419,14 @@ fi
 brewCasks=(
   android-platform-tools
   android-studio
-  atom
   beyond-compare
   charles
   controlplane
   cord
   discord
+  docker
   dropbox
   firefox
-  gimp
   google-backup-and-sync
   google-chrome
   gpg-suite
@@ -438,8 +437,6 @@ brewCasks=(
   keeweb
   keyboard-maestro
   microsoft-office
-  omnifocus
-  omnigraffle
   onedrive
   opera
   parallels
@@ -462,8 +459,6 @@ brewCasks=(
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
   # Reboot again and WavTap should appear in the sound devices menu.
   wireshark
-  xmind-zen
-  zoomus
 )
 brew tap caskroom/cask
 brew tap caskroom/versions
@@ -770,64 +765,6 @@ if [ -n "$FIRST_RUN" ] && ! (defaults read /Library/Preferences/com.apple.Softwa
     sudoit defaults write /Library/Preferences/com.apple.commerce AutoUpdate -bool true
     sudoit defaults write /Library/Preferences/com.apple.commerce AutoUpdateRestartRequired -bool true
 fi
-
-# Install atom packages
-apms=(
-  atom-typescript
-  autocomplete-haskell
-  busy-signal
-  circle-ci
-  docblockr
-  file-icons
-  git-plus
-  git-time-machine
-  haskell-debug
-  haskell-ghc-mod
-  highlight-selected
-  ide-haskell
-  ide-haskell-cabal
-  ide-haskell-hoogle
-  ide-haskell-repl
-  intentions
-  jumpy
-  language-docker
-  language-haskell
-  language-terraform # this caused freezes for me, uninstall and reinstall if that happens
-  last-cursor-position
-  linter
-  linter-docker
-  linter-eslint
-  # todo: auto add -x option to shellcheck settings in atom
-  linter-shellcheck
-  linter-ui-default
-  merge-conflicts
-  nuclide
-  prettier-atom
-  project-manager
-  set-syntax
-  sort-lines
-  split-diff
-)
-if type "apm" > /dev/null; then
-  echo "Checking installed Atom package versions..."
-  # Update all the Atom packages
-  yes | apm upgrade --no-confirm
-  # Get list of currently installed packages
-  apm_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""apm_list"
-  apm list > "$apm_list_temp_file"
-  for pkg in "${apms[@]}";
-  do
-    if ! grep "── $pkg@" "$apm_list_temp_file" > /dev/null; then
-      apm install "$pkg"
-    fi
-  done
-  rm -f "$apm_list_temp_file"
-  unset apm_list_temp_file
-fi
-unset apms
-# Disable language-terraform by default since it will cause Atom to lock up after
-# a couple uses. Re-enable it manually as needed.
-apm disable language-terraform &> /dev/null
 
 # Surface some hidden utility apps that are not available in Spotlight Search
 function linkUtil {
