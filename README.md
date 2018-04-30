@@ -8,5 +8,5 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 1. Open up the Terminal app and run this command:
 
 ```sh
-curl -sL https://raw.githubusercontent.com/dpwolfe/goodmorning/master/goodmorning.sh | sh
+curl -sL https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh | sh
 ```

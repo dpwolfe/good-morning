@@ -100,6 +100,7 @@ alias now='date +"%T"'
 alias nowtime=now
 alias nowdate='date +"%d-%m-%Y"'
 
+# editors
 alias vi=vim
 alias svi='sudo vim'
 alias vis='vim "+set si"'
@@ -123,7 +124,7 @@ alias kn='kill-function node'
 
 alias s='source $HOME/.bash_profile'
 alias eb='vim $HOME/.bash_profile'
-alias ebpub='vim $HOME/repo/goodmorning/dotfiles/.bash_profile'
+alias ebpub='vim $HOME/repo/good-morning/dotfiles/.bash_profile'
 
 alias u2d=unix2dos
 alias f=findfunction
@@ -131,6 +132,7 @@ alias initem='source $HOME/emsdk_portable/emsdk_env.sh'
 alias xs='sudo xcode-select --switch "/Applications/Xcode.app/Contents/Developer/"'
 alias dn='debug-node --web-port 8081'
 
+# git
 alias gc='git commit -m'
 alias gca='git commit -a -m'
 alias pull='git pull'
@@ -151,14 +153,14 @@ alias certonly='sudo certbot certonly --manual --preferred-challenges dns'
 
 gmfunction() {
   pushd "$DIR" > /dev/null || return
-  echo "Pulling latest from goodmorning remote repository..."
+  echo "Pulling latest version of good-morning..."
   git pull > /dev/null
   export GOOD_MORNING_RUN=1
   popd > /dev/null || return
   # shellcheck disable=SC1090
-  source "$DIR/../goodmorning.sh"
+  source "$DIR/../good-morning.sh"
 }
-alias goodmorning='gmfunction'
+alias good-morning='gmfunction'
 
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$HOME/.local/bin:/usr/local/git/bin:/Library/Developer/CommandLineTools/usr/bin:/Applications/CMake.app/Contents/bin:$PATH"
