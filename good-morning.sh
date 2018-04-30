@@ -44,7 +44,7 @@ function promptsecret {
   echo # echo newline after input
 }
 
-GOOD_MORNING_CONFIG_FILE="$HOME/.goodmorning"
+GOOD_MORNING_CONFIG_FILE="$HOME/.good_morning"
 function getConfigValue {
   local val
   val="$( (grep -E "^$1=" -m 1 "$GOOD_MORNING_CONFIG_FILE" 2> /dev/null || echo "$1=$2") | head -n 1 | cut -d '=' -f 2-)"
@@ -63,7 +63,7 @@ function setConfigValue {
   else
     echo "Warning: Tried to set an unknown config key: $1"
   fi
-  echo "# This file saves user preferences for running the goodmorning script." >> "$tempfile"
+  echo "# This file saves user preferences for running the good-morning script." >> "$tempfile"
   echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
   mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
 }
@@ -363,17 +363,17 @@ if ! [ -d "$REPO_ROOT" ]; then
   echo "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
-# Setup clone of goodmorning repository
-GOODMORNING_REPO_ROOT="$REPO_ROOT/goodmorning"
-if ! [ -d "$GOODMORNING_REPO_ROOT/.git" ]; then
-  echo "Cloning goodmorning repository..."
-  git clone https://github.com/dpwolfe/goodmorning.git "$GOODMORNING_REPO_ROOT"
+# Setup clone of good-morning repository
+GOOD_MORNING_REPO_ROOT="$REPO_ROOT/good-morning"
+if ! [ -d "$GOOD_MORNING_REPO_ROOT/.git" ]; then
+  echo "Cloning good-morning repository..."
+  git clone https://github.com/dpwolfe/good-morning.git "$GOOD_MORNING_REPO_ROOT"
   if [ -s "$HOME\.bash_profile" ]; then
     echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
     mv "$HOME\.bash_profile" "$HOME\.old_bash_profile"
   fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
-source \"\$REPO_ROOT/goodmorning/dotfiles/.bash_profile\"
+source \"\$REPO_ROOT/good-morning/dotfiles/.bash_profile\"
 cd \"\$REPO_ROOT\"
 export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"  # load nvm
@@ -385,9 +385,9 @@ if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
 " > "$HOME/.bash_profile"
 
   # copy some starter shell dot files
-  cp "$GOODMORNING_REPO_ROOT/dotfiles/.inputrc" "$HOME/.inputrc"
-  cp "$GOODMORNING_REPO_ROOT/dotfiles/.vimrc" "$HOME/.vimrc"
-  cp -rf "$GOODMORNING_REPO_ROOT/dotfiles/.vim" "$HOME/.vim"
+  cp "$GOOD_MORNING_REPO_ROOT/dotfiles/.inputrc" "$HOME/.inputrc"
+  cp "$GOOD_MORNING_REPO_ROOT/dotfiles/.vimrc" "$HOME/.vimrc"
+  cp -rf "$GOOD_MORNING_REPO_ROOT/dotfiles/.vim" "$HOME/.vim"
   # set flag to indicate this is the first run to turn on additional setup features
   FIRST_RUN=1
 fi
@@ -569,7 +569,7 @@ pyenv global 2.7.14
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
-    local temp_omf_install_file="$HOME/.goodmorning_omf_install.temp"
+    local temp_omf_install_file="$HOME/.good_morning_omf_install.temp"
     curl -L https://get.oh-my.fish > "$temp_omf_install_file"
     fish "$temp_omf_install_file" < /dev/tty
     rm -f "$temp_omf_install_file"
@@ -1080,24 +1080,24 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
 fi
 
 if [ -z "$GOOD_MORNING_RUN" ]; then
-  echo "Use the command goodmorning each day to stay up-to-date!"
+  echo "Use the command good-morning each day to stay up-to-date!"
 fi
 
 function cleanupTempFiles {
-  local goodmorning_pass_file_temp="$HOME/.goodmorning_pass_file" # lacks 'temp' in name to bypass deletion if kept
+  local good_morning_pass_file_temp="$HOME/.good_morning_pass_file" # lacks 'temp' in name to bypass deletion if kept
   # Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
   if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
-    mv "$GOOD_MORNING_ENCRYPTED_PASS_FILE" "$goodmorning_pass_file_temp"
+    mv "$GOOD_MORNING_ENCRYPTED_PASS_FILE" "$good_morning_pass_file_temp"
   fi
   # A glob file deletion is about to happen, proceed with excessive caution.
-  if [[ "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.goodmorning_temp_" ]]; then
+  if [[ "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
     rm -f "$GOOD_MORNING_TEMP_FILE_PREFIX"*
   else
     echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
   fi
   # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
-  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$goodmorning_pass_file_temp" ]; then
-    mv "$goodmorning_pass_file_temp" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
+  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$good_morning_pass_file_temp" ]; then
+    mv "$good_morning_pass_file_temp" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
   fi
 }
 
@@ -1108,7 +1108,7 @@ function cleanupEnvVars {
   unset GITHUB_NAME
   unset GOOD_MORNING_CONFIG_FILE
   unset GOOD_MORNING_TEMP_FILE_PREFIX
-  unset GOODMORNING_REPO_ROOT
+  unset GOOD_MORNING_REPO_ROOT
 
   if [[ "$(getConfigValue 'keep_pass_for_session')" != "yes" ]]; then
     unset GOOD_MORNING_ENCRYPTED_PASS_FILE
@@ -1116,17 +1116,17 @@ function cleanupEnvVars {
   fi
 }
 
-# Update the goodmorning repository last since a change to this script while
+# Update the good-morning repository last since a change to this script while
 # in the middle of execution will break it.
-# This is skipped if the goodmorning bash alias was executed, in which case, a pull
-# was made before goodmorning.sh started.
+# This is skipped if the good-morning bash alias was executed, in which case, a pull
+# was made before good-morning.sh started.
 function cleanupGoodMorning {
   if [ -n "$GOOD_MORNING_RUN" ]; then
     unset GOOD_MORNING_RUN
     local keep_pass_for_session
     keep_pass_for_session="$(getConfigValue 'keep_pass_for_session' 'not-asked')"
     if ( [ -z "$keep_pass_for_session" ] || [[ "$keep_pass_for_session" == "not-asked" ]] ) && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
-      if askto "always be prompted for your password if needed when you run goodmorning again in the same session"; then
+      if askto "always be prompted for your password if needed when you run good-morning again in the same session"; then
         setConfigValue "keep_pass_for_session" "no"
       else
         setConfigValue "keep_pass_for_session" "yes"
@@ -1135,9 +1135,9 @@ function cleanupGoodMorning {
     cleanupTempFiles
     cleanupEnvVars
   else
-    echo "Almost done! Pulling latest for goodmorning repository..."
+    echo "Almost done! Pulling latest for good-morning repository..."
     cleanupTempFiles
-    pushd "$GOODMORNING_REPO_ROOT" > /dev/null
+    pushd "$GOOD_MORNING_REPO_ROOT" > /dev/null
     cleanupEnvVars && git pull && popd > /dev/null
   fi
 }
