@@ -444,6 +444,7 @@ brewCasks=(
   qladdict
   qlcolorcode
   qlmarkdown
+  rocket # "Mind-blowing emoji on your Mac."
   sketch
   skype
   slack
