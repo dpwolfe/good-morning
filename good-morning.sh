@@ -181,16 +181,22 @@ function installXcode {
   prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
 }
 
+function getLocalXcodeVersion {
+  echo "$(/usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/')"
+}
+
 function checkXcodeVersion {
   local xcode_version="9.4 beta 2"
-  local local_version
+  local xcode_build_version="9Q1019a"
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
-    local_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)( beta [1-9])?/\1\2/')"
-    if [[ "$local_version" != "$xcode_version" ]]; then
+    local local_version=getLocalXcodeVersion
+    local local_build_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Build | sed -E 's/Build version ([0-9A-Za-z]+)/\1/')"
+    if [[ "$local_build_version" != "$xcode_build_version" ]]; then
       installXcode "$xcode_version"
-      if [ -n "$local_version" ]; then
+      local new_local_version=getLocalXcodeVersion
+      if [ -n "$local_version" ] && [[ "$local_version" != "$new_local_version" ]]; then
         echo "Uninstalling Xcode $local_version..."
         xcversion uninstall "$local_version" < /dev/tty
       fi
