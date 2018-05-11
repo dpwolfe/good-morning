@@ -182,7 +182,7 @@ function installXcode {
 }
 
 function checkXcodeVersion {
-  local xcode_version=9.3
+  local xcode_version=9.3.1
   local local_version
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
