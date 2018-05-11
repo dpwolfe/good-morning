@@ -182,12 +182,12 @@ function installXcode {
 }
 
 function checkXcodeVersion {
-  local xcode_version=9.3.1
+  local xcode_version="9.4 beta 2"
   local local_version
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
-    local_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/')"
+    local_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)( beta [1-9])?/\1\2/')"
     if [[ "$local_version" != "$xcode_version" ]]; then
       installXcode "$xcode_version"
       if [ -n "$local_version" ]; then
