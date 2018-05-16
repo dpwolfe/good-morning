@@ -173,8 +173,8 @@ function installXcode {
   #   export FASTLANE_USERNAME="$FASTLANE_USERNAME"
   # fi
   xcversion update < /dev/tty
-  xcversion install $xcode_version < /dev/tty
-  xcversion select $xcode_version < /dev/tty
+  xcversion install "$xcode_version" < /dev/tty
+  xcversion select "$xcode_version" < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
   echo "Open up the App Store and install any updates."
