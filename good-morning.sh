@@ -231,7 +231,7 @@ if [ -z "$GITHUB_NAME" ]; then
 fi
 # Generate a new SSH key for GitHub https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
 GITHUB_KEYS_URL="https://github.com/settings/keys"
-if [ -n "$gitHubEmailChanged" ] && askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
+if ( [ -n "$gitHubEmailChanged" ] || ! [ -f "$HOME/.ssh/id_rsa.pub" ] ) && askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
   ssh-keygen -t rsa -b 4096 -C "$GITHUB_EMAIL" < /dev/tty
   # start ssh-agent
   eval "$(ssh-agent -s)"
