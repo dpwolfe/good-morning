@@ -561,18 +561,18 @@ unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not rood)
 # chsh -s `which fish`
 
-# prototype pyenv install code
-if ! pyenv versions | grep "2\.7\.14" &> /dev/null; then
+# prototype pyenv install code - need
+if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
-  pyenv install 2.7.14
+  pyenv install 2.7.15
 fi
 if ! pyenv versions | grep "3\.6\.5" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pyenv install 3.6.5
 fi
-pyenv global 2.7.14
+pyenv global 2.7.15
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
