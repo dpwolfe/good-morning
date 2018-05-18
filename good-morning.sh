@@ -167,6 +167,7 @@ fi
 
 function installXcode {
   local xcode_version="$1"
+  local xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
   echo "Installing Xcode $xcode_version..."
   # if [ -z "$FASTLANE_USERNAME" ]; then
   #   prompt "Enter your Apple Developer ID: " fastlane_user
@@ -174,7 +175,7 @@ function installXcode {
   # fi
   xcversion update < /dev/tty
   xcversion install "$xcode_version" < /dev/tty
-  xcversion select "$xcode_version" < /dev/tty
+  xcversion select "$xcode_short_version" < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
   echo "Open up the App Store and install any updates."
