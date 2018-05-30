@@ -168,13 +168,14 @@ fi
 function installXcode {
   local xcode_version="$1"
   local xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
-  echo "Installing Xcode $xcode_version..."
   # if [ -z "$FASTLANE_USERNAME" ]; then
   #   prompt "Enter your Apple Developer ID: " fastlane_user
   #   export FASTLANE_USERNAME="$FASTLANE_USERNAME"
   # fi
+  echo "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
-  xcversion install "$xcode_version" < /dev/tty
+  echo "Installing Xcode $xcode_version..."
+  xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta simple
   xcversion select "$xcode_short_version" < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
@@ -187,8 +188,8 @@ function getLocalXcodeVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="9.4 beta 2"
-  local xcode_build_version="9Q1019a"
+  local xcode_version="9.4"
+  local xcode_build_version="9F1027a"
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
