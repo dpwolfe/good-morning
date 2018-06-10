@@ -150,10 +150,11 @@ function checkPerms {
 }
 checkPerms
 
-echo "Checking Xcode version..."
 if type rvm &> /dev/null; then
+  echo "Using default Ruby with rvm..."
   rvm use default > /dev/null
 fi
+echo "Checking for existence of xcode-install..."
 if ! gem list --local | grep "xcode-install" > /dev/null; then
   echo "Installing xcode-install for managing Xcode..."
   # https://github.com/KrauseFx/xcode-install
@@ -181,6 +182,8 @@ function installXcode {
   xcversion install-cli-tools < /dev/tty
   echo "Open up the App Store and install any updates."
   prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
+  echo "Cleaning up Xcode installers..."
+  xcversion cleanup
 }
 
 function getLocalXcodeVersion {
@@ -190,6 +193,7 @@ function getLocalXcodeVersion {
 function checkXcodeVersion {
   local xcode_version="9.4"
   local xcode_build_version="9F1027a"
+  echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
@@ -204,7 +208,6 @@ function checkXcodeVersion {
       fi
     fi
   fi
-  xcversion cleanup
 }
 checkXcodeVersion
 
