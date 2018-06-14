@@ -446,6 +446,7 @@ brewCasks=(
   iterm2
   java8
   keeweb
+  keybase
   keyboard-maestro
   microsoft-office
   onedrive
