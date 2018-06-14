@@ -631,6 +631,7 @@ pips=(
   glances
   gsutil # for programmatic access to Google Play Console reports
   packaging
+  pipdeptree
   pipenv
   pip-review
   pycurl
