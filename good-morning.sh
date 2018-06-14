@@ -577,7 +577,7 @@ if ! pyenv versions | grep "3\.6\.5" &> /dev/null; then
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pyenv install 3.6.5
 fi
-pyenv global 2.7.15
+pyenv global 3.6.5
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
@@ -613,10 +613,14 @@ if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
   wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
   python ~/get-pip.py --user
   rm -f ~/get-pip.py
+else
+  echo "Upgrading pip..."
+  pip install --upgrade pip > /dev/null
 fi
 unset localpip
 
-# Install pips in Python2
+export PYCURL_SSL_LIBRARY=openssl
+# Install pips in Python
 piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
 pips=(
@@ -635,6 +639,9 @@ pips=(
 )
 for pip in "${pips[@]}"; do
   if ! grep -i "$pip==" "$piptempfile" &> /dev/null; then
+    CFLAGS="-I$(brew --prefix openssl)/include" \
+    CPPFLAGS="-I$(brew --prefix openssl)/include" \
+    LDFLAGS="-L$(brew --prefix openssl)/lib" \
     "$(findpip)" install "$pip"
   fi
 done
