@@ -191,8 +191,8 @@ function getLocalXcodeVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="9.4"
-  local xcode_build_version="9F1027a"
+  local xcode_version="9.4.1"
+  local xcode_build_version="9F2000"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
@@ -446,7 +446,7 @@ brewCasks=(
   iterm2
   java8
   keeweb
-  keybase
+  # keybase
   keyboard-maestro
   microsoft-office
   onedrive
