@@ -433,7 +433,7 @@ brewCasks=(
   beyond-compare
   charles
   controlplane
-  cord
+  # cord # remote desktop into windows machines from macOS
   discord
   docker
   dropbox
@@ -447,24 +447,24 @@ brewCasks=(
   java8
   keeweb
   # keybase
-  keyboard-maestro
+  keyboard-maestro # keyboard macros
   microsoft-office
   onedrive
-  opera
+  # opera
   parallels
-  provisionql
+  provisionql # quick-look for iOS provisioning profiles
   qladdict
   qlcolorcode
   qlmarkdown
-  rocket # "Mind-blowing emoji on your Mac."
-  sketch
+  rocket # utf-8 emoji quick lookup and insert in any macOS app
+  # sketch
   skype
   slack
   sourcetree
   spotify
   the-unarchiver
   tunnelblick
-  virtualbox
+  # virtualbox
   visual-studio-code
   wavtap # https://github.com/pje/WavTap
   # To use WavTap you'll need to take some extra steps that shall not be automated.
@@ -630,7 +630,7 @@ pips=(
   boto
   gitpython
   glances
-  gsutil # for programmatic access to Google Play Console reports
+  # gsutil # for programmatic access to Google Play Console reports
   packaging
   pipdeptree
   pipenv
