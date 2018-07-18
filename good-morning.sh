@@ -434,6 +434,7 @@ brewCasks=(
   charles
   controlplane
   # cord # remote desktop into windows machines from macOS
+  dbeaver-community
   discord
   docker
   dropbox
