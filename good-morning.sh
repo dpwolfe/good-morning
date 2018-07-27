@@ -730,6 +730,9 @@ function checkNodeVersion {
 }
 
 if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$nvm_version" > /dev/null; then
+  if [ -n "$NVM_DIR" ]; then
+    mkdir -p "$NVM_DIR" # ensure directory exists if environment variable is set by existing bash_profile
+  fi
   # https://github.com/creationix/nvm#install-script
   echo "Installing Node Version Manager v$nvm_version"
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$nvm_version/install.sh | bash
