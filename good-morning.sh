@@ -660,14 +660,27 @@ if ! pip-review | grep "Everything up-to-date" > /dev/null; then
   pip install "prompt-toolkit<1.1.0,>=1.0.0" > /dev/null # fix previous upgrades that went to 2.0
 fi
 
+function upgradeNPM {
+  echo "Checking Node.js $(node -v) global npm package versions..."
+  # Upgrade all global packages other than npm
+  npm update -g
+  # Detect if npm is actually outdated to avoid reinstalling the same version.
+  if [ -n "$(npm outdated -g | grep -E "^npm\s")" ]; then
+    echo "Upgrading npm for Node.js $(node -v)..."
+    npm install npm -g
+  fi
+}
+
 function upgradeNode {
   local local_version="$1"
   local new_version="$2"
   local active_version # version user currently has active in then terminal
   active_version="$(nvm current)"
+
   if [[ "$(echo "$active_version" | cut -c1)" != "v" ]]; then
     active_version="N/A"
   fi
+
   # Install highest Long Term Support (LTS) build as a recommended "prod" node version
   if [[ "$local_version" != "$new_version" ]]; then
     local old_version="$local_version" # rename for readability
@@ -685,13 +698,12 @@ function upgradeNode {
       echo "Installing global Node.js packages used by $reinstall_version into $new_version..."
       nvm reinstall-packages "$reinstall_version"
     fi
-    # Upgrade global packages including npm and npx
-    npm update -g
+    upgradeNPM
   else
-    echo "Checking Node.js $local_version global npm package versions..."
     nvm use "$local_version" > /dev/null
-    npm update -g
+    upgradeNPM
   fi
+
   if [[ "$active_version" != "N/A" ]]; then
     # Switch to the node version in use before any install or 'nvm use' command executed
     nvm use "$active_version" > /dev/null
