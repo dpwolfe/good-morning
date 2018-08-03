@@ -311,7 +311,7 @@ function installGems {
   local gems=(
     bundler
     cocoapods
-    elm_install
+    sqlint
     terraform_landscape
     xcode-install # Will also replace the other xcode-install gem that was installed via a work-around...
   )
