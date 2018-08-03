@@ -280,8 +280,8 @@ elif [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
   rvm install ruby --default
   rvm cleanup all
 else
-  current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+[^ ]*).*/-\1/')"
-  latest_ruby_version="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]' | sed -E 's/(-[0-9.]+)-?(.*)/\1\2/')"
+  current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)([^ ]*).*/-\1-\2/' | sed -E 's/-$//')"
+  latest_ruby_version="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
   if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
     echo "Upgrading RVM..."
     rvm get stable --auto
