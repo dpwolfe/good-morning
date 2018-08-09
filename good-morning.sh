@@ -450,6 +450,7 @@ brewCasks=(
   # keybase
   keyboard-maestro # keyboard macros
   microsoft-office
+  minikube
   onedrive
   # opera
   parallels
@@ -465,7 +466,7 @@ brewCasks=(
   spotify
   the-unarchiver
   tunnelblick
-  # virtualbox
+  virtualbox # A hypervisor like this is needed for Minikube
   visual-studio-code
   wavtap # https://github.com/pje/WavTap
   # To use WavTap you'll need to take some extra steps that shall not be automated.
