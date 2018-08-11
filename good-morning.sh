@@ -453,6 +453,7 @@ brewCasks=(
   minikube
   onedrive
   # opera
+  packer
   parallels
   provisionql # quick-look for iOS provisioning profiles
   qladdict
