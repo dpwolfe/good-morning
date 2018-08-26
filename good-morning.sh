@@ -411,8 +411,7 @@ else
   brew update
   echo "Checking for outdated Homebrew formulas..."
   if [ "$(brew upgrade)" != "" ]; then
-    echo "Cleaning up Homebrew formula cache..."
-    brew cleanup # works better than adding --cleanup
+    BREW_CLEANUP_NEEDED=1
     # If there was any output from the cleanup task, assume a formula changed or was installed.
     # Homebrew Doctor can take a long time to run, so now running only after formula changes...
     echo "Running Hombrew Doctor..."
@@ -422,7 +421,7 @@ else
   for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
     echo "Upgrading $outdatedCask..."
     brew cask reinstall "$outdatedCask"
-    BREW_CASK_UPGRADES=1
+    BREW_CLEANUP_NEEDED=1
   done
 fi
 
@@ -453,7 +452,6 @@ brewCasks=(
   minikube
   onedrive
   # opera
-  packer
   parallels
   provisionql # quick-look for iOS provisioning profiles
   qladdict
@@ -492,16 +490,17 @@ for cask in "${brewCasks[@]}"; do
       brew cask install "$cask"
     fi
     NEW_BREW_CASK_INSTALLS=1
+    BREW_CLEANUP_NEEDED=1
   fi
 done
 rm -f "$cask_collision_file"
 unset cask_collision_file
 unset brewCasks
 
-if [ -n "$NEW_BREW_CASK_INSTALLS" ] || [ -n "$BREW_CASK_UPGRADES" ]; then
-  unset BREW_CASK_UPGRADES;
-  echo "Cleaning up Homebrew Cask cache..."
-  brew cask cleanup
+if [ -n "$BREW_CLEANUP_NEEDED" ]; then
+  unset BREW_CLEANUP_NEEDED;
+  echo "Cleaning up Homebrew cache..."
+  brew cleanup -s # -s clears even the latest versions of uninstalled formulas and casks
 fi
 
 # Install brews
@@ -532,6 +531,7 @@ brews=(
   openssl
   openssl@1.1
   p7zip # provides 7z command
+  packer
   postgresql
   pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
