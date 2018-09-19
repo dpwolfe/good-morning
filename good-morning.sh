@@ -191,7 +191,7 @@ function getLocalXcodeVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="9.4.1"
+  local xcode_version="10"
   local xcode_build_version="9F2000"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
