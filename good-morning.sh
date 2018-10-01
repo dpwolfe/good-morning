@@ -192,7 +192,7 @@ function getLocalXcodeVersion {
 
 function checkXcodeVersion {
   local xcode_version="10"
-  local xcode_build_version="9F2000"
+  local xcode_build_version="10A255"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
