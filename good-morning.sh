@@ -453,6 +453,7 @@ brewCasks=(
   onedrive
   # opera
   parallels
+  postman
   provisionql # quick-look for iOS provisioning profiles
   qladdict
   qlcolorcode
