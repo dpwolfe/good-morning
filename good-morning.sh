@@ -301,7 +301,7 @@ function updateGems {
   echo "Checking system ruby gem versions..."
   if [ "$(gem outdated)" ]; then
     echo "Updating ruby gems..."
-    gem update --force
+    gem update --force --no-document
   fi
 }
 updateGems
@@ -319,7 +319,7 @@ function installGems {
   for gem in "${gems[@]}"; do
     if ! grep "$gem" "$gem_list_temp_file" > /dev/null; then
       echo "Installing $gem..."
-      gem install "$gem"
+      gem install "$gem" --no-document
     fi
   done
   rm -f "$gem_list_temp_file"
