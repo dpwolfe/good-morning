@@ -578,12 +578,12 @@ if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pyenv install 2.7.15
 fi
-if ! pyenv versions | grep "3\.7\.0" &> /dev/null; then
+if ! pyenv versions | grep "3\.7\.1" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
-  pyenv install 3.7.0
+  pyenv install 3.7.1
 fi
-pyenv global 3.7.0
+pyenv global 3.7.1
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
