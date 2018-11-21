@@ -427,14 +427,14 @@ fi
 
 # Install Homebrew casks
 brewCasks=(
-  android-platform-tools
-  android-studio
-  beyond-compare
+  # android-platform-tools
+  # android-studio
+  # beyond-compare
   charles
-  controlplane
+  # controlplane # mac automation based on hardware events
   # cord # remote desktop into windows machines from macOS
   dbeaver-community
-  discord
+  # discord
   docker
   dropbox
   firefox
@@ -508,17 +508,17 @@ fi
 brew tap wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
 # shellcheck disable=SC2034
 brews=(
-  ansible
-  azure-cli
+  # ansible
+  # azure-cli
   bash-completion
-  caddy
+  # caddy
   certbot # For generating SSL certs with Let's Encrypt
   direnv
   docker
   docker-compose
   docker-machine
   fd # https://github.com/sharkdp/fd
-  fish
+  # fish
   fzf # https://github.com/junegunn/fzf
   go
   git
@@ -539,7 +539,7 @@ brews=(
   ruby
   shellcheck # shell script linting
   terraform
-  terragrunt
+  # terragrunt
   tflint
   tmux
   vim
@@ -836,6 +836,8 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   defaults write -g _HIHideMenuBar -bool false
   echo "Attach the dock to the left side, the definitive optimal location according to the community"
   defaults write com.apple.dock orientation left
+  echo "Do not add recently used apps to the dock automatically."
+  defaults write com.apple.dock show-recents -bool false
   echo "Enable tap to click on trackpad"
   defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
   echo "Bump up the trackpad speed a couple notches"
