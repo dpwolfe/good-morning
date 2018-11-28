@@ -575,12 +575,14 @@ unset brew_list_temp_file
 # prototype pyenv install code - need
 if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
-  LDFLAGS="-L$(brew --prefix openssl)/lib" \
+  CPPFLAGS="-I/usr/local/opt/readline/include" \
+  LDFLAGS="-L$(brew --prefix openssl)/lib -L/usr/local/opt/readline/lib" \
   pyenv install 2.7.15
 fi
 if ! pyenv versions | grep "3\.7\.1" &> /dev/null; then
   CFLAGS="-I$(brew --prefix openssl)/include" \
-  LDFLAGS="-L$(brew --prefix openssl)/lib" \
+  CPPFLAGS="-I/usr/local/opt/readline/include" \
+  LDFLAGS="-L$(brew --prefix openssl)/lib -L/usr/local/opt/readline/lib" \
   pyenv install 3.7.1
 fi
 pyenv global 3.7.1
