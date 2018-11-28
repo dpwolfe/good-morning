@@ -110,6 +110,7 @@ alias e='vim'
 alias ping='ping -c 5'
 alias fastping='ping -c 100 -s.2'
 alias ports='netstat -tulanp'
+alias routes='netstat -rn'
 
 alias mv='mv -i'
 alias cp='cp -i'
