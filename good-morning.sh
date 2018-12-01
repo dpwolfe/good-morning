@@ -545,7 +545,7 @@ brews=(
   vim
   watchman
   wget
-  yarn
+  # yarn
   zsh
   zsh-completions
 )
