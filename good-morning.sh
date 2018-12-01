@@ -520,6 +520,7 @@ brews=(
   fd # https://github.com/sharkdp/fd
   # fish
   fzf # https://github.com/junegunn/fzf
+  gcc
   go
   git
   git-lfs
@@ -580,7 +581,7 @@ if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
   pyenv install 2.7.15
 fi
 if ! pyenv versions | grep "3\.7\.1" &> /dev/null; then
-  CFLAGS="-I$(brew --prefix openssl)/include" \
+  CFLAGS="-I$(brew --prefix openssl)/include -std=gnu99" \
   CPPFLAGS="-I/usr/local/opt/readline/include" \
   LDFLAGS="-L$(brew --prefix openssl)/lib -L/usr/local/opt/readline/lib" \
   pyenv install 3.7.1
