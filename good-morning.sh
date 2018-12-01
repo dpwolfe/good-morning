@@ -520,7 +520,6 @@ brews=(
   fd # https://github.com/sharkdp/fd
   # fish
   fzf # https://github.com/junegunn/fzf
-  gcc
   go
   git
   git-lfs
@@ -573,17 +572,16 @@ unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not rood)
 # chsh -s `which fish`
 
+# sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
 # prototype pyenv install code - need
 if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
-  CFLAGS="-I$(brew --prefix openssl)/include" \
-  CPPFLAGS="-I/usr/local/opt/readline/include" \
-  LDFLAGS="-L$(brew --prefix openssl)/lib -L/usr/local/opt/readline/lib" \
+  CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include" \
+  LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
   pyenv install 2.7.15
 fi
 if ! pyenv versions | grep "3\.7\.1" &> /dev/null; then
-  CFLAGS="-I$(brew --prefix openssl)/include -std=gnu99" \
-  CPPFLAGS="-I/usr/local/opt/readline/include" \
-  LDFLAGS="-L$(brew --prefix openssl)/lib -L/usr/local/opt/readline/lib" \
+  CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include" \
+  LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
   pyenv install 3.7.1
 fi
 pyenv global 3.7.1
