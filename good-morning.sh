@@ -276,22 +276,26 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   # shellcheck source=/dev/null
   source "$HOME/.profile" # load rvm
   rvm cleanup all
-elif [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
-  rvm install ruby --default
-  rvm cleanup all
+  # enable rvm auto-update
+  echo rvm_autoupdate_flag=2 >> ~/.rvmrc
 else
-  current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)([^ ]*).*/-\1-\2/' | sed -E 's/-$//')"
   latest_ruby_version="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
-  if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
-    echo "Upgrading RVM..."
-    rvm get stable --auto
-    echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
-    rvm upgrade "$current_ruby_version" "$latest_ruby_version"
-    rvm create alias default ruby
+  if [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
+    rvm install "$latest_ruby_version" --default
     rvm cleanup all
+  else
+    current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)([^ ]*).*/-\1-\2/' | sed -E 's/-$//')"
+    if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
+      echo "Upgrading RVM..."
+      rvm get stable --auto
+      echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
+      rvm upgrade "$current_ruby_version" "$latest_ruby_version"
+      rvm create alias default ruby
+      rvm cleanup all
+    fi
+    unset current_ruby_version
+    unset latest_ruby_version
   fi
-  unset current_ruby_version
-  unset latest_ruby_version
 fi
 
 # ensure we are not using the system version
@@ -572,7 +576,9 @@ unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not rood)
 # chsh -s `which fish`
 
+# Mojave users have to do this step for pyenv to install correctly:
 # sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+
 # prototype pyenv install code - need
 if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
   CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include" \
