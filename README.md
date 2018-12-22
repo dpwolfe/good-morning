@@ -5,12 +5,18 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 ## Instructions
 
 1. Open the App Store (_Apple Menu > App Store..._) and install all system updates.
-1. Open up a Terminal session and run this command (_Command + Space_ and type "Terminal"):
+2. Open up a Terminal session (_Command + Space_ and type "Terminal")
+3. macOS Mojave users need to run this command to install missing C header files:
+
+   ```sh
+   sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+   ```
+
+4. Run this command to kick off the scirpt:
 
 ```sh
 curl -sL https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh | sh
 ```
-
 
 ## What does it do?
 
