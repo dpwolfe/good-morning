@@ -288,9 +288,12 @@ else
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       echo "Upgrading RVM..."
       rvm get stable --auto
+      # Upgrades of ruby versions disabled since there are gem incompatibilities.
+      # At least it's not broken to just to install the latest version and migrate none of the gems.
       # echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
       # rvm upgrade "$current_ruby_version" "$latest_ruby_version"
       echo "Installing latest Ruby version: $latest_ruby_version..."
+      echo "Gems will not be migrated to provide you with a more reliable install experience."
       rvm install "$latest_ruby_version"
       rvm create alias default ruby
       rvm cleanup all
