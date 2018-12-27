@@ -180,6 +180,8 @@ function installXcode {
   xcversion select "$xcode_short_version" < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
+  echo "Installing macOS SDK headers..."
+  sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
   echo "Open up the App Store and install any updates."
   prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
   echo "Cleaning up Xcode installers..."
