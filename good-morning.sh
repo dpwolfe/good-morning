@@ -288,8 +288,10 @@ else
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       echo "Upgrading RVM..."
       rvm get stable --auto
-      echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
-      rvm upgrade "$current_ruby_version" "$latest_ruby_version"
+      # echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
+      # rvm upgrade "$current_ruby_version" "$latest_ruby_version"
+      echo "Installing latest Ruby version: $latest_ruby_version..."
+      rvm install "$latest_ruby_version"
       rvm create alias default ruby
       rvm cleanup all
     fi
