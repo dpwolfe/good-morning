@@ -296,7 +296,7 @@ else
       # rvm upgrade "$current_ruby_version" "$latest_ruby_version"
       echo "Installing latest Ruby version: $latest_ruby_version..."
       echo "Gems will not be migrated to provide you with a more reliable install experience."
-      rvm install "$latest_ruby_version"
+      rvm install "$latest_ruby_version" --default
       rvm create alias default ruby
       rvm cleanup all
     fi
