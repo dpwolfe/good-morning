@@ -279,7 +279,7 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   source "$HOME/.profile" # load rvm
   rvm cleanup all
   # enable rvm auto-update
-  echo rvm_autoupdate_flag=2 >> ~/.rvmrc
+  # echo rvm_autoupdate_flag=2 >> ~/.rvmrc
 else
   latest_ruby_version="$(rvm list known | grep "\[ruby-" | tail -1 | tr -d '[]')"
   if [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
