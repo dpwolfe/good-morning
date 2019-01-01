@@ -637,8 +637,8 @@ if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
   python ~/get-pip.py --user
   rm -f ~/get-pip.py
 else
-  echo "Upgrading pip..."
-  pip install --upgrade pip > /dev/null
+  echo "Checking for update to pip..."
+  pip install --upgrade pip --upgrade-strategy eager > /dev/null
 fi
 unset localpip
 
@@ -701,7 +701,6 @@ function upgradeNode {
     active_version="N/A"
   fi
 
-  # Install highest Long Term Support (LTS) build as a recommended "prod" node version
   if [[ "$local_version" != "$new_version" ]]; then
     local old_version="$local_version" # rename for readability
     nvm install "$new_version"
@@ -724,7 +723,7 @@ function upgradeNode {
     upgradeNPM
   fi
 
-  if [[ "$active_version" != "N/A" ]]; then
+  if [[ "$active_version" != "N/A" ]] && [[ "$active_version" != "$(nvm current)" ]]; then
     # Switch to the node version in use before any install or 'nvm use' command executed
     nvm use "$active_version" > /dev/null
   fi
