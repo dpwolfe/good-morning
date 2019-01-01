@@ -772,8 +772,8 @@ if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$nvm_version" > /dev/
   checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
   echo "Installing latest Node.js LTS..."
   checkNodeVersion "$nvm_local_lts" "$nvm_latest_lts"
-  echo "Setting default Node.js version to be the latest LTS..."
-  nvm alias default lts/*
+  echo "Setting default Node.js version to be the latest..."
+  nvm alias default node
 else
   loadNVM
   echo "Checking version of installed Node.js..."
