@@ -452,7 +452,7 @@ brewCasks=(
   docker
   dropbox
   firefox
-  google-backup-and-sync
+  # google-backup-and-sync
   google-chrome
   gpg-suite
   handbrake
@@ -466,7 +466,7 @@ brewCasks=(
   minikube
   onedrive
   # opera
-  parallels
+  # parallels
   postman
   provisionql # quick-look for iOS provisioning profiles
   qladdict
@@ -476,7 +476,7 @@ brewCasks=(
   # sketch
   skype
   slack
-  sourcetree
+  # sourcetree
   spotify
   the-unarchiver
   tunnelblick
@@ -583,7 +583,7 @@ rm -f "$brew_list_temp_file"
 unset brews
 unset nobrews
 unset brew_list_temp_file
-# Run this to set your shell to use fish (user, not rood)
+# Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
 
 # Mojave users have to do this step for pyenv to install correctly:
