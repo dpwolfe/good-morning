@@ -420,7 +420,7 @@ if ! type "brew" &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
   echo "Updating Homebrew..."
-  brew update
+  brew update 2> /dev/null
   echo "Checking for outdated Homebrew formulas..."
   if [ "$(brew upgrade)" != "" ]; then
     BREW_CLEANUP_NEEDED=1
