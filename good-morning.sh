@@ -280,6 +280,8 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   rvm cleanup all
   # enable rvm auto-update
   echo rvm_autoupdate_flag=2 >> ~/.rvmrc
+  # enable progress bar when downloading RVM / Rubies
+  echo progress-bar >> ~/.curlrc
 else
   echo "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | grep "\[ruby-" | tail -1 | tr -d '[]')"
