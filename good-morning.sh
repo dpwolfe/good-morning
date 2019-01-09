@@ -280,6 +280,8 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   rvm cleanup all
   # enable rvm auto-update
   echo rvm_autoupdate_flag=2 >> ~/.rvmrc
+  # enable rvm auto-reload on update
+  echo rvm_auto_reload_flag=2 >> ~/.rvmrc
   # enable progress bar when downloading RVM / Rubies
   echo progress-bar >> ~/.curlrc
 else
