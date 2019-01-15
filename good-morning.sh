@@ -284,6 +284,8 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   echo rvm_auto_reload_flag=2 >> ~/.rvmrc
   # enable progress bar when downloading RVM / Rubies
   echo progress-bar >> ~/.curlrc
+  # rvm loads in the profile file, not the same way with auto-dot files, so ignore next error
+  echo rvm_silence_path_mismatch_check_flag=1 >> ~/.rvmrc
 else
   echo "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | grep "\[ruby-" | tail -1 | tr -d '[]')"
