@@ -532,9 +532,6 @@ brews=(
   # caddy
   certbot # For generating SSL certs with Let's Encrypt
   direnv
-  docker
-  docker-compose
-  docker-machine
   fd # https://github.com/sharkdp/fd
   # fish
   fzf # https://github.com/junegunn/fzf
