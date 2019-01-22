@@ -443,10 +443,10 @@ else
   done
 fi
 
-# Install Homebrew casks
+# Homebrew casks
 brewCasks=(
-  # android-platform-tools
-  # android-studio
+  # android-platform-tools # uncomment if you need Android dev tools
+  # android-studio # uncomment if you need Android dev tools
   # beyond-compare
   charles
   # controlplane # mac automation based on hardware events
@@ -455,20 +455,23 @@ brewCasks=(
   # discord
   docker
   dropbox
+  # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   firefox
   # google-backup-and-sync
   google-chrome
   gpg-suite
   handbrake
-  insomniax
   iterm2
-  java8
+  java8 # some things require java8 and I have not needed to install the latest java
   keeweb
   # keybase
   keyboard-maestro # keyboard macros
+  # logitech-gaming-software
   microsoft-office
   minikube
-  onedrive
+  # omnifocus
+  # omnigraffle
+  # onedrive
   # opera
   # parallels
   postman
@@ -483,21 +486,37 @@ brewCasks=(
   # sourcetree
   spotify
   the-unarchiver
-  tunnelblick
+  transmission # open source BitTorrent client from https://github.com/transmission/transmission
+  tunnelblick # connect to your VPN
+  vanilla # hide menu icons on your mac
   virtualbox # A hypervisor like this is needed for Minikube
   visual-studio-code
+  # visual-studio-code-insiders
   wavtap # https://github.com/pje/WavTap
   # To use WavTap you'll need to take some extra steps that shall not be automated.
   # Run this from the Recovery terminal: csrutil disable && reboot
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
   # Reboot again and WavTap should appear in the sound devices menu.
   wireshark
+  # xmind-zen
+  # zoomus
 )
 brew tap caskroom/cask
 brew tap caskroom/versions
 brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
 brew cask list > "$brew_list_temp_file"
+# Uninstall Homebrew casks that conflict with this script or are now obsolete
+# but may have been previously installed.
+nobrewcasks=(
+  insomniax # unmaintained
+)
+for brew in "${nobrewcasks[@]}"; do
+  if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
+    brew cask uninstall --force "$brew"
+  fi
+done
+# Install Homebrew casks
 for cask in "${brewCasks[@]}"; do
   if ! grep -E "(^| )$cask($| )" "$brew_list_temp_file" > /dev/null; then
     echo "Installing $cask with Homebrew..."
@@ -530,20 +549,22 @@ brews=(
   # azure-cli
   bash-completion
   # caddy
+  # cassandra
   certbot # For generating SSL certs with Let's Encrypt
-  direnv
+  # dialog # https://invisible-island.net/dialog/
+  direnv # https://direnv.net/
   fd # https://github.com/sharkdp/fd
   # fish
   fzf # https://github.com/junegunn/fzf
-  go
   git
   git-lfs
+  go
   httpie # https://github.com/jakubroztocil/httpie
   jq
-  kops
+  # kops
   kubernetes-cli
   kubernetes-helm
-  maven
+  # maven
   openssl
   openssl@1.1
   p7zip # provides 7z command
@@ -551,12 +572,14 @@ brews=(
   postgresql
   pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
+  # redis
   ruby
   shellcheck # shell script linting
   terraform
   # terragrunt
   tflint
   tmux
+  vegeta
   vim
   watchman
   wget
