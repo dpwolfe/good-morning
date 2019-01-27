@@ -10,3 +10,4 @@ ADD THIS TO YOUR GITCONFIG, DO NOT USE THIS AS A GITCONFIG
 	visualise = !gitk
 	graph = log --color --graph --pretty=format:\"%h | %ad | %an | %s%d\" --date=short
 	all = "!f() { ls -R -d */.git | xargs -P100 -I{} bash -c \"echo {} && git -C {}/../ $1\"; }; f"
+	reauthor = !bash -c 'git rebase --onto $1 --exec \"git commit --amend --author=\\\"$2\\\"\" $1' --
