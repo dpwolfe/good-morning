@@ -555,6 +555,7 @@ brews=(
   direnv # https://direnv.net/
   fd # https://github.com/sharkdp/fd
   # fish
+  fx # https://github.com/antonmedv/fx
   fzf # https://github.com/junegunn/fzf
   git
   git-lfs
