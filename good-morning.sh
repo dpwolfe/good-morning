@@ -421,11 +421,36 @@ if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
   FIRST_RUN=1
 fi
 
+# Homebrew taps - add those needed and remove obosoleted that can create conflicts (example: java8)
+function checkBrewTaps {
+  notaps=(
+    caskroom/cask
+    caskroom/versions
+  )
+  brew_tap_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_tap"
+  brew tap > "$brew_tap_file"
+  for tap in "${notaps[@]}"; do
+    if grep -E "^$tap$" "$brew_tap_file" > /dev/null; then
+      brew untap "$tap"
+    fi
+  done
+  taps=(
+    wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
+  )
+  for tap in "${taps[@]}"; do
+    if ! grep -E "^$tap$" "$brew_tap_file" > /dev/null; then
+      brew tap "$tap"
+    fi
+  done
+  rm -f "$brew_tap_file"
+}
+
 # Install homebrew - https://brew.sh
 if ! type "brew" &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
   echo "Updating Homebrew..."
+  checkBrewTaps
   brew update 2> /dev/null
   echo "Checking for outdated Homebrew formulas..."
   if [ "$(brew upgrade)" != "" ]; then
@@ -501,8 +526,6 @@ brewCasks=(
   # xmind-zen
   # zoomus
 )
-brew tap caskroom/cask
-brew tap caskroom/versions
 brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
 brew cask list > "$brew_list_temp_file"
@@ -542,7 +565,6 @@ if [ -n "$BREW_CLEANUP_NEEDED" ]; then
 fi
 
 # Install brews
-brew tap wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
 # shellcheck disable=SC2034
 brews=(
   # ansible
