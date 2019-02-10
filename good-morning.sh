@@ -399,11 +399,11 @@ if ! [ -d "$GOOD_MORNING_REPO_ROOT/.git" ]; then
   git clone https://github.com/dpwolfe/good-morning.git "$GOOD_MORNING_REPO_ROOT"
   if [ -s "$HOME\.bash_profile" ]; then
     echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
-    mv "$HOME\.bash_profile" "$HOME\.old_bash_profile"
+    mv "$HOME\.bash_profile" "$HOME\.old_bash_profile_$(date +%Y%m%d%H%M%S)"
   fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
 source \"\$REPO_ROOT/good-morning/dotfiles/.bash_profile\"
-cd \"\$REPO_ROOT\"
+if ! contains \$(pwd) \"\$REPO_ROOT\"; then cd \"\$REPO_ROOT\"; fi
 export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"  # load nvm
 [ -s \"\$NVM_DIR/bash_completion\" ] && \. \"\$NVM_DIR/bash_completion\"  # load nvm bash_completion
