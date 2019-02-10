@@ -6,6 +6,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=git-completion.bash
 source "$DIR/git-completion.bash"
 
+function contains {
+    # contains(string, substring)
+    # Returns 0 if string contains the substring, otherwise returns 1
+    string="$1"
+    substring="$(printf '%q' "$2")"
+    if test "${string#*$substring}" != "$string"; then return 0; else return 1; fi
+}
 function rgfunction { grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *; }
 function findfunction { find . -name "$1"; }
 function unix2dos {
