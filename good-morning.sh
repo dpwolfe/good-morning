@@ -737,6 +737,10 @@ function upgradeNPM {
     echo "Upgrading npm for Node.js $(node -v)..."
     npm install npm -g
   fi
+  if ! type "ncu" $> /dev/null; then
+    echo "Installing npm-check-updates global package..."
+    npm install npm-check-updates -g
+  fi
 }
 
 function upgradeNode {
