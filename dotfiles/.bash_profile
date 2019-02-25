@@ -153,6 +153,7 @@ alias cm='git checkout master'
 alias gco='git checkout'
 
 alias yul='yarn upgrade-interactive --latest'
+alias flushdns='sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache'
 
 # create a new SSL cert with Let's Encrypt using certbot and a DNS TXT challenge
 alias certonly='sudo certbot certonly --manual --preferred-challenges dns'
