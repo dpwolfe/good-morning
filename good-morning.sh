@@ -522,7 +522,6 @@ brewCasks=(
   # Run this from the Recovery terminal: csrutil disable && reboot
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
   # Reboot again and WavTap should appear in the sound devices menu.
-  wireshark
   # xmind-zen
   # zoomus
 )
@@ -533,6 +532,7 @@ brew cask list > "$brew_list_temp_file"
 # but may have been previously installed.
 nobrewcasks=(
   insomniax # unmaintained
+  wireshark # no longer a cask
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
@@ -605,6 +605,7 @@ brews=(
   vegeta
   vim
   watchman
+  wireshark
   wget
   # yarn
   zsh
