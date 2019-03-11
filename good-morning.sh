@@ -518,6 +518,7 @@ brewCasks=(
   visual-studio-code
   # visual-studio-code-insiders
   wavtap # https://github.com/pje/WavTap
+  wireshark
   # To use WavTap you'll need to take some extra steps that shall not be automated.
   # Run this from the Recovery terminal: csrutil disable && reboot
   # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
@@ -532,7 +533,6 @@ brew cask list > "$brew_list_temp_file"
 # but may have been previously installed.
 nobrewcasks=(
   insomniax # unmaintained
-  wireshark # no longer a cask
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
@@ -605,7 +605,7 @@ brews=(
   vegeta
   vim
   watchman
-  wireshark
+  # wireshark
   wget
   # yarn
   zsh
@@ -620,7 +620,7 @@ done
 # Uninstall brews that conflict with this script
 # but may have been previously installed.
 nobrews=(
-  # There are currently no known brews that should be forced to uninstall
+  wireshark # installed as cask
 )
 for brew in "${nobrews[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
