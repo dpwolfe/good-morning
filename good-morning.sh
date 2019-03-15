@@ -58,9 +58,14 @@ function setConfigValue {
   keep_pass_for_session="$(getConfigValue "keep_pass_for_session" "not-asked")" # "not-asked", "no" or "yes"
   local applied_cask_depends_on_fix
   applied_cask_depends_on_fix="$(getConfigValue "applied_cask_depends_on_fix" "no")" # "no" or "yes"
+  local last_node_lts_installed
+  last_node_lts_installed="$(getConfigValue "last_node_lts_installed")"
   local tempfile="$GOOD_MORNING_CONFIG_FILE""_temp"
   # crude validation
-  if [[ "$1" == "keep_pass_for_session" ]] || [[ "$1" == "applied_cask_depends_on_fix" ]]; then
+  if [[ "$1" == "keep_pass_for_session" ]] || \
+     [[ "$1" == "applied_cask_depends_on_fix" ]] || \
+     [[ "$1" == "last_node_lts_installed" ]]
+  then
     export $1="$2"
   else
     echo "Warning: Tried to set an unknown config key: $1"
@@ -68,6 +73,7 @@ function setConfigValue {
   echo "# This file stores settings and flags for the good-morning script." >> "$tempfile"
   echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
   echo "applied_cask_depends_on_fix=$applied_cask_depends_on_fix" >> "$tempfile"
+  echo "last_node_lts_installed=$last_node_lts_installed" >> "$tempfile"
   mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
 }
 
@@ -808,6 +814,16 @@ function loadNVM {
   nvm_local_node="$(nvm version node)"
   nvm_latest_node="$(nvm version-remote node)"
   nvm_local_lts="$(nvm version lts/*)"
+  if [[ "$nvm_local_lts" == "N/A" ]]; then
+    # no local lts installed, or local lts is no longer the latest lts
+    local last_node_lts_installed="$(getConfigValue 'last_node_lts_installed')"
+    if [ -n "$last_node_lts_installed" ] && \
+      nvm ls "$last_node_lts_installed" | grep "$last_node_lts_installed" > /dev/null
+    then
+      # lts node was previously installed by good-morning and it is still installed
+      nvm_local_lts="$last_node_lts_installed"
+    fi
+  fi
   nvm_latest_lts="$(nvm version-remote --lts)"
 }
 
@@ -844,6 +860,7 @@ else
   echo "Checking version of installed Node.js LTS..."
   checkNodeVersion "$nvm_local_lts" "$nvm_latest_lts"
 fi
+setConfigValue "last_node_lts_installed" "$nvm_latest_lts"
 unset nvm_version
 unset nvm_local_node
 unset nvm_latest_node
