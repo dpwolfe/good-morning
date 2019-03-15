@@ -56,15 +56,18 @@ function setConfigValue {
   # faking it is not worth the added complexity
   local keep_pass_for_session
   keep_pass_for_session="$(getConfigValue "keep_pass_for_session" "not-asked")" # "not-asked", "no" or "yes"
+  local applied_cask_depends_on_fix
+  applied_cask_depends_on_fix="$(getConfigValue "applied_cask_depends_on_fix" "no")" # "no" or "yes"
   local tempfile="$GOOD_MORNING_CONFIG_FILE""_temp"
   # crude validation
-  if [[ "$1" == "keep_pass_for_session" ]]; then
+  if [[ "$1" == "keep_pass_for_session" ]] || [[ "$1" == "applied_cask_depends_on_fix" ]]; then
     export $1="$2"
   else
     echo "Warning: Tried to set an unknown config key: $1"
   fi
-  echo "# This file saves user preferences for running the good-morning script." >> "$tempfile"
+  echo "# This file stores settings and flags for the good-morning script." >> "$tempfile"
   echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
+  echo "applied_cask_depends_on_fix=$applied_cask_depends_on_fix" >> "$tempfile"
   mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
 }
 
@@ -466,6 +469,15 @@ else
     brew cask reinstall "$outdatedCask"
     BREW_CLEANUP_NEEDED=1
   done
+fi
+
+# Homebrew cask depends_on fix from: https://github.com/Homebrew/homebrew-cask/issues/58046
+# The wireshark 3.0.0 install was the first cask that started to fail to update, but now succeeds
+# with the following fix applied.
+if [[ "$(getConfigValue 'applied_cask_depends_on_fix')" != "yes" ]]; then
+  echo "Applying the Homebrew depends_on metadata fix from https://github.com/Homebrew/homebrew-cask/issues/58046..."
+  /usr/bin/find "$(brew --prefix)/Caskroom/"*'/.metadata' -type f -name '*.rb' -print0 | /usr/bin/xargs -0 /usr/bin/perl -i -0pe 's/depends_on macos: \[.*?\]//gsm;s/depends_on macos: .*//g'
+  setConfigValue "applied_cask_depends_on_fix" "yes"
 fi
 
 # Homebrew casks
