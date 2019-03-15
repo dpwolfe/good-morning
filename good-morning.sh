@@ -731,15 +731,13 @@ fi
 
 function upgradeNPM {
   echo "Checking Node.js $(node -v) global npm package versions..."
-  # Upgrade all global packages other than npm
-  npm update -g
-  # Detect if npm is actually outdated to avoid reinstalling the same version.
-  if [ -n "$(npm outdated -g | grep -E "^npm\s")" ]; then
-    echo "Upgrading npm for Node.js $(node -v)..."
-    npm install npm -g
-  fi
+  # Upgrade all global packages other than npm to latest
+  for package in $(npm -g outdated --parseable --depth=0 | cut -d: -f4); do
+    echo "Upgrading global package $package for Node.js $(node -v)..."
+    npm -g install "$package"
+  done
   if ! type "ncu" &> /dev/null; then
-    echo "Installing npm-check-updates global package..."
+    echo "Installing the npm-check-updates global package..."
     npm install npm-check-updates -g
   fi
 }
