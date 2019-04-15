@@ -280,7 +280,7 @@ if ! [ -d "/Applications/GPG Keychain.app" ]; then
   unset dmg
 fi
 
-if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
+function installRVM {
   echo "Installing RVM..."
   gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
   curl -sSL https://get.rvm.io | bash -s stable --ruby
@@ -295,7 +295,9 @@ if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
   echo progress-bar >> ~/.curlrc
   # rvm loads in the profile file, not the same way with auto-dot files, so ignore next error
   echo rvm_silence_path_mismatch_check_flag=1 >> ~/.rvmrc
-else
+}
+
+function checkRubyVersion {
   echo "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | grep "\[ruby-" | tail -1 | tr -d '[]')"
   if [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
@@ -319,7 +321,12 @@ else
     unset current_ruby_version
     unset latest_ruby_version
   fi
+}
+
+if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
+  installRVM
 fi
+checkRubyVersion
 
 # ensure we are not using the system version
 rvm use default > /dev/null
