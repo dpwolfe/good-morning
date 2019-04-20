@@ -178,10 +178,10 @@ fi
 function installXcode {
   local xcode_version="$1"
   local xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
-  # if [ -z "$FASTLANE_USERNAME" ]; then
-  #   prompt "Enter your Apple Developer ID: " fastlane_user
-  #   export FASTLANE_USERNAME="$FASTLANE_USERNAME"
-  # fi
+  if [ -z "$FASTLANE_USERNAME" ]; then
+    prompt "Enter your Apple Developer ID: " fastlane_user
+    FASTLANE_USERNAME="$fastlane_user"
+  fi
   echo "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
   echo "Installing Xcode $xcode_version..."
@@ -190,11 +190,12 @@ function installXcode {
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
   echo "Installing macOS SDK headers..."
+  # These do need to be re-installed after an Xcode update. 
   sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
-  echo "Open up the App Store and install any updates."
-  prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
   echo "Cleaning up Xcode installers..."
   xcversion cleanup
+  echo "Open up Settings > Software Update and install any updates."
+  prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
 }
 
 function getLocalXcodeVersion {
@@ -202,8 +203,8 @@ function getLocalXcodeVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="10.1"
-  local xcode_build_version="10B61"
+  local xcode_version="10.2"
+  local xcode_build_version="10E125"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
@@ -343,11 +344,12 @@ updateGems
 function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
-    bundler
+    # bundler # dependency of xcode-install
     cocoapods
+    # fastlane # dependency of xcode-install
     sqlint
     terraform_landscape
-    xcode-install # Will also replace the other xcode-install gem that was installed via a work-around...
+    xcode-install # Will also replace the other xcode-install gem that was installed while bootstrapping...
   )
   gem list --local > "$gem_list_temp_file"
   for gem in "${gems[@]}"; do
@@ -357,6 +359,15 @@ function installGems {
     fi
   done
   rm -f "$gem_list_temp_file"
+  # temp fix for fastlane having an internal version conflict with google-cloud-storage
+  # remove once fastlane fixes this
+  echo "Applying workaround to fix xcode-install..."
+  echo "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
+  gem install google-cloud-storage -v 1.15.0 --no-document &> /dev/null
+  gem uninstall google-cloud-storage -v 1.16.0 &> /dev/null
+  gem uninstall google-cloud-storage -v 1.17.0 &> /dev/null
+  gem uninstall google-cloud-storage -v 1.18.0 &> /dev/null
+  # end temp fix
   gem cleanup
 }
 installGems
