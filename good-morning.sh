@@ -63,8 +63,8 @@ function setConfigValue {
   local tempfile="$GOOD_MORNING_CONFIG_FILE""_temp"
   # crude validation
   if [[ "$1" == "keep_pass_for_session" ]] || \
-     [[ "$1" == "applied_cask_depends_on_fix" ]] || \
-     [[ "$1" == "last_node_lts_installed" ]]
+    [[ "$1" == "applied_cask_depends_on_fix" ]] || \
+    [[ "$1" == "last_node_lts_installed" ]]
   then
     export $1="$2"
   else
@@ -178,10 +178,10 @@ fi
 function installXcode {
   local xcode_version="$1"
   local xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
-  if [ -z "$FASTLANE_USERNAME" ]; then
-    prompt "Enter your Apple Developer ID: " fastlane_user
-    FASTLANE_USERNAME="$fastlane_user"
-  fi
+  # if [ -z "$FASTLANE_USER" ]; then
+  #   prompt "Enter your Apple Developer ID: " fastlane_user
+  #   FASTLANE_USER="$fastlane_user"
+  # fi
   echo "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
   echo "Installing Xcode $xcode_version..."
@@ -203,8 +203,8 @@ function getLocalXcodeVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="10.2"
-  local xcode_build_version="10E125"
+  local xcode_version="10.2.1"
+  local xcode_build_version="10E1001"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
