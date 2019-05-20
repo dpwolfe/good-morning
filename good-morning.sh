@@ -305,7 +305,7 @@ function checkRubyVersion {
     rvm install "$latest_ruby_version" --default
     rvm cleanup all
   else
-    current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p0)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
+    current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       echo "Upgrading RVM..."
       rvm get stable --auto
