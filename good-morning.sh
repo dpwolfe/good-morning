@@ -519,6 +519,7 @@ brewCasks=(
   dropbox
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   firefox
+  font-fira-code
   # google-backup-and-sync
   google-chrome
   gpg-suite
