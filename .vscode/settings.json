@@ -1,5 +1,72 @@
 {
+  "breadcrumbs.enabled": true,
+  "editor.fontFamily": "Fantasque Sans Mono",
+  "editor.minimap.maxColumn": 120,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.suggest.localityBonus": true,
+  "editor.tabSize": 2,
+  "editor.wordWrapColumn": 120,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.openEditors.visible": 0,
+  "extensions.ignoreRecommendations": false,
+  "files.autoSave": "onFocusChange",
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "prettier.eslintIntegration": true,
+  "prettier.jsxBracketSameLine": true,
+  "prettier.printWidth": 120,
+  "prettier.singleQuote": true,
+  "terraform.codelens.enabled": false,
+  "vim.easymotionMarkerFontFamily": "Fantasque Sans Mono",
+  "vim.textwidth": 120,
+  "workbench.colorTheme": "Blakai Theme",
+  "javascript.suggestionActions.enabled": false,
+  "gitlens.advanced.messages": {
+    "suppressShowKeyBindingsNotice": true
+  },
   "markdownlint.config": {
-    "MD026": false
+    "MD002": false,
+    "MD013": { "line_length": 120 },
+    "MD026": false,
+    "MD029": false,
+    "MD030": false,
+    "MD033": false,
+    "MD041": false
+  },
+  "debug.node.autoAttach": "on",
+  "diffEditor.ignoreTrimWhitespace": false,
+  "diffEditor.renderSideBySide": true,
+  "editor.minimap.enabled": false,
+  "javascript.preferences.quoteStyle": "single",
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "wallaby.node": "/usr/local/bin/node",
+  "workbench.statusBar.feedback.visible": false,
+  "vim.showmodename": false,
+  "projectManager.showProjectNameInStatusBar": false,
+  "gitlens.mode.statusBar.enabled": false,
+  "gitlens.views.compare.avatars": false,
+  "gitlens.views.lineHistory.avatars": false,
+  "gitlens.views.fileHistory.avatars": false,
+  "gitlens.views.repositories.avatars": false,
+  "gitlens.views.search.avatars": false,
+  "editor.snippetSuggestions": "none",
+  "javascript.suggest.autoImports": false,
+  "javascript.suggest.names": false,
+  "javascript.suggest.paths": false,
+  "gitlens.codeLens.authors.enabled": false,
+  "gitlens.codeLens.recentChange.enabled": false,
+  "gitlens.codeLens.enabled": false,
+  "window.zoomLevel": 0,
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.exclude": {
+      "**/node_modules" : true,
+      "**/dist" : false,
+      "**/.nyc_output": false
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
