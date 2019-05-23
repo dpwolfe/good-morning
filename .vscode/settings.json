@@ -1,6 +1,6 @@
 {
   "breadcrumbs.enabled": true,
-  "editor.fontFamily": "Fantasque Sans Mono",
+  "editor.fontFamily": "FiraCode-Retina",
   "editor.minimap.maxColumn": 120,
   "editor.multiCursorModifier": "ctrlCmd",
   "editor.suggest.localityBonus": true,
@@ -17,9 +17,14 @@
   "prettier.printWidth": 120,
   "prettier.singleQuote": true,
   "terraform.codelens.enabled": false,
-  "vim.easymotionMarkerFontFamily": "Fantasque Sans Mono",
+  "vim.easymotionMarkerFontFamily": "FiraCode-Retina",
   "vim.textwidth": 120,
+  "window.openFilesInNewWindow": "on",
+  "window.openFoldersInNewWindow": "on",
+  "window.openWithoutArgumentsInNewWindow": "on",
+  "window.restoreWindows": "all",
   "workbench.colorTheme": "Blakai Theme",
+  "workbench.startupEditor": "newUntitledFile",
   "javascript.suggestionActions.enabled": false,
   "gitlens.advanced.messages": {
     "suppressShowKeyBindingsNotice": true
@@ -57,6 +62,7 @@
   "gitlens.codeLens.authors.enabled": false,
   "gitlens.codeLens.recentChange.enabled": false,
   "gitlens.codeLens.enabled": false,
+  "terminal.external.osxExec": "iTerm.app",
   "window.zoomLevel": 0,
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -68,5 +74,7 @@
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "editor.fontSize": 11,
+  "editor.fontLigatures": true
 }
