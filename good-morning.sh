@@ -359,6 +359,16 @@ function installGems {
     fi
   done
   rm -f "$gem_list_temp_file"
+  # temp fix for fastlane having an internal version conflict with google-cloud-storage
+  # remove once fastlane fixes this
+  echo "Applying workaround to fix xcode-install..."
+  echo "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
+  gem install google-cloud-storage -v 1.16.0 --no-document &> /dev/null
+  gem uninstall google-cloud-storage -v 1.17.0 &> /dev/null
+  gem uninstall google-cloud-storage -v 1.18.0 &> /dev/null
+  gem uninstall google-cloud-storage -v 1.18.1 &> /dev/null
+  gem uninstall google-cloud-storage -v 1.18.2 &> /dev/null
+  # end temp fix
   gem cleanup
 }
 installGems
