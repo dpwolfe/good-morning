@@ -26,7 +26,7 @@ function askto {
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
   case $yn in
-    y|Y ) ${2}; return 0;;
+    y|Y ) $("${2}"); return 0;;
     n|N ) return 1;;
   esac
 }
