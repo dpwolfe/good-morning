@@ -10,9 +10,9 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 
 ## Instructions
 
-1. Open the App Store (_Apple Menu > App Store..._) and install all system updates.
-2. Open up a Terminal session (_Command + Space_ and type "Terminal")
-3. Run this command to kick off the script:
+1. Install all system updates (_Apple Menu > System Preferences... > Software Update_).
+2. Open up a Terminal session (_Command + Space_ for Spotlight Search and type "Terminal")
+3. Run this command:
 
     ```sh
     curl -sL https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh | sh
