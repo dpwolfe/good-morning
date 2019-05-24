@@ -4,7 +4,7 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 
 ## Pre-requisites
 
-1. You must have admin access on your Mac.
+1. You must have admin privileges on your MacBook.
 1. You must have an Apple ID that has accepted the developer agreement, which you can do
    for free here: <https://developer.apple.com/agree>
 
