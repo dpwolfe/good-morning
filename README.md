@@ -26,7 +26,7 @@ you'll probably like 95% of the system settings, which makes it well worth the t
 of undoing a few that are not to your liking. Change the ones you don't like afterwards
 and feel free to open issues for feedback.
 
-Skip hours of manually installing and setting up the usual laundry list of tools like:
+### Avoid wasting hours manually installing and setting up the usual laundry list of tools like:
 
 1. Xcode latest, plus the command line tools and, since Mojave, installs the C headers
    that are no longer present by default.
@@ -43,7 +43,7 @@ Skip hours of manually installing and setting up the usual laundry list of tools
    environment variables, paths, etc.
    - Feel free to bring your own dotfiles or edit as needed after the first run.
 
-_Run good-morning... every morning._ This keeps all the apps and tools up-to-date for you, including:
+### _Run good-morning... every morning._ to keep all the apps and tools up-to-date, including:
 
 1. Update Node Version Manager (nvm)
 1. Update you to the latest Node.js and latest LTS of Node.js with nvm
