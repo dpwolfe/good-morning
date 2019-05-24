@@ -18,7 +18,7 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
     curl -sL https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh | sh
     ```
 
-## What does good-morning.sh do?
+## What does it do?
 
 On the first run, it sets up a new MacBook with a list of commonly installed apps and
 opinionated system settings. _It's automated, not unattended._ If you are a power user,
