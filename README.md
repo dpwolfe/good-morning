@@ -2,6 +2,12 @@
 
 First thing to run on a new MacBook and every morning thereafter to keep it up to date.
 
+## Pre-requisites
+
+1. You must have admin access on your Mac.
+1. You must have an Apple ID that has accepted the developer agreement, which you can do
+   for free here: <https://developer.apple.com/agree>
+
 ## Instructions
 
 1. Open the App Store (_Apple Menu > App Store..._) and install all system updates.
@@ -12,33 +18,44 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
     curl -sL https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh | sh
     ```
 
-## What does it do?
+## What does good-morning.sh do?
 
-_It's automated, but not unattended._ On first run, an opinionated set of common tooling is installed and numerous opinionated system settings are set. You're only prompted the first time to set the system settings. Even if you don't like some settings, you'll probably like 95% of them. Change those you don't like afterwards and feel free to open an issue for feedback on those you think I should prompt everyone about first.
+On the first run, it sets up a new MacBook with a list of commonly installed apps and
+opinionated system settings. _It's automated, not unattended._ If you are a power user,
+you'll probably like 95% of the system settings, which makes it well worth the trouble
+of undoing a few that are not to your liking. Change the ones you don't like afterwards
+and feel free to open issues for feedback.
 
-Some of the goodies:
+Skip hours of manually installing and setting up the usual laundry list of tools like:
 
-1. Node Version Manager (rvm)
-1. Homebrew, installing a variety of formulas and casks
-1. Xcode latest
-1. Node.js latest and latest LTS
-1. Pyenv w/ a Python 2.x and 3.x version and pip
-1. An SSH key and GPG key and installing them on GitHub
-1. Ruby Version Manager (rvm) with latest Ruby
-1. iTerm
-1. Configure the terminal to use some dotfiles. Feel free to bring your own dotfiles afterwards.
+1. Xcode latest, plus the command line tools and, since Mojave, installs the C headers
+   that are no longer present by default.
+1. Node Version Manager (nvm) with latest Node.js and latest LTS of Node.js
+1. Homebrew, installing a number of frequently used apps and utilities.
+   - Includes: Microsoft Office, Docker, Visual Studio Code, Slack, Skype, Minikube + VirtuaBox,
+     Spotify, Wireshark, Postman, iTerm2, Charles, DBeaver
+1. Pyenv w/ Python 2.x and 3.x versions along with pip
+1. A new SSH key and GPG key by walking you through their creation and the steps to add
+   them to GitHub
+1. Ruby Version Manager (rvm) with the latest Ruby
+1. iTerm2
+1. Primes your .bash_profile with some dotfiles containing aliases, git bash completion,
+   environment variables, paths, etc.
+   - Feel free to bring your own dotfiles or edit as needed after the first run.
 
-_Run good-morning... every morning._ Use iTerm. Subsequent runs do many things to keep your system up to date, including:
+_Run good-morning... every morning._ This keeps all the apps and tools up-to-date for you, including:
 
 1. Update Node Version Manager (nvm)
-1. Updating you to the latest Node.js and latest LTS of Node.js (using nvm)
-    - The previous latest version is uninstalled automatically. That only happens once, so install/re-install older versions as needed since they are not touched by good-morning.
-1. Update globally installed node_modules in both latest versions of Node.js
-1. Update npm in both latest versions of Node.js
-1. Fix ownership to be yours on directories as recommended by Homebrew or found from my own trials by fire
-1. Update apps installed via Homebrew casks in addition to brew formulas (regular brews are easy).
-1. Update Python versions
-1. Update pips, sometimes fixing the install of pip
-1. Update Xcode
-1. Update Ruby gems
-1. Variety of installer cache cleanup and clearing to free up space
+1. Update you to the latest Node.js and latest LTS of Node.js with nvm
+   - An easy way to discover when a new Node.js version releases.
+   - Globally installed packages are automatically re-installed with new Node.js versions.
+   - The version that is immediately before the new version (locally) is uninstalled automatically.
+     That only happens during an upgrade, so install/re-install older versions as needed without worry since
+     they will not be affected by good-morning.
+1. Update npm and globally installed node_modules for the latest Node.js and Node.js LTS.
+1. Fix ownership to be yours on directories recommended by Homebrew or as required by casks through trial and error.
+1. Update apps (casks) installed via Homebrew in addition to brew formulas (updating brew formulas was already easy).
+1. Update Python versions and pip versions. Occasionally fix the install of pip because Python environments are finicky.
+1. Update Xcode, uninstalling the immediately previous version similar to Node.js upgrades.
+1. Update Ruby and Ruby gems.
+1. Keep installer caches clean, freeing up disk space.
