@@ -43,7 +43,7 @@ and feel free to open issues for feedback.
    environment variables, paths, etc.
    - Feel free to bring your own dotfiles or edit as needed after the first run.
 
-### _Run good-morning... every morning_ to keep all the apps and tools up-to-date, including:
+### _Run good-morning... every morning_ to keep it all up-to-date, including:
 
 1. Update Node Version Manager (nvm)
 1. Update you to the latest Node.js and latest LTS of Node.js with nvm
