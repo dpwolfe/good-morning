@@ -485,7 +485,7 @@ else
     BREW_CLEANUP_NEEDED=1
     # If there was any output from the cleanup task, assume a formula changed or was installed.
     # Homebrew Doctor can take a long time to run, so now running only after formula changes...
-    echo "Running Hombrew Doctor..."
+    echo "Running Hombrew Doctor since Homebrew updates were installed..."
     brew doctor
   fi
   echo "Checking for outdated Homebrew Casks..."
