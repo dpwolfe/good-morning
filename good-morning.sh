@@ -344,9 +344,8 @@ updateGems
 function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
-    # bundler # dependency of xcode-install
     cocoapods
-    # fastlane # dependency of xcode-install
+    # fastlane # installed as dependency of xcode-install
     sqlint
     terraform_landscape
     xcode-install # Will also replace the other xcode-install gem that was installed while bootstrapping...
@@ -513,6 +512,7 @@ brewCasks=(
   charles
   # controlplane # mac automation based on hardware events
   # cord # remote desktop into windows machines from macOS
+  # dash # https://kapeli.com/dash
   dbeaver-community
   # discord
   docker
@@ -529,8 +529,9 @@ brewCasks=(
   keeweb
   # keybase
   keyboard-maestro # keyboard macros
-  # logitech-gaming-software
+  # logitech-gaming-software # if you plug-in a logitech keyboard
   microsoft-office
+  # microsoft-teams
   minikube
   # omnifocus
   # omnigraffle
@@ -542,9 +543,13 @@ brewCasks=(
   qladdict
   qlcolorcode
   qlmarkdown
+  qlstephen
+  quicklook-json
   rocket # utf-8 emoji quick lookup and insert in any macOS app
   # sketch
-  skype
+  skitch
+  # skype
+  # skype-for-business
   slack
   # sourcetree
   spotify
@@ -556,13 +561,13 @@ brewCasks=(
   visual-studio-code
   # visual-studio-code-insiders
   wavtap # https://github.com/pje/WavTap
+  ## To use WavTap you'll need to take some extra steps that shall not be automated.
+  ## Run this from the Recovery terminal: csrutil disable && reboot
+  ## Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
+  ## Reboot again and WavTap should appear in the sound devices menu.
   wireshark
-  # To use WavTap you'll need to take some extra steps that shall not be automated.
-  # Run this from the Recovery terminal: csrutil disable && reboot
-  # Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
-  # Reboot again and WavTap should appear in the sound devices menu.
   # xmind-zen
-  # zoomus
+  zoomus
 )
 brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
@@ -606,12 +611,15 @@ fi
 # shellcheck disable=SC2034
 brews=(
   # ansible
+  # automake
   # azure-cli
   bash-completion
   # caddy
   # cassandra
   certbot # For generating SSL certs with Let's Encrypt
+  coreutils
   # dialog # https://invisible-island.net/dialog/
+  dep # go dependency manager
   direnv # https://direnv.net/
   fd # https://github.com/sharkdp/fd
   # fish
@@ -620,21 +628,27 @@ brews=(
   git
   git-lfs
   go
+  # highlight
   httpie # https://github.com/jakubroztocil/httpie
+  # isl
   jq
   # kops
   kubernetes-cli
   kubernetes-helm
+  # lnav
   # maven
+  # neovim
   openssl
   openssl@1.1
   p7zip # provides 7z command
   packer
+  pgcli
+  pgtune
+  pgweb
   postgresql
   pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
   # redis
-  ruby
   shellcheck # shell script linting
   terraform
   # terragrunt
@@ -643,9 +657,8 @@ brews=(
   vegeta
   vim
   watchman
-  # wireshark
   wget
-  # yarn
+  zlib
   zsh
   zsh-completions
 )
@@ -671,9 +684,6 @@ unset nobrews
 unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
-
-# Mojave users have to do this step for pyenv to install correctly:
-# sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
 
 # prototype pyenv install code - need
 if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
@@ -741,9 +751,9 @@ pips=(
   # gsutil # for programmatic access to Google Play Console reports
   lxml
   packaging
+  pip-review
   pipdeptree
   pipenv
-  pip-review
   pycurl
   requests
   virtualenv
