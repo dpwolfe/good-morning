@@ -621,6 +621,7 @@ brews=(
   # dialog # https://invisible-island.net/dialog/
   dep # go dependency manager
   direnv # https://direnv.net/
+  docker-squash # https://github.com/goldmann/docker-squash
   fd # https://github.com/sharkdp/fd
   # fish
   fx # https://github.com/antonmedv/fx
