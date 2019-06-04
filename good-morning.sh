@@ -518,8 +518,8 @@ brewCasks=(
   # dash # https://kapeli.com/dash
   dbeaver-community
   # discord
-  docker
-  # dropbox # May need to run docker-edge
+  # docker # May need to run docker-edge
+  dropbox
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   firefox
   font-fira-code
