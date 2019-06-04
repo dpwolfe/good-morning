@@ -519,6 +519,7 @@ brewCasks=(
   dbeaver-community
   # discord
   # docker # May need to run docker-edge
+  docker-edge
   dropbox
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   firefox
@@ -579,6 +580,7 @@ brew cask list > "$brew_list_temp_file"
 # but may have been previously installed.
 nobrewcasks=(
   insomniax # unmaintained
+  docker # temporarily needing docker-edge for MacBook 2015
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
