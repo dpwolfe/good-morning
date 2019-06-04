@@ -14,19 +14,20 @@ if [ -z "$GOOD_MORNING_PASSPHRASE" ]; then
   GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
 function encryptToFile {
-  echo "$1" | openssl enc -aes-256-cbc -k $GOOD_MORNING_PASSPHRASE > "$2"
+  echo "$1" | openssl enc -aes-256-cbc -k "$GOOD_MORNING_PASSPHRASE" > "$2"
 }
 
 function decryptFromFile {
-  openssl enc -aes-256-cbc -d -k $GOOD_MORNING_PASSPHRASE < "$1"
+  openssl enc -aes-256-cbc -d -k "$GOOD_MORNING_PASSPHRASE" < "$1"
 }
 
 function askto {
   echo "Do you want to $1? $3"
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
+  # shellcheck disable=SC2091
   case $yn in
-    y|Y ) $("${2}"); return 0;;
+    y|Y ) $($2); return 0;;
     n|N ) return 1;;
   esac
 }
@@ -177,7 +178,8 @@ fi
 
 function installXcode {
   local xcode_version="$1"
-  local xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
+  local xcode_short_version
+  xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
   # if [ -z "$FASTLANE_USER" ]; then
   #   prompt "Enter your Apple Developer ID: " fastlane_user
   #   FASTLANE_USER="$fastlane_user"
@@ -210,7 +212,8 @@ function checkXcodeVersion {
     installXcode "$xcode_version"
   else
     local local_version=getLocalXcodeVersion
-    local local_build_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Build | sed -E 's/Build version ([0-9A-Za-z]+)/\1/')"
+    local local_build_version
+    local_build_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Build | sed -E 's/Build version ([0-9A-Za-z]+)/\1/')"
     if [[ "$local_build_version" != "$xcode_build_version" ]]; then
       installXcode "$xcode_version"
       local new_local_version=getLocalXcodeVersion
@@ -372,7 +375,7 @@ function installGems {
 }
 installGems
 
-if ( [ -n "$gitHubEmailChanged" ] || [ -n "$gitHubNameChanged" ] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
+if ( [[ -n "$gitHubEmailChanged" ]] || [[ -n "$gitHubNameChanged" ]] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
   promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
   gpg --batch --gen-key <<EOF
 %echo "Generating a GPG key for signing Git operations...""
@@ -589,7 +592,7 @@ for cask in "${brewCasks[@]}"; do
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [ -s "$cask_collision_file" ]; then
       # Remove non-brew installed version of app and retry.
-      sudoit rm -rf "$(cat $cask_collision_file)"
+      sudoit rm -rf "$(cat "$cask_collision_file")"
       rm -f "$cask_collision_file"
       brew cask install "$cask"
     fi
@@ -715,7 +718,7 @@ function checkOhMyFish {
 function pickbin {
   local versions="$1"
   for version in $versions; do
-    if type $version &> /dev/null; then
+    if type "$version" &> /dev/null; then
       echo "$version"
       return
     fi
@@ -768,7 +771,7 @@ for pip in "${pips[@]}"; do
   fi
 done
 unset pips
-rm -f $piptempfile
+rm -f "$piptempfile"
 unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
@@ -847,7 +850,8 @@ function loadNVM {
   nvm_local_lts="$(nvm version lts/*)"
   if [[ "$nvm_local_lts" == "N/A" ]]; then
     # no local lts installed, or local lts is no longer the latest lts
-    local last_node_lts_installed="$(getConfigValue 'last_node_lts_installed')"
+    local last_node_lts_installed
+    last_node_lts_installed="$(getConfigValue 'last_node_lts_installed')"
     if [ -n "$last_node_lts_installed" ] && \
       nvm ls "$last_node_lts_installed" | grep "$last_node_lts_installed" > /dev/null
     then
@@ -938,7 +942,8 @@ fi
 
 # Surface some hidden utility apps that are not available in Spotlight Search
 function linkUtil {
-  local linkPath="/Applications/Utilities/$(echo "$1" | sed -E "s/.*\/(.*\.app)/\1/")"
+  local linkPath
+  linkPath="/Applications/Utilities/$(echo "$1" | sed -E "s/.*\/(.*\.app)/\1/")"
   if [ -d "$1" ] && ! [ -L "$linkPath" ]; then
     echo "Creating $linkPath symlink..."
     sudoit ln -s "$1" "$linkPath"

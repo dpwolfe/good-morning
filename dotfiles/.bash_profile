@@ -77,8 +77,9 @@ function askto {
   echo "Do you want to $1? $3"
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
+  # shellcheck disable=SC2091
   case $yn in
-    y|Y ) $("${2}"); return 0;;
+    y|Y ) $($2); return 0;;
     n|N ) return 1;;
   esac
 }
@@ -160,9 +161,8 @@ alias push='git push'
 alias pushs='git push --set-upstream origin $(parse_git_branch)'
 alias cm='git checkout master'
 alias gco='git checkout'
-alias gbd='askto "delete all local git branches except master" "git branch | grep -Ev "master" | xargs -n 1 git branch -D"'
+alias gbd='askto "delete all local git branches except master" "git branch | grep -Ev master | xargs -n 1 git branch -D"'
 
-alias yul='yarn upgrade-interactive --latest'
 alias flushdns='sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache'
 
 # create a new SSL cert with Let's Encrypt using certbot and a DNS TXT challenge
