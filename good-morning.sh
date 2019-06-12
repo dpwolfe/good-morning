@@ -540,6 +540,7 @@ brewCasks=(
   # omnifocus
   # omnigraffle
   # onedrive
+  openconnect-gui # connect to a Cisco Connect VPN
   # opera
   # parallels
   postman
