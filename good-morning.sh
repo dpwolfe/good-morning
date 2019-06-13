@@ -10,7 +10,7 @@ function randstring32 {
   env LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1
 }
 
-if [ -z "$GOOD_MORNING_PASSPHRASE" ]; then
+if [[ -z "$GOOD_MORNING_PASSPHRASE" ]]; then
   GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
 function encryptToFile {
@@ -33,7 +33,7 @@ function askto {
 }
 
 function prompt {
-  if [ -n "$2" ]; then
+  if [[ -n "$2" ]]; then
     read -r -p "$1" "$2" < /dev/tty
   else
     read -r -p "$1" < /dev/tty
@@ -152,7 +152,7 @@ function checkPerms {
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
-    if [ -d "$dir" ] && ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
+    if [[ -d "$dir" ]] && ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
       echo "Setting ownership of $dir to $USER..."
       sudoit chown -R "$userPerm" "$dir"
     fi
@@ -179,8 +179,9 @@ fi
 function installXcode {
   local xcode_version="$1"
   local xcode_short_version
+  # local fastlane_user
   xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
-  # if [ -z "$FASTLANE_USER" ]; then
+  # if [[ -z "$FASTLANE_USER" ]]; then
   #   prompt "Enter your Apple Developer ID: " fastlane_user
   #   FASTLANE_USER="$fastlane_user"
   # fi
@@ -201,12 +202,12 @@ function installXcode {
 }
 
 function getLocalXcodeVersion {
-  echo "$(/usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/')"
+  /usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/'
 }
 
 function checkXcodeVersion {
-  local xcode_version="10.2.1"
-  local xcode_build_version="10E1001"
+  local xcode_version="11.0"
+  local xcode_build_version="11M336w"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
@@ -217,7 +218,7 @@ function checkXcodeVersion {
     if [[ "$local_build_version" != "$xcode_build_version" ]]; then
       installXcode "$xcode_version"
       local new_local_version=getLocalXcodeVersion
-      if [ -n "$local_version" ] && [[ "$local_version" != "$new_local_version" ]]; then
+      if [[ -n "$local_version" ]] && [[ "$local_version" != "$new_local_version" ]]; then
         echo "Uninstalling Xcode $local_version..."
         xcversion uninstall "$local_version" < /dev/tty
       fi
@@ -237,14 +238,14 @@ fi
 
 GITHUB_EMAIL="$(git config --global --get user.email)"
 unset gitHubEmailChanged
-if [ -z "$GITHUB_EMAIL" ]; then
+if [[ -z "$GITHUB_EMAIL" ]]; then
   prompt "Enter your GitHub email address: " GITHUB_EMAIL
   git config --global user.email "$GITHUB_EMAIL"
   gitHubEmailChanged=1
 fi
 GITHUB_NAME="$(git config --global --get user.name)"
 unset gitHubNameChanged
-if [ -z "$GITHUB_NAME" ]; then
+if [[ -z "$GITHUB_NAME" ]]; then
   prompt "Enter your full name used on GitHub: " GITHUB_NAME
   git config --global user.name "$GITHUB_NAME"
   gitHubNameChanged=1
@@ -304,7 +305,7 @@ function installRVM {
 function checkRubyVersion {
   echo "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | grep "\[ruby-" | tail -1 | tr -d '[]')"
-  if [ "$(rvm list | grep 'No rvm rubies')" != "" ]; then
+  if [[ "$(rvm list | grep 'No rvm rubies')" != "" ]]; then
     rvm install "$latest_ruby_version" --default
     rvm cleanup all
   else
@@ -337,9 +338,12 @@ rvm use default > /dev/null
 
 function updateGems {
   echo "Checking system ruby gem versions..."
-  if [ "$(gem outdated)" ]; then
-    echo "Updating ruby gems..."
-    gem update --force --no-document
+  local outdated
+  outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
+  if [[ -n "$outdated" ]]; then
+    echo "Updating these outdated ruby gems: $outdated"
+    # shellcheck disable=SC2086
+    gem update $outdated --force --no-document
   fi
 }
 updateGems
@@ -414,7 +418,7 @@ EOF
 fi
 
 # Pick a default repo root unless one is already set
-if [ -z "${REPO_ROOT+x}" ]; then
+if [[ -z "${REPO_ROOT+x}" ]]; then
   REPO_ROOT="$HOME/repo"
 fi
 # Create local repository root
@@ -424,10 +428,10 @@ if ! [ -d "$REPO_ROOT" ]; then
 fi
 # Setup clone of good-morning repository
 GOOD_MORNING_REPO_ROOT="$REPO_ROOT/good-morning"
-if ! [ -d "$GOOD_MORNING_REPO_ROOT/.git" ]; then
+if ! [[ -d "$GOOD_MORNING_REPO_ROOT/.git" ]]; then
   echo "Cloning good-morning repository..."
   git clone https://github.com/dpwolfe/good-morning.git "$GOOD_MORNING_REPO_ROOT"
-  if [ -s "$HOME\.bash_profile" ]; then
+  if [[ -s "$HOME\.bash_profile" ]]; then
     echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
     mv "$HOME\.bash_profile" "$HOME\.old_bash_profile_$(date +%Y%m%d%H%M%S)"
   fi
@@ -483,7 +487,7 @@ else
   checkBrewTaps
   brew update 2> /dev/null
   echo "Checking for outdated Homebrew formulas..."
-  if [ "$(brew upgrade)" != "" ]; then
+  if [[ -n "$(brew upgrade)" ]]; then
     BREW_CLEANUP_NEEDED=1
     # If there was any output from the cleanup task, assume a formula changed or was installed.
     # Homebrew Doctor can take a long time to run, so now running only after formula changes...
@@ -593,7 +597,7 @@ for cask in "${brewCasks[@]}"; do
   if ! grep -E "(^| )$cask($| )" "$brew_list_temp_file" > /dev/null; then
     echo "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
-    if [ -s "$cask_collision_file" ]; then
+    if [[ -s "$cask_collision_file" ]]; then
       # Remove non-brew installed version of app and retry.
       sudoit rm -rf "$(cat "$cask_collision_file")"
       rm -f "$cask_collision_file"
@@ -607,7 +611,7 @@ rm -f "$cask_collision_file"
 unset cask_collision_file
 unset brewCasks
 
-if [ -n "$BREW_CLEANUP_NEEDED" ]; then
+if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
   unset BREW_CLEANUP_NEEDED;
   echo "Cleaning up Homebrew cache..."
   brew cleanup -s # -s clears even the latest versions of uninstalled formulas and casks
@@ -855,7 +859,7 @@ function loadNVM {
     # no local lts installed, or local lts is no longer the latest lts
     local last_node_lts_installed
     last_node_lts_installed="$(getConfigValue 'last_node_lts_installed')"
-    if [ -n "$last_node_lts_installed" ] && \
+    if [[ -n "$last_node_lts_installed" ]] && \
       nvm ls "$last_node_lts_installed" | grep "$last_node_lts_installed" > /dev/null
     then
       # lts node was previously installed by good-morning and it is still installed
@@ -878,7 +882,7 @@ function checkNodeVersion {
 }
 
 if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$nvm_version" > /dev/null; then
-  if [ -n "$NVM_DIR" ]; then
+  if [[ -n "$NVM_DIR" ]]; then
     mkdir -p "$NVM_DIR" # ensure directory exists if environment variable is set by existing bash_profile
   fi
   # https://github.com/creationix/nvm#install-script
@@ -905,7 +909,7 @@ unset nvm_latest_node
 unset nvm_local_lts
 unset nvm_latest_lts
 
-if [ -n "$FIRST_RUN" ] && askto "review and install some recommended applications"; then
+if [[ -n "$FIRST_RUN" ]] && askto "review and install some recommended applications"; then
   echo "Follow these steps to complete the iTerm setup:"
   echo "1. In Preferences > Profiles > Colors and select Tango Dark from the Color Presets... drop down."
   echo "2. In Prefernces > Profiles > Terminal, set the iTerm buffer scroll back to 100000."
@@ -916,7 +920,7 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
   # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
 
   # Ensure Atom Shell Commands are installed
-  if [ -d "/Applications/Atom.app" ] && ! type "apm" > /dev/null; then
+  if [[ -d "/Applications/Atom.app" ]] && ! type "apm" > /dev/null; then
     echo "You need to install the Atom shell commands from inside Atom."
     echo "After Atom opens, go to the Atom menu and select Atom > Install Shell Commands."
     prompt "Hit Enter to open Atom..."
@@ -928,7 +932,7 @@ if [ -n "$FIRST_RUN" ] && askto "review and install some recommended application
   fi
 fi
 
-if [ -n "$FIRST_RUN" ] && ! (defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled && \
+if [[ -n "$FIRST_RUN" ]] && ! (defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall && \
   defaults read /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall && \
@@ -947,14 +951,14 @@ fi
 function linkUtil {
   local linkPath
   linkPath="/Applications/Utilities/$(echo "$1" | sed -E "s/.*\/(.*\.app)/\1/")"
-  if [ -d "$1" ] && ! [ -L "$linkPath" ]; then
+  if [[ -d "$1" ]] && ! [[ -L "$linkPath" ]]; then
     echo "Creating $linkPath symlink..."
     sudoit ln -s "$1" "$linkPath"
   fi
 }
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
-if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
+if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   unset NEW_BREW_CASK_INSTALLS
   # Moved this lower since it's not important to do this earlier in the script
   # and it might avoid prompting for the password until more of the work is done.
@@ -963,7 +967,7 @@ if [ -n "$NEW_BREW_CASK_INSTALLS" ]; then
   sudoit mdutil -a -i on
 fi
 
-if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; then
+if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"; then
   echo "Modifying System Settings"
   echo "Only show icons of running apps in app bar, using Spotlight to launch"
   defaults write com.apple.dock static-only -bool true
@@ -1259,7 +1263,7 @@ if [ -n "$FIRST_RUN" ] && askto "set some opinionated starter system settings"; 
   echo "Restart your computer to see all the changes."
 fi
 
-if [ -z "$GOOD_MORNING_RUN" ]; then
+if [[ -z "$GOOD_MORNING_RUN" ]]; then
   echo "Use the command good-morning each day to stay up-to-date!"
 fi
 
@@ -1301,11 +1305,11 @@ function cleanupEnvVars {
 # This is skipped if the good-morning bash alias was executed, in which case, a pull
 # was made before good-morning.sh started.
 function cleanupGoodMorning {
-  if [ -n "$GOOD_MORNING_RUN" ]; then
+  if [[ -n "$GOOD_MORNING_RUN" ]]; then
     unset GOOD_MORNING_RUN
     local keep_pass_for_session
     keep_pass_for_session="$(getConfigValue 'keep_pass_for_session' 'not-asked')"
-    if ( [ -z "$keep_pass_for_session" ] || [[ "$keep_pass_for_session" == "not-asked" ]] ) && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
+    if ( [[ -z "$keep_pass_for_session" ]] || [[ "$keep_pass_for_session" == "not-asked" ]] ) && [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
       if askto "always be prompted for your password if needed when you run good-morning again in the same session"; then
         setConfigValue "keep_pass_for_session" "no"
       else
