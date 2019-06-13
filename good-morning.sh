@@ -338,13 +338,14 @@ rvm use default > /dev/null
 
 function updateGems {
   echo "Checking system ruby gem versions..."
-  local outdated
-  outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
-  if [[ -n "$outdated" ]]; then
-    echo "Updating these outdated ruby gems: $outdated"
-    # shellcheck disable=SC2086
-    gem update $outdated --force --no-document
-  fi
+  get update --force --no-document
+  # local outdated
+  # outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
+  # if [[ -n "$outdated" ]]; then
+  #   echo "Updating these outdated ruby gems: $outdated"
+  #   # shellcheck disable=SC2086
+  #   gem update $outdated --force --no-document
+  # fi
 }
 updateGems
 
