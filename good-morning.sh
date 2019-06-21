@@ -157,6 +157,8 @@ function checkPerms {
       sudoit chown -R "$userPerm" "$dir"
     fi
   done
+  # "Allow apps downloaded from: Anywhere"
+  # spctl --master-disable # Step 1
 }
 checkPerms
 
