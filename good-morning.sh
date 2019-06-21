@@ -539,7 +539,7 @@ brewCasks=(
   keyboard-maestro # keyboard macros
   # logitech-gaming-software # if you plug-in a logitech keyboard
   microsoft-office
-  # microsoft-teams
+  microsoft-teams
   minikube
   # omnifocus
   # omnigraffle
