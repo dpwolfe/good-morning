@@ -522,8 +522,8 @@ brewCasks=(
   # dash # https://kapeli.com/dash
   dbeaver-community
   # discord
-  # docker # May need to run docker-edge
-  # docker-edge # This has install woes on macOS right now too.
+  # docker # need to run docker-edge on 2015 MacBooks or MacBooks using macOS Catalina
+  docker-edge
   dropbox
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   firefox
@@ -585,7 +585,7 @@ brew cask list > "$brew_list_temp_file"
 # but may have been previously installed.
 nobrewcasks=(
   insomniax # unmaintained
-  # docker # temporarily needing docker-edge for MacBook 2015
+  docker # temporarily needing docker-edge for MacBook 2015
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
