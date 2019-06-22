@@ -178,19 +178,30 @@ if ! gem list --local | grep "xcode-install" > /dev/null; then
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
+function ensureXcodeInstallUserSet {
+  if [[ -z "$XCODE_INSTALL_USER" ]]; then
+    local xcode_install_user
+    echo "Your Apple Developer ID is required to install Xcode and essential build tools."
+    echo "The Apple ID you use must have accepted the Apple Developer Agreement."
+    echo "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
+    prompt "Enter your Apple Developer ID: " xcode_install_user
+    XCODE_INSTALL_USER="$xcode_install_user"
+    if [[ -f ~/.bash_profile ]]; then
+      # append to .bash_profile since unlikely to change
+      echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
+    fi
+  fi
+}
+
 function installXcode {
   local xcode_version="$1"
   local xcode_short_version
-  # local fastlane_user
   xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
-  # if [[ -z "$FASTLANE_USER" ]]; then
-  #   prompt "Enter your Apple Developer ID: " fastlane_user
-  #   FASTLANE_USER="$fastlane_user"
-  # fi
+  ensureXcodeInstallUserSet
   echo "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
   echo "Installing Xcode $xcode_version..."
-  xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta simple
+  xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta a simple process
   xcversion select "$xcode_short_version" < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
@@ -448,6 +459,7 @@ if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
 # RVM is sourced from the .profile file, make sure this happens last or RVM will complain
 [ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\"
 " > "$HOME/.bash_profile"
+  ensureXcodeInstallUserSet
 
   # copy some starter shell dot files
   cp "$GOOD_MORNING_REPO_ROOT/dotfiles/.inputrc" "$HOME/.inputrc"
