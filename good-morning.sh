@@ -578,7 +578,7 @@ brewCasks=(
   ## Reboot again and WavTap should appear in the sound devices menu.
   wireshark
   # xmind-zen
-  zoomus
+  zoomus # Broken on macOS 10.15 Catalina (2019-06-21) - Infinite spinner on joining call. Use web version if impacted.
 )
 brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
@@ -586,8 +586,8 @@ brew cask list > "$brew_list_temp_file"
 # Uninstall Homebrew casks that conflict with this script or are now obsolete
 # but may have been previously installed.
 nobrewcasks=(
-  insomniax # unmaintained
-  docker # temporarily needing docker-edge for MacBook 2015
+  insomniax # remove since this is now unmaintained
+  docker # 2015 MacBooks and MacBooks with macOS 10.15 Catalina installed need to use docker-edge (2019-06-21)
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
