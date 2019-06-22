@@ -157,8 +157,12 @@ function checkPerms {
       sudoit chown -R "$userPerm" "$dir"
     fi
   done
-  # "Allow apps downloaded from: Anywhere"
-  # spctl --master-disable # Step 1
+  # "Allow apps downloaded from: Anywhere" for app backwards compatibility with macOS 10.15 Catalina
+  # Otherwise, some apps and quicklook extensions don't switch to the Allowed state properly from
+  # the Security & Privacy settings.
+  if spctl --status | grep -E "assessments enabled" > /dev/null && sw_vers | grep -E "ProductVersion:\t10\.15" > /dev/null; then
+    sudoit spctl --master-disable
+  fi
 }
 checkPerms
 
