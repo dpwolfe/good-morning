@@ -122,6 +122,10 @@ function dmginstall {
   fi
 }
 
+function getOSVersion {
+  sw_vers | grep -E "ProductVersion" | sed -E "s/^.*(10\.[0-9]+)/\1/"
+}
+
 function checkPerms {
   echo "Checking directory permissions..."
   local dirs=(
@@ -160,7 +164,7 @@ function checkPerms {
   # "Allow apps downloaded from: Anywhere" for app backwards compatibility with macOS 10.15 Catalina
   # Otherwise, some apps and quicklook extensions don't switch to the Allowed state properly from
   # the Security & Privacy settings.
-  if spctl --status | grep -E "assessments enabled" > /dev/null && sw_vers | grep -E "ProductVersion:\t10\.15" > /dev/null; then
+  if spctl --status | grep -E "assessments enabled" > /dev/null && [[ "$(getOSVersion)" == "10.15" ]]; then
     sudoit spctl --master-disable
   fi
 }
@@ -210,8 +214,10 @@ function installXcode {
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
   echo "Installing macOS SDK headers..."
-  # These do need to be re-installed after an Xcode update. 
-  sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+  if [[ "$(getOSVersion)" == "10.14" ]]; then
+    # This does not need to be re-installed after an Xcode update, but it is safe to blindly do it again.
+    sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+  fi
   echo "Cleaning up Xcode installers..."
   xcversion cleanup
   echo "Open up Settings > Software Update and install any updates."
