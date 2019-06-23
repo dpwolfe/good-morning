@@ -9,6 +9,8 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 3. You must have an Apple ID that has accepted the developer agreement, which you can do
    for free here: <https://developer.apple.com/account/>
 
+_A fresh install of macOS is preferred, but not required._
+
 ## Instructions
 
 1. Install all system updates (_Apple Menu > System Preferences... > Software Update_).

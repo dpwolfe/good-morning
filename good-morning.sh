@@ -123,7 +123,7 @@ function dmginstall {
 }
 
 function getOSVersion {
-  sw_vers | grep -E "ProductVersion" | sed -E "s/^.*(10\.[0-9]+)/\1/"
+  sw_vers | grep -E "ProductVersion" | sed -E "s/^.*(10\.[.0-9]+)/\1/"
 }
 
 function checkPerms {
@@ -209,12 +209,22 @@ function installXcode {
   echo "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
   echo "Installing Xcode $xcode_version..."
+  if [[ "$(getOSVersion)" == "10.15" ]] || [[ "$(getOSVersion)" == "10.14.5" ]]; then
+    echo "Xcode install has trouble using the Archive Utility on 10.14.5 and higher, including 10.15."
+    echo "This script will hang after the Xcode download completes (i.e. progress bar reaches 100%)."
+    echo "If this happens, do the following:"
+    echo "1. Leave the Archive Utility application and this terminal session running."
+    echo "2. Open up a second terminal session and run: open ~/Library/Caches/XcodeInstall/*.xip"
+    echo "3. After it finishes extracting (takes several minutes), manually quit the Archive Utility."
+    echo "4. Return to this terminal session and it enter your password to continue."
+    echo "If you do not see a password prompt, delete the xip file referenced above and run good-morning again."
+  fi
   xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta a simple process
   xcversion select "$xcode_short_version" < /dev/tty
   echo "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
-  echo "Installing macOS SDK headers..."
-  if [[ "$(getOSVersion)" == "10.14" ]]; then
+  if getOSVersion | grep "10.14" > /dev/null; then
+    echo "Installing macOS SDK headers..."
     # This does not need to be re-installed after an Xcode update, but it is safe to blindly do it again.
     sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
   fi
