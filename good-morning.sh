@@ -189,7 +189,7 @@ function ensureXcodeInstallUserSet {
     echo "The Apple ID you use must have accepted the Apple Developer Agreement."
     echo "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
     prompt "Enter your Apple Developer ID: " xcode_install_user
-    XCODE_INSTALL_USER="$xcode_install_user"
+    export XCODE_INSTALL_USER="$xcode_install_user"
     if [[ -f ~/.bash_profile ]]; then
       # append to .bash_profile since unlikely to change
       echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
@@ -224,7 +224,7 @@ function getLocalXcodeVersion {
 
 function checkXcodeVersion {
   local xcode_version="11.0"
-  local xcode_build_version="11M336w"
+  local xcode_build_version="19A487l"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
