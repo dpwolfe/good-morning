@@ -14,7 +14,7 @@ function contains {
     if test "${string#*$substring}" != "$string"; then return 0; else return 1; fi
 }
 function rgfunction { grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *; }
-function findfunction { find . -name "$1"; }
+function findfunction { find . -name "$1" 2>/dev/null; }
 function unix2dos {
     sed "s/$/$(printf '\r')/" "$1" > "$1.new";
     rm "$1";
