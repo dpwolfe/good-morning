@@ -222,21 +222,27 @@ function getLocalXcodeVersion {
   /usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/'
 }
 
+function getLocalXcodeBuildVersion {
+  /usr/bin/xcodebuild -version 2>&1 | grep Build | sed -E 's/Build version ([0-9A-Za-z]+)/\1/'
+}
+
 function checkXcodeVersion {
-  local xcode_version="11.0"
+  local xcode_version="11.0" # do not append prerelease names such as "Beta" to this version number.
+  local xcode_prerelease_stage="Beta 2" # leave blank when not installing a beta
   local xcode_build_version="19A487l"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
+    echo "Upgrading Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version)..."
     local local_version=getLocalXcodeVersion
-    local local_build_version
-    local_build_version="$(/usr/bin/xcodebuild -version 2>&1 | grep Build | sed -E 's/Build version ([0-9A-Za-z]+)/\1/')"
+    local local_build_version=getLocalXcodeBuildVersion
     if [[ "$local_build_version" != "$xcode_build_version" ]]; then
       installXcode "$xcode_version"
       local new_local_version=getLocalXcodeVersion
+      # If there was a previous version installed, but it wasn't a beta which will have the same version number...
       if [[ -n "$local_version" ]] && [[ "$local_version" != "$new_local_version" ]]; then
-        echo "Uninstalling Xcode $local_version..."
+        echo "Uninstalling Xcode $local_version (Build $local_build_version)..."
         xcversion uninstall "$local_version" < /dev/tty
       fi
     fi
