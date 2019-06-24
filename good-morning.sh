@@ -856,8 +856,9 @@ rm -f "$piptempfile"
 unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
-  # echo "Upgrading pip installed packages..."
-  # pip-review --auto
+  setBuildEnv macosx
+  echo "Upgrading pip installed packages..."
+  pip-review --auto
   # temporary workaround until we can ignore upgrading deps beyond what is supported (i.e. awscli and prompt-toolkit)
   pip install "prompt-toolkit<1.1.0,>=1.0.0" > /dev/null # fix previous upgrades that went to 2.0
 fi
