@@ -153,6 +153,7 @@ function checkPerms {
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
     "$HOME/.pyenv"
+    "$(ls -d /Applications/*.app)"
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
@@ -998,17 +999,32 @@ function linkUtil {
 }
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
+function allowAllApps {
+  if xattr -v -- * | grep -q com.apple.quarantine; then
+    echo "Auto-approving applications downloaded from the Internet for you to open..."
+    # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
+    xattr -v -- * | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\/Applications\/\1/' \
+      | sudoit xargs -n 1 xattr -d com.apple.quarantine
+  fi
+}
+
+function reindexSpotlight {
+  echo "Triggering a rebuild of the Spotlight index to ensure all new brew casks appear..."
+  sudoit mdutil -E /
+}
+
 if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   unset NEW_BREW_CASK_INSTALLS
   # Moved this lower since it's not important to do this earlier in the script
   # and it might avoid prompting for the password until more of the work is done.
-  echo "Triggering re-index of Spotlight search for benefit of new brew casks..."
-  sudoit mdutil -a -i off
-  sudoit mdutil -a -i on
+  reindexSpotlight
 fi
+allowAllApps
 
-if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"; then
-  echo "Modifying System Settings"
+if ( [[ -n "$FIRST_RUN" ]] || [[ -z "$GOOD_MORNING_RUN" ]] ) \
+  && askto "set some opinionated starter system settings"; then
+
+  echo "Optimizing System Settings"
   echo "Only show icons of running apps in app bar, using Spotlight to launch"
   defaults write com.apple.dock static-only -bool true
   echo "Auto show and hide the menu bar"
@@ -1078,31 +1094,34 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Check for software updates daily, not just once per week"
   defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 
-  echo "Modifying Mouse & Trackpad Settings"
-  echo "Trackpad: enable tap to click for this user and for the login screen"
+  echo "Optimizing Mouse & Trackpad Settings"
+  echo "Enable tap to click for this user and for the login screen"
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
   defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
   defaults write -g com.apple.mouse.tapBehavior -int 1
-  echo "Trackpad: map bottom right corner to right-click"
+  echo "Map bottom right corner to right-click"
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -int 2
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -bool true
   defaults -currentHost write -g com.apple.trackpad.trackpadCornerClickBehavior -int 1
   defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick -bool true
-  echo "Trackpad: swipe between pages with three fingers"
+  echo "Swipe between pages with three fingers"
   defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
   defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerHorizSwipeGesture -int 1
-  echo "Trackpad: 'Tap with three fingers' instead of 'Force click with one finger' for 'Look up' feature"
+  echo "'Tap with three fingers' instead of 'Force click with one finger' for 'Look up' feature"
   defaults -currentHost write -g com.apple.trackpad.forceClick -int 0
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 2
-
-  echo "Increase sound quality for Bluetooth headphones/headsets"
-  defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
-  echo "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
-  defaults write -g AppleKeyboardUIMode -int 3
   echo "Use scroll gesture with the Ctrl (^) modifier key to zoom"
   defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
   defaults write com.apple.universalaccess HIDScrollZoomModifierMask -int 262144
+
+  echo "Optimizing Bluetooth Settings"
+  echo "Increase sound quality for Bluetooth headphones/headsets"
+  defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
+
+  echo "Optimizing Keyboard Settings"
+  echo "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
+  defaults write -g AppleKeyboardUIMode -int 3
   echo "Follow the keyboard focus while zoomed in"
   defaults write com.apple.universalaccess closeViewZoomFollowsFocus -bool true
   echo "Disable press-and-hold for keys in favor of key repeat"
@@ -1122,7 +1141,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Turn off typing suggestions in the touch bar"
   defaults write -g NSAutomaticTextCompletionEnabled -bool false
 
-  echo "Modifying Screen Settings"
+  echo "Optimizing Screen Settings"
   echo "Require password immediately after sleep or screen saver begins"
   defaults write com.apple.screensaver askForPassword -int 1
   defaults write com.apple.screensaver askForPasswordDelay -int 0
@@ -1141,7 +1160,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Enable HiDPI display modes (requires restart)"
   sudoit defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 
-  echo "Modifying Finder Settings"
+  echo "Optimizing Finder Settings"
   echo "Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons"
   defaults write com.apple.finder QuitMenuItem -bool true
   echo "Finder: disable window animations and Get Info animations"
@@ -1198,7 +1217,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Disabling '<App> is an application downloaded from the internet. Are you sure you want to open it?"
   defaults write com.apple.LaunchServices LSQuarantine -bool false
 
-  echo "Modifying Dock Settings"
+  echo "Optimizing Dock Settings"
   echo "Enable highlight hover effect for the grid view of a stack (Dock)"
   defaults write com.apple.dock mouse-over-hilte-stack -bool true
   echo "Set the icon size of Dock items to 36 pixels"
@@ -1220,7 +1239,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Make Dock icons of hidden applications translucent"
   defaults write com.apple.dock showhidden -bool true
 
-  echo "Modifying Safari & WebKit Settings"
+  echo "Optimizing Safari & WebKit Settings"
   echo "Set Safari’s home page to about:blank for faster loading"
   defaults write com.apple.Safari HomePage -string "about:blank"
   echo "Prevent Safari from opening ‘safe’ files automatically after downloading"
@@ -1244,7 +1263,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Enable the WebKit Developer Tools in the Mac App Store"
   defaults write com.apple.appstore WebKitDeveloperExtras -bool true
 
-  echo "Modifying iTunes Settings"
+  echo "Optimizing iTunes Settings"
   echo "Disable the iTunes store link arrows"
   defaults write com.apple.iTunes show-store-link-arrows -bool false
   echo "Disable the Genius sidebar in iTunes"
@@ -1258,24 +1277,24 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   echo "Make ⌘ + F focus the search input in iTunes"
   defaults write com.apple.iTunes NSUserKeyEquivalents -dict-add "Target Search Field" "@F"
 
-  echo "Modifying Mail Settings"
+  echo "Optimizing Mail Settings"
   echo "Disable send and reply animations in Mail.app"
   defaults write com.apple.mail DisableReplyAnimations -bool true
   defaults write com.apple.mail DisableSendAnimations -bool true
   echo "Add the keyboard shortcut ⌘ + Enter to send an email in Mail.app"
   defaults write com.apple.mail NSUserKeyEquivalents -dict-add "Send" "@U21a9"
 
-  echo "Modifying Terminal Settings"
+  echo "Optimizing Terminal Settings"
   echo "Enable \"focus follows mouse\" for Terminal.app and all X11 apps."
   echo "i.e. hover over a window and start typing in it without clicking first"
   defaults write com.apple.terminal FocusFollowsMouse -bool true
   defaults write org.x.X11 wm_ffm -bool true
 
-  echo "Modifying Time Machine Settings"
+  echo "Optimizing Time Machine Settings"
   echo "Prevent Time Machine from prompting to use new hard drives as backup volume"
   defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 
-  echo "Modifying Address Book, Dashboard, iCal, TextEdit, and Disk Utility Settings"
+  echo "Optimizing Address Book, Dashboard, iCal, TextEdit, and Disk Utility Settings"
   echo "Enable the debug menu in Address Book"
   defaults write com.apple.addressbook ABShowDebugMenu -bool true
   echo "Enable Dashboard dev mode (allows keeping widgets on the desktop)"
@@ -1289,7 +1308,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "set some opinionated starter system settings"
   defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
   defaults write com.apple.DiskUtility advanced-image-options -bool true
 
-  echo "Modifying Energy Settings"
+  echo "Optimizing Energy Settings"
   echo "Stay on for 60 minutes with battery and 3 hours when plugged in"
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "Display Sleep Timer" -int 60
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "System Sleep Timer" -int 60
@@ -1349,7 +1368,9 @@ function cleanupGoodMorning {
     unset GOOD_MORNING_RUN
     local keep_pass_for_session
     keep_pass_for_session="$(getConfigValue 'keep_pass_for_session' 'not-asked')"
-    if ( [[ -z "$keep_pass_for_session" ]] || [[ "$keep_pass_for_session" == "not-asked" ]] ) && [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
+    if ( [[ -z "$keep_pass_for_session" ]] || [[ "$keep_pass_for_session" == "not-asked" ]] ) \
+      && [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
+
       if askto "always be prompted for your password if needed when you run good-morning again in the same session"; then
         setConfigValue "keep_pass_for_session" "no"
       else
