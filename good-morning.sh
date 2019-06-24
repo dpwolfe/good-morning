@@ -712,6 +712,7 @@ brews=(
   postgresql
   pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
+  readline # for pyenv installs of python
   # redis
   shellcheck # shell script linting
   terraform
@@ -722,6 +723,7 @@ brews=(
   vim
   watchman
   wget
+  xz # for pyenv installs of python
   zlib
   zsh
   zsh-completions
@@ -749,18 +751,37 @@ unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
 
-# prototype pyenv install code - need
-if ! pyenv versions | grep "2\.7\.15" &> /dev/null; then
-  CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include" \
+# prototype pyenv install code
+function setBuildEnv {
+  export SDK="$1"
+  export AR=$(xcrun --sdk $SDK --find ar)
+  export AS=$(xcrun --sdk $SDK --find as)
+  export ASCPP=$(xcrun --sdk $SDK --find as)
+  export CC=$(xcrun --sdk $SDK --find gcc)
+  export CPP="$(xcrun --sdk $SDK --find gcc) -E"
+  export CXX=$(xcrun --sdk $SDK --find g++)
+  export CXXCPP="$(xcrun --sdk $SDK --find g++) -E"
+  export LD=$(xcrun --sdk $SDK --find ld)
+  export NM=$(xcrun --sdk $SDK --find nm)
+  export RANLIB=$(xcrun --sdk $SDK --find ranlib)
+  export STRIP=$(xcrun --sdk $SDK --find strip)
+}
+if ! pyenv versions | grep "2\.7\.16" &> /dev/null; then
+  setBuildEnv macosx
+  CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
   LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
-  pyenv install 2.7.15
+  CPPFLAGS="-I$(brew --prefix zlib)/include" \
+  pyenv install 2.7.16
 fi
-if ! pyenv versions | grep "3\.7\.1" &> /dev/null; then
-  CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include" \
+if ! pyenv versions | grep "3\.7\.3" &> /dev/null; then
+  setBuildEnv macosx
+  CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
   LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
-  pyenv install 3.7.1
+  CPPFLAGS="-I$(brew --prefix zlib)/include" \
+  pyenv install 3.7.3
 fi
-pyenv global 3.7.1
+pyenv global 3.7.3
+# end prototype pyenv install code
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
