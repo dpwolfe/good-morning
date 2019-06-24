@@ -250,9 +250,9 @@ function getLocalXcodeBuildVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="10.2.1" # do not append prerelease names such as "Beta" to this version number.
-  local xcode_prerelease_stage="" # leave blank when not installing a beta
-  local xcode_build_version="10E1001"
+  local xcode_version="11.0" # do not append prerelease names such as "Beta" to this version number.
+  local xcode_prerelease_stage="Beta 2" # leave blank when not installing a beta
+  local xcode_build_version="11M337n"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
