@@ -211,15 +211,20 @@ function installXcode {
   xcversion update < /dev/tty
   echo "Installing Xcode $xcode_version..."
   if [[ "$(getOSVersion)" == "10.15" ]] || [[ "$(getOSVersion)" == "10.14.5" ]]; then
+    echo ""
     echo "Xcode install has trouble using the Archive Utility on 10.14.5 and higher, including 10.15."
     echo "This script will hang after the Xcode download completes (i.e. progress bar reaches 100%)."
     echo "If this happens, do the following:"
     echo "1. Leave the Archive Utility application and this terminal session running."
     echo "2. Open up a second terminal session and run the following command with parenthesis:"
     echo "   (cd ~/Library/Caches/XcodeInstall; xip --expand ~/Library/Caches/XcodeInstall/*.xip)"
-    echo "3. After it finishes extracting (takes several minutes), manually quit the Archive Utility."
-    echo "4. Return to this terminal session and it enter your password to continue."
-    echo "If you do not see a password prompt, delete the xip file referenced above and run good-morning again."
+    echo "3. Wait several minutes for the extraction process to complete."
+    echo "5. Manually quit the Archive Utility."
+    echo "6. Return to this terminal session and it enter your password to continue."
+    echo ""
+    echo "If you do not see a password prompt or encounter any issues, close this terminal window,"
+    echo "open a new session, run 'xcversion cleanup' and then run 'good-morning' again."
+    echo ""
   fi
   xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta a simple process
   xcversion select "$xcode_short_version" < /dev/tty
@@ -245,19 +250,23 @@ function getLocalXcodeBuildVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="11.0" # do not append prerelease names such as "Beta" to this version number.
-  local xcode_prerelease_stage="Beta 2" # leave blank when not installing a beta
-  local xcode_build_version="19A487l"
+  local xcode_version="10.2.1" # do not append prerelease names such as "Beta" to this version number.
+  local xcode_prerelease_stage="" # leave blank when not installing a beta
+  local xcode_build_version="10E1001"
   echo "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
-    echo "Upgrading Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version)..."
-    local local_version=getLocalXcodeVersion
-    local local_build_version=getLocalXcodeBuildVersion
+    local local_version
+    local local_build_version
+    local_version="$(getLocalXcodeVersion)"
+    local_build_version="$(getLocalXcodeBuildVersion)"
     if [[ "$local_build_version" != "$xcode_build_version" ]]; then
+      echo "Upgrading Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) \ 
+        from $local_version (Build $local_build_version)..."
       installXcode "$xcode_version"
-      local new_local_version=getLocalXcodeVersion
+      local new_local_version
+      new_local_version="$(getLocalXcodeVersion)"
       # If there was a previous version installed, but it wasn't a beta which will have the same version number...
       if [[ -n "$local_version" ]] && [[ "$local_version" != "$new_local_version" ]]; then
         echo "Uninstalling Xcode $local_version (Build $local_build_version)..."
