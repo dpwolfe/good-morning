@@ -153,7 +153,7 @@ function checkPerms {
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
     "$HOME/.pyenv"
-    "$(ls -d /Applications/*.app)"
+    $(ls -d /Applications)
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
@@ -1035,10 +1035,10 @@ linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app
 
 function allowAllApps {
   if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
-    echo "Auto-approving applications downloaded from the Internet for you to open..."
+    echo "Auto-approving applications in Gatekeeper..."
     # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
-    xattr -v -- /Applications/* | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\/Applications\/\1/' \
-      | sudoit xargs -n 1 xattr -d com.apple.quarantine
+    sudoit "$(xattr -v -- /Applications/* | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\1/g' \
+      | xargs -n 1 -- xattr -d com.apple.quarantine)"
   fi
 }
 
@@ -1053,7 +1053,7 @@ if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   # and it might avoid prompting for the password until more of the work is done.
   reindexSpotlight
 fi
-allowAllApps
+# allowAllApps
 
 if ( [[ -n "$FIRST_RUN" ]] || [[ -z "$GOOD_MORNING_RUN" ]] ) \
   && askto "set some opinionated starter system settings"; then
