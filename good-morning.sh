@@ -1034,10 +1034,10 @@ function linkUtil {
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
 function allowAllApps {
-  if xattr -v -- * | grep -q com.apple.quarantine; then
+  if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
     echo "Auto-approving applications downloaded from the Internet for you to open..."
     # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
-    xattr -v -- * | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\/Applications\/\1/' \
+    xattr -v -- /Applications/* | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\/Applications\/\1/' \
       | sudoit xargs -n 1 xattr -d com.apple.quarantine
   fi
 }
