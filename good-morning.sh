@@ -128,6 +128,7 @@ function getOSVersion {
 
 function checkPerms {
   echo "Checking directory permissions..."
+  # shellcheck disable=SC2207
   local dirs=(
     # Block of dirs that Homebrew needs the user to own for successful operation.
     # The redundancy of nested dirs is left here intentionally even though we use -R.
@@ -287,6 +288,22 @@ if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
 fi
+
+function setBuildEnv {
+  export SDK="$1"
+  export AR=$(xcrun --sdk $SDK --find ar)
+  export AS=$(xcrun --sdk $SDK --find as)
+  export ASCPP=$(xcrun --sdk $SDK --find as)
+  export CC=$(xcrun --sdk $SDK --find gcc)
+  export CPP="$(xcrun --sdk $SDK --find gcc) -E"
+  export CXX=$(xcrun --sdk $SDK --find g++)
+  export CXXCPP="$(xcrun --sdk $SDK --find g++) -E"
+  export LD=$(xcrun --sdk $SDK --find ld)
+  export NM=$(xcrun --sdk $SDK --find nm)
+  export RANLIB=$(xcrun --sdk $SDK --find ranlib)
+  export STRIP=$(xcrun --sdk $SDK --find strip)
+}
+setBuildEnv macosx
 
 GITHUB_EMAIL="$(git config --global --get user.email)"
 unset gitHubEmailChanged
@@ -661,6 +678,7 @@ for cask in "${brewCasks[@]}"; do
   fi
 done
 rm -f "$cask_collision_file"
+rm -f "$brew_list_temp_file"
 unset cask_collision_file
 unset brewCasks
 
@@ -670,7 +688,37 @@ if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
   brew cleanup -s # -s clears even the latest versions of uninstalled formulas and casks
 fi
 
-# Install brews
+# Install Homebrew formulas
+
+function ensureFormulaListCache {
+  if ! [[ -s "$brew_list_temp_file" ]]; then
+    brew list > "$brew_list_temp_file"
+  fi
+}
+
+function changeFormula {
+  local formula_name="$1"
+  local brew_command="$2"
+  local formula_ref="${3:-$formula_name}"
+  ensureFormulaListCache
+  if ! grep -E "(^| )$formula_name($| )" "$brew_list_temp_file" > /dev/null; then
+    # shellcheck disable=SC2046
+    brew "$brew_command" "$formula_ref" \
+      $(if [[ "$brew_command" == "uninstall" ]]; then echo "--force --ignore-dependencies"; fi)
+  fi
+}
+
+function ensureFormulaInstalled {
+  local formula_name="$1"
+  local formula_ref="${2:-$formula_name}"
+  changeFormula "$formula_name" install "$formula_ref"
+}
+
+function ensureFormulaUninstalled {
+  local formula_name="$1"
+  changeFormula "$formula_name" uninstall
+}
+
 # shellcheck disable=SC2034
 brews=(
   # ansible
@@ -716,7 +764,6 @@ brews=(
   # redis
   shellcheck # shell script linting
   terraform
-  # terragrunt
   tflint
   tmux
   vegeta
@@ -728,21 +775,19 @@ brews=(
   zsh
   zsh-completions
 )
-brew list > "$brew_list_temp_file"
 for brew in "${brews[@]}"; do
-  if ! grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
-    brew install "$brew"
-  fi
+  ensureFormulaInstalled "$brew"
 done
+# install sshpass, which is not for ssh novices
+ensureFormulaInstalled sshpass "https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb"
+
 # Uninstall brews that conflict with this script
 # but may have been previously installed.
 nobrews=(
   wireshark # installed as cask
 )
 for brew in "${nobrews[@]}"; do
-  if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
-    brew uninstall --force --ignore-dependencies "$brew"
-  fi
+  ensureFormulaUninstalled "$brew"
 done
 rm -f "$brew_list_temp_file"
 unset brews
@@ -752,29 +797,13 @@ unset brew_list_temp_file
 # chsh -s `which fish`
 
 # prototype pyenv install code
-function setBuildEnv {
-  export SDK="$1"
-  export AR=$(xcrun --sdk $SDK --find ar)
-  export AS=$(xcrun --sdk $SDK --find as)
-  export ASCPP=$(xcrun --sdk $SDK --find as)
-  export CC=$(xcrun --sdk $SDK --find gcc)
-  export CPP="$(xcrun --sdk $SDK --find gcc) -E"
-  export CXX=$(xcrun --sdk $SDK --find g++)
-  export CXXCPP="$(xcrun --sdk $SDK --find g++) -E"
-  export LD=$(xcrun --sdk $SDK --find ld)
-  export NM=$(xcrun --sdk $SDK --find nm)
-  export RANLIB=$(xcrun --sdk $SDK --find ranlib)
-  export STRIP=$(xcrun --sdk $SDK --find strip)
-}
 if ! pyenv versions | grep "2\.7\.16" &> /dev/null; then
-  setBuildEnv macosx
   CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
   LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
   CPPFLAGS="-I$(brew --prefix zlib)/include" \
   pyenv install 2.7.16
 fi
 if ! pyenv versions | grep "3\.7\.3" &> /dev/null; then
-  setBuildEnv macosx
   CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
   LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
   CPPFLAGS="-I$(brew --prefix zlib)/include" \
@@ -856,7 +885,6 @@ rm -f "$piptempfile"
 unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
-  setBuildEnv macosx
   echo "Upgrading pip installed packages..."
   pip-review --auto
   # temporary workaround until we can ignore upgrading deps beyond what is supported (i.e. awscli and prompt-toolkit)
@@ -1035,10 +1063,14 @@ linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app
 
 function allowAllApps {
   if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
-    echo "Auto-approving applications in Gatekeeper..."
+    echo "Auto-approving applications for Gatekeeper..."
     # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
-    sudoit "$(xattr -v -- /Applications/* | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\1/g' \
-      | xargs -n 1 -- xattr -d com.apple.quarantine)"
+    local apps
+    apps="$(xattr -v -- /Applications/* | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\1/')"
+    for app in "${apps[@]}"; do
+      echo "Approving $(echo "$app" | sed -E 's/\/Applications\/(.*)\.app/\1/')..."
+      sudoit xattr -d com.apple.quarantine "$app"
+    done
   fi
 }
 
@@ -1053,7 +1085,7 @@ if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   # and it might avoid prompting for the password until more of the work is done.
   reindexSpotlight
 fi
-# allowAllApps
+allowAllApps
 
 if ( [[ -n "$FIRST_RUN" ]] || [[ -z "$GOOD_MORNING_RUN" ]] ) \
   && askto "set some opinionated starter system settings"; then
