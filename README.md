@@ -4,6 +4,8 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 
 ## Pre-requisites
 
+_A fresh install of macOS is ideal, but not required._
+
 - Your MacBook must be running macOS 10.14 (Mojave) or 10.15 (Catalina)
 - You must have admin privileges on your MacBook.
 - You must have System Integrity Protection disabled.
@@ -11,8 +13,7 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
    2. Run `csrutil disable; reboot`
 - You must have an Apple ID that has accepted the developer agreement, which you can do
    for free here: <https://developer.apple.com/account/>
-
-_A fresh install of macOS is preferred, but not required._
+- A solid Internet connection at least for the first run.
 
 ## Instructions
 
