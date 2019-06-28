@@ -603,7 +603,8 @@ brewCasks=(
   gpg-suite
   handbrake
   iterm2
-  java8 # some things require java8 and I have not needed to install the latest java
+  java # DBeaver will freeze at 100% CPU on macOS 10.15 Catalina unless using an updated Java
+  # java8
   keeweb
   # keybase
   keyboard-maestro # keyboard macros
