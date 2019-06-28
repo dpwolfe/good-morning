@@ -796,21 +796,30 @@ unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
 
-# prototype pyenv install code
-if ! pyenv versions | grep "2\.7\.16" &> /dev/null; then
-  CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
-  LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
-  CPPFLAGS="-I$(brew --prefix zlib)/include" \
-  pyenv install 2.7.16
-fi
-if ! pyenv versions | grep "3\.7\.3" &> /dev/null; then
-  CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
-  LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
-  CPPFLAGS="-I$(brew --prefix zlib)/include" \
-  pyenv install 3.7.3
-fi
-pyenv global 3.7.3
-# end prototype pyenv install code
+function checkPythonInstall {
+  local pythonVersion="$1"
+  if ! pyenv versions | grep "$pythonVersion" &> /dev/null; then
+    CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
+    LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
+    CPPFLAGS="-I$(brew --prefix zlib)/include" \
+    pyenv install "$pythonVersion"
+  fi
+}
+
+function checkPythonVersions {
+  local python2version="2.7.16"
+  local python3version="3.7.3"
+  checkPythonInstall "$python2version"
+  checkPythonInstall "$python3version"
+  local globalPythonVersion
+  if [[ "$GOOD_MORNING_USE_LEGACY_PYTHON" == 1 ]]; then
+    globalPythonVersion="$python2version"
+  else
+    globalPythonVersion="$python3version"
+  fi
+  pyenv global "$globalPythonVersion"
+}
+checkPythonVersions
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
