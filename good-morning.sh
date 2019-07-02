@@ -633,6 +633,7 @@ brewCasks=(
   slack
   # sourcetree
   spotify
+  tableplus # dbeaver incompatible with macOS 10.15 Catalina for the moment
   the-unarchiver
   transmission # open source BitTorrent client from https://github.com/transmission/transmission
   tunnelblick # connect to your VPN
