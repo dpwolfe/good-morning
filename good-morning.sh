@@ -86,10 +86,10 @@ function sudoit {
     sudoOpt="$1"
     shift
   fi
-  if ! [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ] || ! decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" printf ""; then
+  if ! [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]] || ! decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" printf ""; then
     GOOD_MORNING_ENCRYPTED_PASS_FILE="$GOOD_MORNING_TEMP_FILE_PREFIX$(randstring32)"
     local p=
-    while [ -z "$p" ] || ! echo "$p" | sudo -S -p "" printf ""; do
+    while [[ -z "$p" ]] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
     done
     encryptToFile "$p" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
@@ -112,7 +112,7 @@ function dmginstall {
   local appPathUser="$HOME/Applications/$1.app"
   local downloadPath="$HOME/Downloads/$1.dmg"
   # only offer to install if not installed in either the user or "all users" locations
-  if ! [ -d "$appPath" ] && ! [ -d "$appPathUser" ] && askto "install $1"; then
+  if ! [[ -d "$appPath" ]] && ! [[ -d "$appPathUser" ]] && askto "install $1"; then
     curl -JL "$2" -o "$downloadPath"
     yes | hdiutil attach "$downloadPath" > /dev/null
     # install in the "all users" location
@@ -321,7 +321,7 @@ if [[ -z "$GITHUB_NAME" ]]; then
 fi
 # Generate a new SSH key for GitHub https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
 GITHUB_KEYS_URL="https://github.com/settings/keys"
-if ( [ -n "$gitHubEmailChanged" ] || ! [ -f "$HOME/.ssh/id_rsa.pub" ] ) && askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
+if ( [[ -n "$gitHubEmailChanged" ]] || ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] ) && askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
   ssh-keygen -t rsa -b 4096 -C "$GITHUB_EMAIL" < /dev/tty
   # start ssh-agent
   eval "$(ssh-agent -s)"
@@ -343,7 +343,7 @@ fi
 
 # This install is an artifact for first-run that is overridden by the brew cask install
 # Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
-if ! [ -d "/Applications/GPG Keychain.app" ]; then
+if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
   echo "Installing GPG Suite..."
   dmg="$HOME/Downloads/GPGSuite.dmg"
   curl -JL https://releases.gpgtools.org/GPG_Suite-2017.3.dmg -o "$dmg"
@@ -397,7 +397,7 @@ function checkRubyVersion {
   fi
 }
 
-if ! [ -s "$HOME/.rvm/scripts/rvm" ] && ! type rvm &> /dev/null; then
+if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
   installRVM
 fi
 checkRubyVersion
@@ -491,7 +491,7 @@ if [[ -z "${REPO_ROOT+x}" ]]; then
   REPO_ROOT="$HOME/repo"
 fi
 # Create local repository root
-if ! [ -d "$REPO_ROOT" ]; then
+if ! [[ -d "$REPO_ROOT" ]]; then
   echo "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
@@ -721,12 +721,25 @@ function ensureFormulaUninstalled {
   changeFormula "$formula_name" uninstall
 }
 
+
+# Uninstall brews that conflict with this script
+# but may have been previously installed.
+nobrews=(
+  bash-completion
+  wireshark # installed as cask
+)
+for brew in "${nobrews[@]}"; do
+  ensureFormulaUninstalled "$brew"
+done
+unset nobrews
+
 # shellcheck disable=SC2034
 brews=(
   # ansible
   # automake
   # azure-cli
-  bash-completion
+  bash-completion@2
+  brew-cask-completion
   # caddy
   # cassandra
   certbot # For generating SSL certs with Let's Encrypt
@@ -734,11 +747,14 @@ brews=(
   # dialog # https://invisible-island.net/dialog/
   dep # go dependency manager
   direnv # https://direnv.net/
+  docker-compose-completion
+  docker-machine-completion
   docker-squash # https://github.com/goldmann/docker-squash
   fd # https://github.com/sharkdp/fd
   # fish
   fx # https://github.com/antonmedv/fx
   fzf # https://github.com/junegunn/fzf
+  # gem-completion
   git
   git-lfs
   go
@@ -749,16 +765,20 @@ brews=(
   # kops
   kubernetes-cli
   kubernetes-helm
+  # launchctl-completion
   # lnav
   # maven
+  # maven-completion
   # neovim
   openssl
   openssl@1.1
   p7zip # provides 7z command
   packer
+  # packer-completion
   pgcli
   pgtune
   pgweb
+  pip-completion
   postgresql
   pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
@@ -780,20 +800,12 @@ brews=(
 for brew in "${brews[@]}"; do
   ensureFormulaInstalled "$brew"
 done
+
 # install sshpass, which is not for ssh novices
 ensureFormulaInstalled sshpass "https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb"
 
-# Uninstall brews that conflict with this script
-# but may have been previously installed.
-nobrews=(
-  wireshark # installed as cask
-)
-for brew in "${nobrews[@]}"; do
-  ensureFormulaUninstalled "$brew"
-done
-rm -f "$brew_list_temp_file"
 unset brews
-unset nobrews
+rm -f "$brew_list_temp_file"
 unset brew_list_temp_file
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
@@ -995,7 +1007,7 @@ function checkNodeVersion {
   fi
 }
 
-if ! [ -s "$HOME/.nvm/nvm.sh" ] || ! nvm --version | grep "$nvm_version" > /dev/null; then
+if ! [[ -s "$HOME/.nvm/nvm.sh" ]] || ! nvm --version | grep "$nvm_version" > /dev/null; then
   if [[ -n "$NVM_DIR" ]]; then
     mkdir -p "$NVM_DIR" # ensure directory exists if environment variable is set by existing bash_profile
   fi
@@ -1406,7 +1418,7 @@ fi
 function cleanupTempFiles {
   local good_morning_pass_file_temp="$HOME/.good_morning_pass_file" # lacks 'temp' in name to bypass deletion if kept
   # Clean-up the encrypted pass file used for sudo calls unless disabled by the config.
-  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]; then
+  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
     mv "$GOOD_MORNING_ENCRYPTED_PASS_FILE" "$good_morning_pass_file_temp"
   fi
   # A glob file deletion is about to happen, proceed with excessive caution.
@@ -1416,7 +1428,7 @@ function cleanupTempFiles {
     echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
   fi
   # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
-  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [ -e "$good_morning_pass_file_temp" ]; then
+  if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [[ -e "$good_morning_pass_file_temp" ]]; then
     mv "$good_morning_pass_file_temp" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
   fi
 }
@@ -1464,3 +1476,16 @@ function cleanupGoodMorning {
   fi
 }
 cleanupGoodMorning
+
+function gm::greeting {
+  local hour
+  hour=$(date "+%k")
+  if ((hour < 12 )); then
+    echo "Good morning!"
+  elif ((hour < 18 )); then
+    echo "Good afternoon!"
+  else
+    echo "Good evening!"
+  fi
+}
+gm::greeting
