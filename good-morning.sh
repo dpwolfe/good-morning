@@ -1480,9 +1480,9 @@ cleanupGoodMorning
 function gm::greeting {
   local hour
   hour=$(date "+%k")
-  if ((hour < 12 )); then
+  if (( hour < 12 )); then
     echo "Good morning!"
-  elif ((hour < 18 )); then
+  elif (( hour < 18 )); then
     echo "Good afternoon!"
   else
     echo "Good evening!"
