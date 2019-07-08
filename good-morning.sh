@@ -6,6 +6,26 @@ set +o errexit
 # Turn on for debugging
 # set -o xtrace
 
+function errcho {
+  local red='\033[0;31m'
+  local nc='\033[0m'
+  local bold
+  bold=$(tput bold)
+  local normal
+  normal=$(tput sgr0)
+  echo -e "${bold}${red}ERROR: $*${nc}${normal}" >&2
+}
+
+function eccho {
+  local light_blue='\033[1;34m'
+  local nc='\033[0m'
+  local bold
+  bold=$(tput bold)
+  local normal
+  normal=$(tput sgr0)
+  echo -e "${bold}${light_blue}$*${nc}${normal}"
+}
+
 function randstring32 {
   env LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1
 }
@@ -22,7 +42,7 @@ function decryptFromFile {
 }
 
 function askto {
-  echo "Do you want to $1? $3"
+  eccho "Do you want to $1? $3"
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
   # shellcheck disable=SC2091
@@ -67,9 +87,10 @@ function setConfigValue {
     [[ "$1" == "applied_cask_depends_on_fix" ]] || \
     [[ "$1" == "last_node_lts_installed" ]]
   then
+    # shellcheck disable=SC2086
     export $1="$2"
   else
-    echo "Warning: Tried to set an unknown config key: $1"
+    errcho "Warning: Tried to set an unknown config key: $1"
   fi
   echo "# This file stores settings and flags for the good-morning script." >> "$tempfile"
   echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
@@ -82,7 +103,7 @@ GOOD_MORNING_TEMP_FILE_PREFIX="$GOOD_MORNING_CONFIG_FILE""_temp_"
 function sudoit {
   local sudoOpt
   # allow passing a flag or combination to sudo (example: -H)
-  if [[ "$(echo '$1' | cut -c1)" == "-" ]]; then
+  if [[ "$(echo "$1" | cut -c1)" == "-" ]]; then
     sudoOpt="$1"
     shift
   fi
@@ -102,7 +123,7 @@ function masinstall {
     # macOS Sierra issue for users who have never installed the given app - https://github.com/mas-cli/mas/issues/85
     mas install "$1" || \
       open "https://itunes.apple.com/us/app/id$1" && \
-      echo "GitHub issue: https://github.com/mas-cli/mas/issues/85" && \
+      eccho "GitHub issue: https://github.com/mas-cli/mas/issues/85" && \
       prompt "Install $2 from the Mac App Store and hit Enter when finished..."
   fi
 }
@@ -127,7 +148,7 @@ function getOSVersion {
 }
 
 function checkPerms {
-  echo "Checking directory permissions..."
+  eccho "Checking directory permissions..."
   # shellcheck disable=SC2207
   local dirs=(
     # Block of dirs that Homebrew needs the user to own for successful operation.
@@ -159,7 +180,7 @@ function checkPerms {
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
     if [[ -d "$dir" ]] && ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
-      echo "Setting ownership of $dir to $USER..."
+      eccho "Setting ownership of $dir to $USER..."
       sudoit chown -R "$userPerm" "$dir"
     fi
   done
@@ -173,12 +194,12 @@ function checkPerms {
 checkPerms
 
 if type rvm &> /dev/null; then
-  echo "Using default Ruby with rvm..."
+  eccho "Using default Ruby with rvm..."
   rvm use default > /dev/null
 fi
-echo "Checking for existence of xcode-install..."
+eccho "Checking for existence of xcode-install..."
 if ! gem list --local | grep "xcode-install" > /dev/null; then
-  echo "Installing xcode-install for managing Xcode..."
+  eccho "Installing xcode-install for managing Xcode..."
   # https://github.com/KrauseFx/xcode-install
   # The alternative install instructions must be used since there is not a working
   # compiler on the system at this point in the setup.
@@ -191,9 +212,9 @@ fi
 function ensureXcodeInstallUserSet {
   if [[ -z "$XCODE_INSTALL_USER" ]]; then
     local xcode_install_user
-    echo "Your Apple Developer ID is required to install Xcode and essential build tools."
-    echo "The Apple ID you use must have accepted the Apple Developer Agreement."
-    echo "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
+    eccho "Your Apple Developer ID is required to install Xcode and essential build tools."
+    eccho "The Apple ID you use must have accepted the Apple Developer Agreement."
+    eccho "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
     prompt "Enter your Apple Developer ID: " xcode_install_user
     export XCODE_INSTALL_USER="$xcode_install_user"
     if [[ -f ~/.bash_profile ]]; then
@@ -208,39 +229,39 @@ function installXcode {
   local xcode_short_version
   xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
   ensureXcodeInstallUserSet
-  echo "Updating list of available Xcode versions..."
+  eccho "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
-  echo "Installing Xcode $xcode_version..."
+  eccho "Installing Xcode $xcode_version..."
   if [[ "$(getOSVersion)" == "10.15" ]] || [[ "$(getOSVersion)" == "10.14.5" ]]; then
-    echo ""
-    echo "Xcode install has trouble using the Archive Utility on 10.14.5 and higher, including 10.15."
-    echo "This script will hang after the Xcode download completes (i.e. progress bar reaches 100%)."
-    echo "If this happens, do the following:"
-    echo "1. Leave the Archive Utility application and this terminal session running."
-    echo "2. Open up a second terminal session and run the following command:"
-    echo "   (cd ~/Library/Caches/XcodeInstall; xip --expand ~/Library/Caches/XcodeInstall/*.xip)"
-    echo "3. Wait several minutes for the extraction process to complete."
-    echo "4. Run this command to fixup Xcode 11 Beta 2:"
-    echo "   (cd ~/Library/Caches/XcodeInstall; find *.app -type l ! -exec test -e {} \; -delete)"
-    echo "5. Manually quit the Archive Utility application."
-    echo "6. Return to this terminal session and it enter your password to continue."
-    echo ""
-    echo "If you do not see a password prompt or encounter any issues, close this terminal window,"
-    echo "open a new session, run 'xcversion cleanup' and then run 'good-morning' again."
-    echo ""
+    eccho ""
+    eccho "Xcode install has trouble using the Archive Utility on 10.14.5 and higher, including 10.15."
+    eccho "This script will hang after the Xcode download completes (i.e. progress bar reaches 100%)."
+    eccho "If this happens, do the following:"
+    eccho "1. Leave the Archive Utility application and this terminal session running."
+    eccho "2. Open up a second terminal session and run the following command:"
+    eccho "   (cd ~/Library/Caches/XcodeInstall; xip --expand ~/Library/Caches/XcodeInstall/*.xip)"
+    eccho "3. Wait several minutes for the extraction process to complete."
+    eccho "4. Run this command to fixup Xcode 11 Beta 2:"
+    eccho "   (cd ~/Library/Caches/XcodeInstall; find *.app -type l ! -exec test -e {} \; -delete)"
+    eccho "5. Manually quit the Archive Utility application."
+    eccho "6. Return to this terminal session and it enter your password to continue."
+    eccho ""
+    eccho "If you do not see a password prompt or encounter any issues, close this terminal window,"
+    eccho "open a new session, run 'xcversion cleanup' and then run 'good-morning' again."
+    eccho ""
   fi
   xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta a simple process
   xcversion select "$xcode_short_version" < /dev/tty
-  echo "Installing Xcode command line tools..."
+  eccho "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
   if getOSVersion | grep "10.14" > /dev/null; then
-    echo "Installing macOS SDK headers..."
+    eccho "Installing macOS SDK headers..."
     # This does not need to be re-installed after an Xcode update, but it is safe to blindly do it again.
     sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
   fi
-  echo "Cleaning up Xcode installers..."
+  eccho "Cleaning up Xcode installers..."
   xcversion cleanup
-  echo "Open up Settings > Software Update and install any updates."
+  eccho "Open up Settings > Software Update and install any updates."
   prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
 }
 
@@ -256,7 +277,7 @@ function checkXcodeVersion {
   local xcode_version="11.0" # do not append prerelease names such as "Beta" to this version number.
   local xcode_prerelease_stage="Beta 2" # leave blank when not installing a beta
   local xcode_build_version="11M337n"
-  echo "Checking Xcode version..."
+  eccho "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
   else
@@ -265,14 +286,14 @@ function checkXcodeVersion {
     local_version="$(getLocalXcodeVersion)"
     local_build_version="$(getLocalXcodeBuildVersion)"
     if [[ "$local_build_version" != "$xcode_build_version" ]]; then
-      echo "Upgrading Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) \ 
+      eccho "Upgrading Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) \ 
         from $local_version (Build $local_build_version)..."
       installXcode "$xcode_version"
       local new_local_version
       new_local_version="$(getLocalXcodeVersion)"
       # If there was a previous version installed, but it wasn't a beta which will have the same version number...
       if [[ -n "$local_version" ]] && [[ "$local_version" != "$new_local_version" ]]; then
-        echo "Uninstalling Xcode $local_version (Build $local_build_version)..."
+        eccho "Uninstalling Xcode $local_version (Build $local_build_version)..."
         xcversion uninstall "$local_version" < /dev/tty
       fi
     fi
@@ -281,9 +302,9 @@ function checkXcodeVersion {
 checkXcodeVersion
 
 if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
-  echo "Accepting the Xcode license..."
+  eccho "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
-  echo "Installing Xcode packages..."
+  eccho "Installing Xcode packages..."
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDevice.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
@@ -334,8 +355,8 @@ if ( [[ -n "$gitHubEmailChanged" ]] || ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] ) && a
   ssh-add -K "$HOME/.ssh/id_rsa"
   # copy public ssh key to clipboard for pasting on GitHub
   pbcopy < "$HOME/.ssh/id_rsa.pub"
-  echo "SSH key copied to clipboard. GitHub will be opened next."
-  echo "Click 'New SSH key' on GitHub when it opens and paste in the copied key."
+  eccho "SSH key copied to clipboard. GitHub will be opened next."
+  eccho "Click 'New SSH key' on GitHub when it opens and paste in the copied key."
   prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
   open "$GITHUB_KEYS_URL"
   prompt "Hit Enter after the SSH key is saved on GitHub..."
@@ -344,7 +365,7 @@ fi
 # This install is an artifact for first-run that is overridden by the brew cask install
 # Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
 if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
-  echo "Installing GPG Suite..."
+  eccho "Installing GPG Suite..."
   dmg="$HOME/Downloads/GPGSuite.dmg"
   curl -JL https://releases.gpgtools.org/GPG_Suite-2017.3.dmg -o "$dmg"
   hdiutil attach "$dmg"
@@ -355,7 +376,7 @@ if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
 fi
 
 function installRVM {
-  echo "Installing RVM..."
+  eccho "Installing RVM..."
   gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
   curl -sSL https://get.rvm.io | bash -s stable --ruby
   # shellcheck source=/dev/null
@@ -372,7 +393,7 @@ function installRVM {
 }
 
 function checkRubyVersion {
-  echo "Checking Ruby version..."
+  eccho "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | grep "\[ruby-" | tail -1 | tr -d '[]')"
   if [[ "$(rvm list | grep 'No rvm rubies')" != "" ]]; then
     rvm install "$latest_ruby_version" --default
@@ -380,14 +401,14 @@ function checkRubyVersion {
   else
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
-      echo "Upgrading RVM..."
+      eccho "Upgrading RVM..."
       rvm get stable --auto
       # Upgrades of ruby versions disabled since there are gem incompatibilities.
       # At least it's not broken to just to install the latest version and migrate none of the gems.
-      # echo "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
+      # eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
       # rvm upgrade "$current_ruby_version" "$latest_ruby_version"
-      echo "Installing latest Ruby version: $latest_ruby_version..."
-      echo "Gems will not be migrated to provide you with a more reliable install experience."
+      eccho "Installing latest Ruby version: $latest_ruby_version..."
+      eccho "Gems will not be migrated to provide you with a more reliable install experience."
       rvm install "$latest_ruby_version" --default
       rvm alias create default ruby
       rvm cleanup all
@@ -406,11 +427,11 @@ checkRubyVersion
 rvm use default > /dev/null
 
 function updateGems {
-  echo "Checking system ruby gem versions..."
+  eccho "Checking system ruby gem versions..."
   local outdated
   outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
   if [[ -n "$outdated" ]]; then
-    echo "Updating these outdated ruby gems: $outdated"
+    eccho "Updating these outdated ruby gems: $outdated"
     # shellcheck disable=SC2086
     gem update $outdated --force --no-document
   fi
@@ -429,15 +450,15 @@ function installGems {
   gem list --local > "$gem_list_temp_file"
   for gem in "${gems[@]}"; do
     if ! grep "$gem" "$gem_list_temp_file" > /dev/null; then
-      echo "Installing $gem..."
+      eccho "Installing $gem..."
       gem install "$gem" --no-document
     fi
   done
   rm -f "$gem_list_temp_file"
   # temp fix for fastlane having an internal version conflict with google-cloud-storage
   # remove once fastlane fixes this
-  echo "Applying workaround to fix xcode-install..."
-  echo "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
+  eccho "Applying workaround to fix xcode-install..."
+  eccho "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
   gem install google-cloud-storage -v 1.16.0 --no-document &> /dev/null
   gem uninstall google-cloud-storage -v 1.17.0 &> /dev/null
   gem uninstall google-cloud-storage -v 1.18.0 &> /dev/null
@@ -472,8 +493,8 @@ EOF
   gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
   # copy the GPG public key for GitHub
   gpg --armor --export "$gpg_key_id" | pbcopy
-  echo "GPG key copied to clipboard. GitHub will be opened next."
-  echo "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
+  eccho "GPG key copied to clipboard. GitHub will be opened next."
+  eccho "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
   prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
   open "$GITHUB_KEYS_URL"
   prompt "Hit Enter after the GPG key is saved on GitHub to continue..."
@@ -482,7 +503,7 @@ EOF
   git config --global user.signingkey "$gpg_key_id"
   # Silence output about needing a passphrase on each commit
   # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
-  echo "Finishing up GPG setup with a test..."
+  eccho "Finishing up GPG setup with a test..."
   echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
 fi
 
@@ -492,16 +513,16 @@ if [[ -z "${REPO_ROOT+x}" ]]; then
 fi
 # Create local repository root
 if ! [[ -d "$REPO_ROOT" ]]; then
-  echo "Creating $REPO_ROOT"
+  eccho "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
 # Setup clone of good-morning repository
 GOOD_MORNING_REPO_ROOT="$REPO_ROOT/good-morning"
 if ! [[ -d "$GOOD_MORNING_REPO_ROOT/.git" ]]; then
-  echo "Cloning good-morning repository..."
+  eccho "Cloning good-morning repository..."
   git clone https://github.com/dpwolfe/good-morning.git "$GOOD_MORNING_REPO_ROOT"
   if [[ -s "$HOME\.bash_profile" ]]; then
-    echo "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
+    eccho "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
     mv "$HOME\.bash_profile" "$HOME\.old_bash_profile_$(date +%Y%m%d%H%M%S)"
   fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
@@ -553,20 +574,20 @@ function checkBrewTaps {
 if ! type "brew" &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
-  echo "Updating Homebrew..."
+  eccho "Updating Homebrew..."
   checkBrewTaps
   brew update 2> /dev/null
-  echo "Checking for outdated Homebrew formulas..."
+  eccho "Checking for outdated Homebrew formulas..."
   if [[ -n "$(brew upgrade)" ]]; then
     BREW_CLEANUP_NEEDED=1
     # If there was any output from the cleanup task, assume a formula changed or was installed.
     # Homebrew Doctor can take a long time to run, so now running only after formula changes...
-    echo "Running Hombrew Doctor since Homebrew updates were installed..."
+    eccho "Running Hombrew Doctor since Homebrew updates were installed..."
     brew doctor
   fi
-  echo "Checking for outdated Homebrew Casks..."
+  eccho "Checking for outdated Homebrew Casks..."
   for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
-    echo "Upgrading $outdatedCask..."
+    eccho "Upgrading $outdatedCask..."
     brew cask reinstall "$outdatedCask"
     BREW_CLEANUP_NEEDED=1
   done
@@ -576,7 +597,7 @@ fi
 # The wireshark 3.0.0 install was the first cask that started to fail to update, but now succeeds
 # with the following fix applied.
 if [[ "$(getConfigValue 'applied_cask_depends_on_fix')" != "yes" ]]; then
-  echo "Applying the Homebrew depends_on metadata fix from https://github.com/Homebrew/homebrew-cask/issues/58046..."
+  eccho "Applying the Homebrew depends_on metadata fix from https://github.com/Homebrew/homebrew-cask/issues/58046..."
   /usr/bin/find "$(brew --prefix)/Caskroom/"*'/.metadata' -type f -name '*.rb' -print0 | /usr/bin/xargs -0 /usr/bin/perl -i -0pe 's/depends_on macos: \[.*?\]//gsm;s/depends_on macos: .*//g'
   setConfigValue "applied_cask_depends_on_fix" "yes"
 fi
@@ -667,7 +688,7 @@ done
 # Install Homebrew casks
 for cask in "${brewCasks[@]}"; do
   if ! grep -E "(^| )$cask($| )" "$brew_list_temp_file" > /dev/null; then
-    echo "Installing $cask with Homebrew..."
+    eccho "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [[ -s "$cask_collision_file" ]]; then
       # Remove non-brew installed version of app and retry.
@@ -686,7 +707,7 @@ unset brewCasks
 
 if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
   unset BREW_CLEANUP_NEEDED;
-  echo "Cleaning up Homebrew cache..."
+  eccho "Cleaning up Homebrew cache..."
   brew cleanup -s # -s clears even the latest versions of uninstalled formulas and casks
 fi
 
@@ -859,18 +880,18 @@ function pickbin {
 }
 
 function findpip {
-  echo "$(pickbin 'pip pip2 pip2.7 pip3 pip3.6')"
+  pickbin 'pip pip2 pip2.7 pip3 pip3.6'
 }
 
-echo "Checking pip install..."
+eccho "Checking pip install..."
 localpip="$(findpip)"
 if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
-  echo "Installing pip..."
+  eccho "Installing pip..."
   wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
   python ~/get-pip.py --user
   rm -f ~/get-pip.py
 else
-  echo "Checking for update to pip..."
+  eccho "Checking for update to pip..."
   pip install --upgrade pip --upgrade-strategy eager > /dev/null
 fi
 unset localpip
@@ -908,21 +929,21 @@ rm -f "$piptempfile"
 unset piptempfile
 
 if ! pip-review | grep "Everything up-to-date" > /dev/null; then
-  echo "Upgrading pip installed packages..."
+  eccho "Upgrading pip installed packages..."
   pip-review --auto
   # temporary workaround until we can ignore upgrading deps beyond what is supported (i.e. awscli and prompt-toolkit)
   pip install "prompt-toolkit<1.1.0,>=1.0.0" > /dev/null # fix previous upgrades that went to 2.0
 fi
 
 function upgradeNPM {
-  echo "Checking Node.js $(node -v) global npm package versions..."
+  eccho "Checking Node.js $(node -v) global npm package versions..."
   # Upgrade all global packages other than npm to latest
   for package in $(npm -g outdated --parseable --depth=0 | cut -d: -f4); do
-    echo "Upgrading global package $package for Node.js $(node -v)..."
+    eccho "Upgrading global package $package for Node.js $(node -v)..."
     npm -g install "$package"
   done
   if ! type "ncu" &> /dev/null; then
-    echo "Installing the npm-check-updates global package..."
+    eccho "Installing the npm-check-updates global package..."
     npm install npm-check-updates -g
   fi
 }
@@ -940,7 +961,7 @@ function upgradeNode {
   if [[ "$local_version" != "$new_version" ]]; then
     local old_version="$local_version" # rename for readability
     nvm install "$new_version"
-    echo "Clearing Node Version Manager cache..."
+    eccho "Clearing Node Version Manager cache..."
     nvm cache clear > /dev/null
     if [[ "$active_version" == "$old_version" ]]; then
       # In this case, the version that was active will be uninstalled.
@@ -950,7 +971,7 @@ function upgradeNode {
     local reinstall_version
     reinstall_version="$(if [[ \"$old_version\" == \"N/A\" ]]; then echo "$active_version"; else echo "$old_version"; fi)"
     if [[ "$reinstall_version" != "N/A" ]] && [[ "$reinstall_version" != "$new_version" ]]; then
-      echo "Installing global Node.js packages used by $reinstall_version into $new_version..."
+      eccho "Installing global Node.js packages used by $reinstall_version into $new_version..."
       nvm reinstall-packages "$reinstall_version"
     fi
     upgradeNPM
@@ -973,10 +994,10 @@ nvm_latest_node=
 nvm_local_lts=
 nvm_latest_lts=
 function loadNVM {
-  echo "Loading Node Version Manager..."
+  eccho "Loading Node Version Manager..."
   # shellcheck source=/dev/null
   . "$HOME/.nvm/nvm.sh" > /dev/null
-  echo "Getting Node.js version information..."
+  eccho "Getting Node.js version information..."
   # cached because calling nvm version-remote takes a noticeable amount of time
   nvm_local_node="$(nvm version node)"
   nvm_latest_node="$(nvm version-remote node)"
@@ -1002,7 +1023,7 @@ function checkNodeVersion {
   if [[ "$local_version" != "N/A" ]] && \
     [[ "$local_version" != "$latest_version" ]] && \
     [[ "$local_version" != "$nvm_latest_lts" ]]; then
-      echo "Uninstalling Node.js $local_version..."
+      eccho "Uninstalling Node.js $local_version..."
       nvm uninstall "$local_version"
   fi
 }
@@ -1012,20 +1033,20 @@ if ! [[ -s "$HOME/.nvm/nvm.sh" ]] || ! nvm --version | grep "$nvm_version" > /de
     mkdir -p "$NVM_DIR" # ensure directory exists if environment variable is set by existing bash_profile
   fi
   # https://github.com/creationix/nvm#install-script
-  echo "Installing Node Version Manager v$nvm_version"
+  eccho "Installing Node Version Manager v$nvm_version"
   curl -o- https://raw.githubusercontent.com/creationix/nvm/v$nvm_version/install.sh | bash
   loadNVM
-  echo "Installing latest Node.js..."
+  eccho "Installing latest Node.js..."
   checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
-  echo "Installing latest Node.js LTS..."
+  eccho "Installing latest Node.js LTS..."
   checkNodeVersion "$nvm_local_lts" "$nvm_latest_lts"
-  echo "Setting default Node.js version to be the latest..."
+  eccho "Setting default Node.js version to be the latest..."
   nvm alias default node
 else
   loadNVM
-  echo "Checking version of installed Node.js..."
+  eccho "Checking version of installed Node.js..."
   checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
-  echo "Checking version of installed Node.js LTS..."
+  eccho "Checking version of installed Node.js LTS..."
   checkNodeVersion "$nvm_local_lts" "$nvm_latest_lts"
 fi
 setConfigValue "last_node_lts_installed" "$nvm_latest_lts"
@@ -1036,19 +1057,19 @@ unset nvm_local_lts
 unset nvm_latest_lts
 
 if [[ -n "$FIRST_RUN" ]] && askto "review and install some recommended applications"; then
-  echo "Follow these steps to complete the iTerm setup:"
-  echo "1. In Preferences > Profiles > Colors and select Tango Dark from the Color Presets... drop down."
-  echo "2. In Prefernces > Profiles > Terminal, set the iTerm buffer scroll back to 100000."
-  echo "3. Run the Install Shell Integration command from the iTerm2 menu."
-  echo "4. Use iTerm instead of Terminal from now on. Learn more here: https://iterm2.com/"
+  eccho "Follow these steps to complete the iTerm setup:"
+  eccho "1. In Preferences > Profiles > Colors and select Tango Dark from the Color Presets... drop down."
+  eccho "2. In Prefernces > Profiles > Terminal, set the iTerm buffer scroll back to 100000."
+  eccho "3. Run the Install Shell Integration command from the iTerm2 menu."
+  eccho "4. Use iTerm instead of Terminal from now on. Learn more here: https://iterm2.com/"
   prompt "Hit Enter to continue..."
   # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
   # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
 
   # Ensure Atom Shell Commands are installed
   if [[ -d "/Applications/Atom.app" ]] && ! type "apm" > /dev/null; then
-    echo "You need to install the Atom shell commands from inside Atom."
-    echo "After Atom opens, go to the Atom menu and select Atom > Install Shell Commands."
+    eccho "You need to install the Atom shell commands from inside Atom."
+    eccho "After Atom opens, go to the Atom menu and select Atom > Install Shell Commands."
     prompt "Hit Enter to open Atom..."
     open "/Applications/Atom.app"
     prompt "Select the menu item Atom > Install Shell Commands and hit Enter here when finished..."
@@ -1078,7 +1099,7 @@ function linkUtil {
   local linkPath
   linkPath="/Applications/Utilities/$(echo "$1" | sed -E "s/.*\/(.*\.app)/\1/")"
   if [[ -d "$1" ]] && ! [[ -L "$linkPath" ]]; then
-    echo "Creating $linkPath symlink..."
+    eccho "Creating $linkPath symlink..."
     sudoit ln -s "$1" "$linkPath"
   fi
 }
@@ -1086,19 +1107,20 @@ linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app
 
 function allowAllApps {
   if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
-    echo "Auto-approving applications for Gatekeeper..."
+    eccho "Auto-approving applications for Gatekeeper..."
     # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
-    local apps
-    apps="$(xattr -v -- /Applications/* | grep com.apple.quarantine | sed -E 's/^(.*\.app): com.apple.quarantine$/\1/')"
+    # shellcheck disable=SC2207
+    local apps=($(xattr -v -- /Applications/* | grep com.apple.quarantine | \
+      sed -E 's/^(.*\.app): com.apple.quarantine$/\1/'))
     for app in "${apps[@]}"; do
-      echo "Approving $(echo "$app" | sed -E 's/\/Applications\/(.*)\.app/\1/')..."
+      eccho "Approving $(echo "$app" | sed -E 's/\/Applications\/(.*)\.app/\1/')..."
       sudoit xattr -d com.apple.quarantine "$app"
     done
   fi
 }
 
 function reindexSpotlight {
-  echo "Triggering a rebuild of the Spotlight index to ensure all new brew casks appear..."
+  eccho "Triggering a rebuild of the Spotlight index to ensure all new brew casks appear..."
   sudoit mdutil -E /
 }
 
@@ -1113,306 +1135,306 @@ allowAllApps
 if ( [[ -n "$FIRST_RUN" ]] || [[ -z "$GOOD_MORNING_RUN" ]] ) \
   && askto "set some opinionated starter system settings"; then
 
-  echo "Optimizing System Settings"
-  echo "Only show icons of running apps in app bar, using Spotlight to launch"
+  eccho "Optimizing System Settings"
+  eccho "Only show icons of running apps in app bar, using Spotlight to launch"
   defaults write com.apple.dock static-only -bool true
-  echo "Auto show and hide the menu bar"
+  eccho "Auto show and hide the menu bar"
   defaults write -g _HIHideMenuBar -bool false
-  echo "Attach the dock to the left side, the definitive optimal location according to the community"
+  eccho "Attach the dock to the left side, the definitive optimal location according to the community"
   defaults write com.apple.dock orientation left
-  echo "Do not add recently used apps to the dock automatically."
+  eccho "Do not add recently used apps to the dock automatically."
   defaults write com.apple.dock show-recents -bool false
-  echo "Enable tap to click on trackpad"
+  eccho "Enable tap to click on trackpad"
   defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
-  echo "Bump up the trackpad speed a couple notches"
+  eccho "Bump up the trackpad speed a couple notches"
   defaults write -g com.apple.trackpad.scaling 2
-  echo "Turn off the annoying auto-capitalize while typing"
+  eccho "Turn off the annoying auto-capitalize while typing"
   defaults write -g NSAutomaticCapitalizationEnabled -bool false
-  echo "Turn off dash substitution"
+  eccho "Turn off dash substitution"
   defaults write -g NSAutomaticDashSubstitutionEnabled -bool false
-  echo "Set beep volume to 0"
+  eccho "Set beep volume to 0"
   defaults write -g com.apple.sound.beep.volume -int 0
-  echo "Turn off the cursor location assist that will grow the cursor size when shaken"
+  eccho "Turn off the cursor location assist that will grow the cursor size when shaken"
   defaults write -g CGDisableCursorLocationMagnification -bool true
-  echo "Bump the mouse scaling up a couple notches"
+  eccho "Bump the mouse scaling up a couple notches"
   defaults write -g com.apple.mouse.scaling -float 2
-  echo "Set interface style to dark"
+  eccho "Set interface style to dark"
   defaults write -g AppleInterfaceStyle -string "Dark"
-  echo "Set a short alert sound"
+  eccho "Set a short alert sound"
   defaults write -g com.apple.sound.beep.sound -string "/System/Library/Sounds/Pop.aiff"
   # todo: hide siri
-  echo "Set fast speed key repeat rate, setting to 0 basically deletes everything at"
-  echo "once in some slower apps. 1 is still too fast for some apps. 2 is the"
-  echo "reasonable safe min."
+  eccho "Set fast speed key repeat rate, setting to 0 basically deletes everything at"
+  eccho "once in some slower apps. 1 is still too fast for some apps. 2 is the"
+  eccho "reasonable safe min."
   defaults write -g KeyRepeat -int 2
-  echo "Set the delay until repeat to be very short"
+  eccho "Set the delay until repeat to be very short"
   defaults write -g InitialKeyRepeat -int 15
-  echo "Disable the auto spelling correction since technical acronyms and names get so often miss-corrected"
+  eccho "Disable the auto spelling correction since technical acronyms and names get so often miss-corrected"
   defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
-  echo "Show Volume in the menu bar"
+  eccho "Show Volume in the menu bar"
   defaults write com.apple.systemuiserver menuExtras -array-add "/System/Library/CoreServices/Menu Extras/Volume.menu"
   defaults write com.apple.systemuiserver "NSStatusItem Visible com.apple.menuextra.volume" -bool true
-  echo "Increase window resize speed for Cocoa applications"
+  eccho "Increase window resize speed for Cocoa applications"
   defaults write -g NSWindowResizeTime -float 0.001
-  echo "Expand save panel by default"
+  eccho "Expand save panel by default"
   defaults write -g NSNavPanelExpandedStateForSaveMode -bool true
-  echo "Expand print panel by default"
+  eccho "Expand print panel by default"
   defaults write -g PMPrintingExpandedStateForPrint -bool true
-  echo "Save to disk (not to iCloud) by default"
+  eccho "Save to disk (not to iCloud) by default"
   defaults write -g NSDocumentSaveNewDocumentsToCloud -bool false
-  echo "Automatically quit printer app once the print jobs complete"
+  eccho "Automatically quit printer app once the print jobs complete"
   defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
-  echo "Disable the "Are you sure you want to open this application?" dialog"
+  eccho "Disable the "Are you sure you want to open this application?" dialog"
   defaults write com.apple.LaunchServices LSQuarantine -bool false
-  echo "Display ASCII control characters using caret notation in standard text views"
+  eccho "Display ASCII control characters using caret notation in standard text views"
   defaults write -g NSTextShowsControlCharacters -bool true
-  echo "Disable Resume system-wide"
+  eccho "Disable Resume system-wide"
   defaults write -g NSQuitAlwaysKeepsWindows -bool false
-  echo "Disable automatic termination of inactive apps"
+  eccho "Disable automatic termination of inactive apps"
   defaults write -g NSDisableAutomaticTermination -bool true
-  echo "Disable automatic period substitution as it’s annoying when typing code"
+  eccho "Disable automatic period substitution as it’s annoying when typing code"
   defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
-  echo "Disable automatic quote substitution as it inevitably happens when writing JavaScript or JSON"
+  eccho "Disable automatic quote substitution as it inevitably happens when writing JavaScript or JSON"
   defaults write -g NSAutomaticQuoteSubstitutionEnabled -bool false
-  echo "Disable the crash reporter"
+  eccho "Disable the crash reporter"
   defaults write com.apple.CrashReporter DialogType -string "none"
-  echo "Set Help Viewer windows to non-floating mode"
+  eccho "Set Help Viewer windows to non-floating mode"
   defaults write com.apple.helpviewer DevMode -bool true
-  echo "Reveal IP address, hostname, OS version, etc. when clicking the clock in the login window"
+  eccho "Reveal IP address, hostname, OS version, etc. when clicking the clock in the login window"
   sudoit defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
-  echo "Check for software updates daily, not just once per week"
+  eccho "Check for software updates daily, not just once per week"
   defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 
-  echo "Optimizing Mouse & Trackpad Settings"
-  echo "Enable tap to click for this user and for the login screen"
+  eccho "Optimizing Mouse & Trackpad Settings"
+  eccho "Enable tap to click for this user and for the login screen"
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
   defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
   defaults write -g com.apple.mouse.tapBehavior -int 1
-  echo "Map bottom right corner to right-click"
+  eccho "Map bottom right corner to right-click"
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -int 2
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -bool true
   defaults -currentHost write -g com.apple.trackpad.trackpadCornerClickBehavior -int 1
   defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick -bool true
-  echo "Swipe between pages with three fingers"
+  eccho "Swipe between pages with three fingers"
   defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
   defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture -int 1
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerHorizSwipeGesture -int 1
-  echo "'Tap with three fingers' instead of 'Force click with one finger' for 'Look up' feature"
+  eccho "'Tap with three fingers' instead of 'Force click with one finger' for 'Look up' feature"
   defaults -currentHost write -g com.apple.trackpad.forceClick -int 0
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 2
-  echo "Use scroll gesture with the Ctrl (^) modifier key to zoom"
+  eccho "Use scroll gesture with the Ctrl (^) modifier key to zoom"
   defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
   defaults write com.apple.universalaccess HIDScrollZoomModifierMask -int 262144
 
-  echo "Optimizing Bluetooth Settings"
-  echo "Increase sound quality for Bluetooth headphones/headsets"
+  eccho "Optimizing Bluetooth Settings"
+  eccho "Increase sound quality for Bluetooth headphones/headsets"
   defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
 
-  echo "Optimizing Keyboard Settings"
-  echo "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
+  eccho "Optimizing Keyboard Settings"
+  eccho "Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)"
   defaults write -g AppleKeyboardUIMode -int 3
-  echo "Follow the keyboard focus while zoomed in"
+  eccho "Follow the keyboard focus while zoomed in"
   defaults write com.apple.universalaccess closeViewZoomFollowsFocus -bool true
-  echo "Disable press-and-hold for keys in favor of key repeat"
+  eccho "Disable press-and-hold for keys in favor of key repeat"
   defaults write -g ApplePressAndHoldEnabled -bool false
-  echo "Automatically illuminate built-in MacBook keyboard in low light"
+  eccho "Automatically illuminate built-in MacBook keyboard in low light"
   defaults write com.apple.BezelServices kDim -bool true
-  echo "Turn off keyboard illumination when computer is not used for 5 minutes"
+  eccho "Turn off keyboard illumination when computer is not used for 5 minutes"
   defaults write com.apple.BezelServices kDimTime -int 300
-  echo "Set language and text formats"
+  eccho "Set language and text formats"
   defaults write -g AppleLanguages -array "en"
   defaults write -g AppleLocale -string "en_US@currency=USD"
   defaults write -g AppleMeasurementUnits -string "Inches"
   defaults write -g AppleMetricUnits -bool false
-  echo "Disable auto-correct"
+  eccho "Disable auto-correct"
   defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
   defaults write -g WebAutomaticSpellingCorrectionEnabled -bool false
-  echo "Turn off typing suggestions in the touch bar"
+  eccho "Turn off typing suggestions in the touch bar"
   defaults write -g NSAutomaticTextCompletionEnabled -bool false
 
-  echo "Optimizing Screen Settings"
-  echo "Require password immediately after sleep or screen saver begins"
+  eccho "Optimizing Screen Settings"
+  eccho "Require password immediately after sleep or screen saver begins"
   defaults write com.apple.screensaver askForPassword -int 1
   defaults write com.apple.screensaver askForPasswordDelay -int 0
-  echo "Top right screen corner starts the screen saver instead of using idle time"
+  eccho "Top right screen corner starts the screen saver instead of using idle time"
   defaults write com.apple.dock wvous-tr-corner -int 5
   defaults write com.apple.dock wvous-tr-modifier -int 0
   defaults -currentHost write com.apple.screensaver idleTime 0
-  echo "Save screenshots to the desktop"
+  eccho "Save screenshots to the desktop"
   defaults write com.apple.screencapture location -string "$HOME/Desktop"
-  echo "Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
+  eccho "Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
   defaults write com.apple.screencapture type -string "png"
-  echo "Disable shadow in screenshots"
+  eccho "Disable shadow in screenshots"
   defaults write com.apple.screencapture disable-shadow -bool true
-  echo "Enable subpixel font rendering on non-Apple LCDs"
+  eccho "Enable subpixel font rendering on non-Apple LCDs"
   defaults write -g AppleFontSmoothing -int 2
-  echo "Enable HiDPI display modes (requires restart)"
+  eccho "Enable HiDPI display modes (requires restart)"
   sudoit defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 
-  echo "Optimizing Finder Settings"
-  echo "Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons"
+  eccho "Optimizing Finder Settings"
+  eccho "Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons"
   defaults write com.apple.finder QuitMenuItem -bool true
-  echo "Finder: disable window animations and Get Info animations"
+  eccho "Finder: disable window animations and Get Info animations"
   defaults write com.apple.finder DisableAllAnimations -bool true
-  echo "Show icons for hard drives, servers, and removable media on the desktop"
+  eccho "Show icons for hard drives, servers, and removable media on the desktop"
   defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
   defaults write com.apple.finder ShowHardDrivesOnDesktop -bool true
   defaults write com.apple.finder ShowMountedServersOnDesktop -bool true
   defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
-  echo "Finder: show hidden files by default"
+  eccho "Finder: show hidden files by default"
   defaults write com.apple.finder AppleShowAllFiles -bool true
-  echo "Finder: show path bar"
+  eccho "Finder: show path bar"
   defaults write com.apple.finder ShowPathbar -bool true
-  echo "Finder: show all filename extensions"
+  eccho "Finder: show all filename extensions"
   defaults write -g AppleShowAllExtensions -bool true
-  echo "Finder: show status bar"
+  eccho "Finder: show status bar"
   defaults write com.apple.finder ShowStatusBar -bool true
-  echo "Finder: allow text selection in Quick Look"
+  eccho "Finder: allow text selection in Quick Look"
   defaults write com.apple.finder QLEnableTextSelection -bool true
-  echo "Display full POSIX path as Finder window title"
+  eccho "Display full POSIX path as Finder window title"
   defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
-  echo "When performing a search, search the current folder by default"
+  eccho "When performing a search, search the current folder by default"
   defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
-  echo "Disable the warning when changing a file extension"
+  eccho "Disable the warning when changing a file extension"
   defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
-  echo "Avoid creating .DS_Store files on network volumes"
+  eccho "Avoid creating .DS_Store files on network volumes"
   defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
-  echo "Disable disk image verification"
+  eccho "Disable disk image verification"
   defaults write com.apple.frameworks.diskimages skip-verify -bool true
   defaults write com.apple.frameworks.diskimages skip-verify-locked -bool true
   defaults write com.apple.frameworks.diskimages skip-verify-remote -bool true
-  echo "Automatically open a new Finder window when a volume is mounted"
+  eccho "Automatically open a new Finder window when a volume is mounted"
   defaults write com.apple.frameworks.diskimages auto-open-ro-root -bool true
   defaults write com.apple.frameworks.diskimages auto-open-rw-root -bool true
   defaults write com.apple.finder OpenWindowForNewRemovableDisk -bool true
-  echo "Use list view in all Finder windows by default"
+  eccho "Use list view in all Finder windows by default"
   # You can set the other view modes by using one of these four-letter codes: icnv, clmv, Flwv
   defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
-  echo "Disable the warning before emptying the Trash"
+  eccho "Disable the warning before emptying the Trash"
   defaults write com.apple.finder WarnOnEmptyTrash -bool false
-  echo "Empty Trash securely by default"
+  eccho "Empty Trash securely by default"
   defaults write com.apple.finder EmptyTrashSecurely -bool true
-  echo "Enable AirDrop over Ethernet and on unsupported Macs running Lion"
+  eccho "Enable AirDrop over Ethernet and on unsupported Macs running Lion"
   defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
-  echo "Display all file sizes in Finder windows"
+  eccho "Display all file sizes in Finder windows"
   /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Delete "StandardViewSettings:ExtendedListViewSettings:calculateAllSizes" bool'
   /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Add "StandardViewSettings:ExtendedListViewSettings:calculateAllSizes" bool true'
   /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Delete "StandardViewSettings:ListViewSettings:calculateAllSizes" bool'
   /usr/libexec/PlistBuddy "$HOME/Library/Preferences/com.apple.finder.plist" -c 'Add "StandardViewSettings:ListViewSettings:calculateAllSizes" bool true'
-  echo "Turn off Finder sounds"
+  eccho "Turn off Finder sounds"
   defaults write com.apple.finder 'FinderSounds' -bool false
-  echo "Making ~/Library visible"
+  eccho "Making ~/Library visible"
   /usr/bin/chflags nohidden "$HOME/Library"
-  echo "Disabling '<App> is an application downloaded from the internet. Are you sure you want to open it?"
+  eccho "Disabling '<App> is an application downloaded from the internet. Are you sure you want to open it?"
   defaults write com.apple.LaunchServices LSQuarantine -bool false
 
-  echo "Optimizing Dock Settings"
-  echo "Enable highlight hover effect for the grid view of a stack (Dock)"
+  eccho "Optimizing Dock Settings"
+  eccho "Enable highlight hover effect for the grid view of a stack (Dock)"
   defaults write com.apple.dock mouse-over-hilte-stack -bool true
-  echo "Set the icon size of Dock items to 36 pixels"
+  eccho "Set the icon size of Dock items to 36 pixels"
   defaults write com.apple.dock tilesize -int 36
-  echo "Enable spring loading for all Dock items"
+  eccho "Enable spring loading for all Dock items"
   defaults write com.apple.dock enable-spring-load-actions-on-all-items -bool true
-  echo "Show indicator lights for open applications in the Dock"
+  eccho "Show indicator lights for open applications in the Dock"
   defaults write com.apple.dock show-process-indicators -bool true
-  echo "Don’t animate opening applications from the Dock"
+  eccho "Don’t animate opening applications from the Dock"
   defaults write com.apple.dock launchanim -bool false
-  echo "Speed up Mission Control animations"
+  eccho "Speed up Mission Control animations"
   defaults write com.apple.dock expose-animation-duration -float 0.1
-  echo "Remove the auto-hiding Dock delay"
+  eccho "Remove the auto-hiding Dock delay"
   defaults write com.apple.Dock autohide-delay -float 0
-  echo "Remove the animation when hiding/showing the Dock"
+  eccho "Remove the animation when hiding/showing the Dock"
   defaults write com.apple.dock autohide-time-modifier -float 0
-  echo "Automatically hide and show the Dock"
+  eccho "Automatically hide and show the Dock"
   defaults write com.apple.dock autohide -bool true
-  echo "Make Dock icons of hidden applications translucent"
+  eccho "Make Dock icons of hidden applications translucent"
   defaults write com.apple.dock showhidden -bool true
 
-  echo "Optimizing Safari & WebKit Settings"
-  echo "Set Safari’s home page to about:blank for faster loading"
+  eccho "Optimizing Safari & WebKit Settings"
+  eccho "Set Safari’s home page to about:blank for faster loading"
   defaults write com.apple.Safari HomePage -string "about:blank"
-  echo "Prevent Safari from opening ‘safe’ files automatically after downloading"
+  eccho "Prevent Safari from opening ‘safe’ files automatically after downloading"
   defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
-  echo "Hide Safari’s bookmarks bar by default"
+  eccho "Hide Safari’s bookmarks bar by default"
   defaults write com.apple.Safari ShowFavoritesBar -bool false
-  echo "Disable Safari’s thumbnail cache for History and Top Sites"
+  eccho "Disable Safari’s thumbnail cache for History and Top Sites"
   defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
-  echo "Enable Safari’s debug menu"
+  eccho "Enable Safari’s debug menu"
   defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-  echo "Make Safari’s search banners default to Contains instead of Starts With"
+  eccho "Make Safari’s search banners default to Contains instead of Starts With"
   defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
-  echo "Remove useless icons from Safari’s bookmarks bar"
+  eccho "Remove useless icons from Safari’s bookmarks bar"
   defaults write com.apple.Safari ProxiesInBookmarksBar ""
-  echo "Enable the Develop menu and the Web Inspector in Safari"
+  eccho "Enable the Develop menu and the Web Inspector in Safari"
   defaults write com.apple.Safari IncludeDevelopMenu -bool true
   defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
   defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
-  echo "Add a context menu item for showing the Web Inspector in web views"
+  eccho "Add a context menu item for showing the Web Inspector in web views"
   defaults write -g WebKitDeveloperExtras -bool true
-  echo "Enable the WebKit Developer Tools in the Mac App Store"
+  eccho "Enable the WebKit Developer Tools in the Mac App Store"
   defaults write com.apple.appstore WebKitDeveloperExtras -bool true
 
-  echo "Optimizing iTunes Settings"
-  echo "Disable the iTunes store link arrows"
+  eccho "Optimizing iTunes Settings"
+  eccho "Disable the iTunes store link arrows"
   defaults write com.apple.iTunes show-store-link-arrows -bool false
-  echo "Disable the Genius sidebar in iTunes"
+  eccho "Disable the Genius sidebar in iTunes"
   defaults write com.apple.iTunes disableGeniusSidebar -bool true
-  echo "Disable the Ping sidebar in iTunes"
+  eccho "Disable the Ping sidebar in iTunes"
   defaults write com.apple.iTunes disablePingSidebar -bool true
-  echo "Disable all the other Ping stuff in iTunes"
+  eccho "Disable all the other Ping stuff in iTunes"
   defaults write com.apple.iTunes disablePing -bool true
-  echo "Disable radio stations in iTunes"
+  eccho "Disable radio stations in iTunes"
   defaults write com.apple.iTunes disableRadio -bool true
-  echo "Make ⌘ + F focus the search input in iTunes"
+  eccho "Make ⌘ + F focus the search input in iTunes"
   defaults write com.apple.iTunes NSUserKeyEquivalents -dict-add "Target Search Field" "@F"
 
-  echo "Optimizing Mail Settings"
-  echo "Disable send and reply animations in Mail.app"
+  eccho "Optimizing Mail Settings"
+  eccho "Disable send and reply animations in Mail.app"
   defaults write com.apple.mail DisableReplyAnimations -bool true
   defaults write com.apple.mail DisableSendAnimations -bool true
-  echo "Add the keyboard shortcut ⌘ + Enter to send an email in Mail.app"
+  eccho "Add the keyboard shortcut ⌘ + Enter to send an email in Mail.app"
   defaults write com.apple.mail NSUserKeyEquivalents -dict-add "Send" "@U21a9"
 
-  echo "Optimizing Terminal Settings"
-  echo "Enable \"focus follows mouse\" for Terminal.app and all X11 apps."
-  echo "i.e. hover over a window and start typing in it without clicking first"
+  eccho "Optimizing Terminal Settings"
+  eccho "Enable \"focus follows mouse\" for Terminal.app and all X11 apps."
+  eccho "i.e. hover over a window and start typing in it without clicking first"
   defaults write com.apple.terminal FocusFollowsMouse -bool true
   defaults write org.x.X11 wm_ffm -bool true
 
-  echo "Optimizing Time Machine Settings"
-  echo "Prevent Time Machine from prompting to use new hard drives as backup volume"
+  eccho "Optimizing Time Machine Settings"
+  eccho "Prevent Time Machine from prompting to use new hard drives as backup volume"
   defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 
-  echo "Optimizing Address Book, Dashboard, iCal, TextEdit, and Disk Utility Settings"
-  echo "Enable the debug menu in Address Book"
+  eccho "Optimizing Address Book, Dashboard, iCal, TextEdit, and Disk Utility Settings"
+  eccho "Enable the debug menu in Address Book"
   defaults write com.apple.addressbook ABShowDebugMenu -bool true
-  echo "Enable Dashboard dev mode (allows keeping widgets on the desktop)"
+  eccho "Enable Dashboard dev mode (allows keeping widgets on the desktop)"
   defaults write com.apple.dashboard devmode -bool true
-  echo "Use plain text mode for new TextEdit documents"
+  eccho "Use plain text mode for new TextEdit documents"
   defaults write com.apple.TextEdit RichText -int 0
-  echo "Open and save files as UTF–8 in TextEdit"
+  eccho "Open and save files as UTF–8 in TextEdit"
   defaults write com.apple.TextEdit PlainTextEncoding -int 4
   defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
-  echo "Enable the debug menu in Disk Utility"
+  eccho "Enable the debug menu in Disk Utility"
   defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
   defaults write com.apple.DiskUtility advanced-image-options -bool true
 
-  echo "Optimizing Energy Settings"
-  echo "Stay on for 60 minutes with battery and 3 hours when plugged in"
+  eccho "Optimizing Energy Settings"
+  eccho "Stay on for 60 minutes with battery and 3 hours when plugged in"
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "Display Sleep Timer" -int 60
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "System Sleep Timer" -int 60
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "System Sleep Timer" -int 180
   sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "Display Sleep Timer" -int 180
-  echo "Show battery percentage"
+  eccho "Show battery percentage"
   defaults write com.apple.menuextra.battery ShowPercent -string "YES"
-  echo "Turn off the boot sound effect"
+  eccho "Turn off the boot sound effect"
   sudoit nvram SystemAudioVolume=" "
 
-  echo "Restart your computer to see all the changes."
+  eccho "Restart your computer to see all the changes."
 fi
 
 if [[ -z "$GOOD_MORNING_RUN" ]]; then
-  echo "Use the command good-morning each day to stay up-to-date!"
+  eccho "Use the command good-morning each day to stay up-to-date!"
 fi
 
 function cleanupTempFiles {
@@ -1425,7 +1447,7 @@ function cleanupTempFiles {
   if [[ "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
     rm -f "$GOOD_MORNING_TEMP_FILE_PREFIX"*
   else
-    echo "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
+    errcho "Warning: Unexpected pass file prefix. Temp file clean-up is incomplete."
   fi
   # Move the encrypted pass file back post cleanup if deleting it was disabled by the config.
   if [[ "$(getConfigValue 'keep_pass_for_session')" == "yes" ]] && [[ -e "$good_morning_pass_file_temp" ]]; then
@@ -1469,7 +1491,7 @@ function cleanupGoodMorning {
     cleanupTempFiles
     cleanupEnvVars
   else
-    echo "Almost done! Pulling latest for good-morning repository..."
+    eccho "Almost done! Pulling latest for good-morning repository..."
     cleanupTempFiles
     pushd "$GOOD_MORNING_REPO_ROOT" > /dev/null
     cleanupEnvVars && git pull && popd > /dev/null
@@ -1481,11 +1503,11 @@ function gm::greeting {
   local hour
   hour=$(date "+%k")
   if (( hour < 12 )); then
-    echo "Good morning!"
+    eccho "Done. Good morning!"
   elif (( hour < 18 )); then
-    echo "Good afternoon!"
+    eccho "Done. Good afternoon!"
   else
-    echo "Good evening!"
+    eccho "Done. Good evening!"
   fi
 }
 gm::greeting
