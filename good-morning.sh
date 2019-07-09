@@ -6,6 +6,8 @@ set +o errexit
 # Turn on for debugging
 # set -o xtrace
 
+bold=
+normal=
 if type tput &> /dev/null; then
   bold=$(tput bold)
   normal=$(tput sgr0)
