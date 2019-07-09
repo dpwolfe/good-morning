@@ -6,23 +6,20 @@ set +o errexit
 # Turn on for debugging
 # set -o xtrace
 
-function errcho {
-  local red='\033[0;31m'
-  local nc='\033[0m'
-  local bold
+if type tput &> /dev/null; then
   bold=$(tput bold)
-  local normal
   normal=$(tput sgr0)
+fi
+
+function errcho {
+  red='\033[0;31m'
+  nc='\033[0m'
   echo -e "${bold}${red}ERROR: $*${nc}${normal}" >&2
 }
 
 function eccho {
   local light_blue='\033[1;34m'
   local nc='\033[0m'
-  local bold
-  bold=$(tput bold)
-  local normal
-  normal=$(tput sgr0)
   echo -e "${bold}${light_blue}$*${nc}${normal}"
 }
 
