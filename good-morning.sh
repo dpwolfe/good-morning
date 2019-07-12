@@ -1520,7 +1520,7 @@ function cleanupGoodMorning {
 }
 cleanupGoodMorning
 
-function gm::greeting {
+function greeting {
   local hour
   hour=$(date "+%k")
   if (( hour < 12 )); then
@@ -1531,4 +1531,4 @@ function gm::greeting {
     eccho "Done. Good evening!"
   fi
 }
-gm::greeting
+greeting
