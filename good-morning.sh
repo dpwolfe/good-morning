@@ -419,6 +419,7 @@ function checkRubyVersion {
       rvm upgrade "$current_ruby_version" "$latest_ruby_version"
       eccho "Gems will not be migrated to provide you with a more reliable post-upgrade experience."
       rvm install "$latest_ruby_version" --default
+      eccho "The previous version of Ruby is still available by running 'rvm use $current_ruby_version'."
       rvm alias create default ruby
       rvm cleanup all
     fi
