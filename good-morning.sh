@@ -274,8 +274,8 @@ function getLocalXcodeBuildVersion {
 
 function checkXcodeVersion {
   local xcode_version="11.0" # do not append prerelease names such as "Beta" to this version number.
-  local xcode_prerelease_stage="Beta 2" # leave blank when not installing a beta
-  local xcode_build_version="11M337n"
+  local xcode_prerelease_stage="Beta 3" # leave blank when not installing a beta
+  local xcode_build_version="11M362v"
   eccho "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
@@ -284,9 +284,10 @@ function checkXcodeVersion {
     local local_build_version
     local_version="$(getLocalXcodeVersion)"
     local_build_version="$(getLocalXcodeBuildVersion)"
-    if [[ "$local_build_version" != "$xcode_build_version" ]]; then
-      eccho "Upgrading Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) \ 
-        from $local_version (Build $local_build_version)..."
+    if [[ "$local_build_version" != "$xcode_build_version" ]] \
+      && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) \ 
+        from $local_version (Build $local_build_version)..."; then
+
       installXcode "$xcode_version"
       local new_local_version
       new_local_version="$(getLocalXcodeVersion)"
@@ -325,53 +326,63 @@ function setBuildEnv {
 }
 setBuildEnv macosx
 
-GITHUB_EMAIL="$(git config --global --get user.email)"
-unset gitHubEmailChanged
-if [[ -z "$GITHUB_EMAIL" ]]; then
-  prompt "Enter your GitHub email address: " GITHUB_EMAIL
-  git config --global user.email "$GITHUB_EMAIL"
-  gitHubEmailChanged=1
+GIT_EMAIL="$(git config --global --get user.email)"
+if [[ -z "$GIT_EMAIL" ]]; then
+  prompt "Enter the email address you use for git commits: " GIT_EMAIL
+  git config --global user.email "$GIT_EMAIL"
 fi
-GITHUB_NAME="$(git config --global --get user.name)"
-unset gitHubNameChanged
-if [[ -z "$GITHUB_NAME" ]]; then
-  prompt "Enter your full name used on GitHub: " GITHUB_NAME
-  git config --global user.name "$GITHUB_NAME"
-  gitHubNameChanged=1
+GIT_NAME="$(git config --global --get user.name)"
+if [[ -z "$GIT_NAME" ]]; then
+  prompt "Enter the full name you use for git commits: " GIT_NAME
+  git config --global user.name "$GIT_NAME"
 fi
 # Generate a new SSH key for GitHub https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
-GITHUB_KEYS_URL="https://github.com/settings/keys"
-if ( [[ -n "$gitHubEmailChanged" ]] || ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] ) && askto "create a GitHub SSH key for $GITHUB_EMAIL"; then
-  ssh-keygen -t rsa -b 4096 -C "$GITHUB_EMAIL" < /dev/tty
-  # start ssh-agent
+
+if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL"; then
+  eccho "Generating SSH key to be stored at $HOME/.ssh/id_rsa ..."
+  ssh-keygen -t rsa -b 4096 -C "$GIT_EMAIL" < /dev/tty
+  eccho "Starting ssh-agent ..."
   eval "$(ssh-agent -s)"
   # automatically load the keys and store passphrases in your keychain
+  eccho "Initializing your ~/.ssh/config"
   echo "Host *
- AddKeysToAgent yes
- UseKeychain yes
- IdentityFile \"$HOME/.ssh/id_rsa\"" > "$HOME/.ssh/config"
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile \"$HOME/.ssh/id_rsa\"" >> "$HOME/.ssh/config"
   # add your ssh key to ssh-agent
   ssh-add -K "$HOME/.ssh/id_rsa"
-  # copy public ssh key to clipboard for pasting on GitHub
-  pbcopy < "$HOME/.ssh/id_rsa.pub"
-  eccho "SSH key copied to clipboard. GitHub will be opened next."
-  eccho "Click 'New SSH key' on GitHub when it opens and paste in the copied key."
-  prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
-  open "$GITHUB_KEYS_URL"
-  prompt "Hit Enter after the SSH key is saved on GitHub..."
+  if askto "add your SSH key to GitHub or other source control provider"; then
+    # copy public ssh key to clipboard for pasting on GitHub
+    pbcopy < "$HOME/.ssh/id_rsa.pub"
+    eccho "The public key is now in your clipboard."
+    GITHUB_KEYS_URL="https://github.com/settings/keys"
+    if askto "open up GitHub's settings page for adding SSH keys"; then
+      eccho "GitHub will be opened next. Sign-in with $GIT_EMAIL if you have not already."
+      eccho "Click 'New SSH key' and paste in the copied key."
+      prompt "Hit Enter to open $GITHUB_KEYS_URL..."
+      open "$GITHUB_KEYS_URL"
+      prompt "Hit Enter to continue after the SSH key is saved on GitHub..."
+    else
+      eccho "With your new public key in the clipboard, take a moment to add it to all of the"
+      eccho "source control providers that you use, such as BitBucket or GitLab."
+      prompt "Hit Enter to continue running the script..."
+    fi
+  fi
 fi
 
 # This install is an artifact for first-run that is overridden by the brew cask install
 # Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
+gpg_suite_new_install=
 if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
   eccho "Installing GPG Suite..."
   dmg="$HOME/Downloads/GPGSuite.dmg"
-  curl -JL https://releases.gpgtools.org/GPG_Suite-2017.3.dmg -o "$dmg"
+  curl -JL https://releases.gpgtools.org/GPG_Suite-2018.5.dmg -o "$dmg"
   hdiutil attach "$dmg"
   sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
   diskutil unmount "GPG Suite"
   rm -f "$dmg"
   unset dmg
+  gpg_suite_new_install=1
 fi
 
 function installRVM {
@@ -401,7 +412,7 @@ function checkRubyVersion {
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       eccho "Upgrading RVM..."
-      rvm get stable --auto
+      rvm get stable --auto-dotfiles
       # Upgrades of ruby versions disabled since there are gem incompatibilities.
       # At least it's not broken to just to install the latest version and migrate none of the gems.
       # eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
@@ -468,42 +479,49 @@ function installGems {
 }
 installGems
 
-if ( [[ -n "$gitHubEmailChanged" ]] || [[ -n "$gitHubNameChanged" ]] ) && askto "create a Git GPG signing key for $GITHUB_EMAIL"; then
-  promptsecret "Enter the passphrase to use for the GPG key" GPG_PASSPHRASE
-  gpg --batch --gen-key <<EOF
-%echo "Generating a GPG key for signing Git operations...""
-%echo "Learn why here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
-%echo "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
+if (( gpg_suite_new_install == 1 )); then
+  unset gpg_suite_new_install
+  eccho "Creating a GPG key for you to use when signing commits is an excellent way to guarantee the"
+  eccho "integrity of your code changes for others."
+  eccho "Learn more about this here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
+  eccho "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
+  if askto "create a GPG signing key for signing your git commits"; then
+    eccho "Generating a GPG key for signing Git operations..."
+    promptsecret "Enter a passphrase for the GPG key" GPG_PASSPHRASE
+    gpg --batch --gen-key <<EOF
 Key-Type: RSA
 Key-Length: 4096
 Subkey-Type: RSA
 Subkey-Length: 4096
-Name-Real: $GITHUB_NAME
+Name-Real: $GIT_NAME
 Name-Comment: Git signing key
-Name-Email: $GITHUB_EMAIL
+Name-Email: $GIT_EMAIL
 Expire-Date: 2y
 Passphrase: $GPG_PASSPHRASE
 %commit
-%echo Signing key created.
 EOF
-  unset GPG_PASSPHRASE
-  gpg_todays_date=$(date -u +"%Y-%m-%d")
-  gpg_expr="sec.*4096.*\/([[:xdigit:]]{16}) $gpg_todays_date.*"
-  gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
-  # copy the GPG public key for GitHub
-  gpg --armor --export "$gpg_key_id" | pbcopy
-  eccho "GPG key copied to clipboard. GitHub will be opened next."
-  eccho "Click 'New GPG key' on GitHub when it opens and paste in the copied key."
-  prompt "Hit Enter to open up GitHub... ($GITHUB_KEYS_URL)"
-  open "$GITHUB_KEYS_URL"
-  prompt "Hit Enter after the GPG key is saved on GitHub to continue..."
-  # enable autos-signing of all the commits
-  git config --global commit.gpgsign true
-  git config --global user.signingkey "$gpg_key_id"
-  # Silence output about needing a passphrase on each commit
-  # echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
-  eccho "Finishing up GPG setup with a test..."
-  echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
+    unset GPG_PASSPHRASE
+
+    eccho "Signing key created."
+    gpg_todays_date=$(date -u +"%Y-%m-%d")
+    gpg_expr="sec.*4096.*\/([[:xdigit:]]{16}) $gpg_todays_date.*"
+    gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
+    # copy the GPG public key for GitHub
+    gpg --armor --export "$gpg_key_id" | pbcopy
+    eccho "Your new GPG key is copied to the clipboard."
+    if askto "open up GitHub's settings page for adding GPG keys"; then
+      eccho "After GitHub opens, click 'New GPG key' and paste in the copied key."
+      prompt "Hit Enter to open up $GITHUB_KEYS_URL ..."
+      open "$GITHUB_KEYS_URL"
+      prompt "Hit Enter to continue after you have saved the GPG key on GitHub..."
+    fi
+    eccho "Enabling auto-signing of all commits and other git actions..."
+    git config --global commit.gpgsign true
+    git config --global user.signingkey "$gpg_key_id"
+    eccho "Finishing up GPG setup with a test that will complete the setup..."
+    eccho "Please accept the GPG related dialog box if it opens."
+    echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
+  fi
 fi
 
 # Pick a default repo root unless one is already set
@@ -774,6 +792,7 @@ brews=(
   # fish
   fx # https://github.com/antonmedv/fx
   fzf # https://github.com/junegunn/fzf
+  gcc
   # gem-completion
   git
   git-lfs
@@ -1106,11 +1125,14 @@ linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app
 
 function allowAllApps {
   if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
+    local apps
     eccho "Auto-approving applications for Gatekeeper..."
     # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
+    IFS=$'\n'
     # shellcheck disable=SC2207
-    local apps=($(xattr -v -- /Applications/* | grep com.apple.quarantine | \
+    apps=($(xattr -v -- /Applications/* | grep com.apple.quarantine | \
       sed -E 's/^(.*\.app): com.apple.quarantine$/\1/'))
+    unset IFS
     for app in "${apps[@]}"; do
       eccho "Approving $(echo "$app" | sed -E 's/\/Applications\/(.*)\.app/\1/')..."
       sudoit xattr -d com.apple.quarantine "$app"
@@ -1131,7 +1153,7 @@ if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
 fi
 allowAllApps
 
-if ( [[ -n "$FIRST_RUN" ]] || [[ -z "$GOOD_MORNING_RUN" ]] ) \
+if (( FIRST_RUN == 1 )) || [[ -z "$GOOD_MORNING_RUN" ]] \
   && askto "set some opinionated starter system settings"; then
 
   eccho "Optimizing System Settings"
@@ -1456,9 +1478,9 @@ function cleanupTempFiles {
 
 function cleanupEnvVars {
   unset FIRST_RUN
-  unset GITHUB_EMAIL
+  unset GIT_EMAIL
   unset GITHUB_KEYS_URL
-  unset GITHUB_NAME
+  unset GIT_NAME
   unset GOOD_MORNING_CONFIG_FILE
   unset GOOD_MORNING_TEMP_FILE_PREFIX
   unset GOOD_MORNING_REPO_ROOT
