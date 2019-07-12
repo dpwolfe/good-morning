@@ -404,7 +404,7 @@ function installRVM {
 
 function checkRubyVersion {
   eccho "Checking Ruby version..."
-  latest_ruby_version="$(rvm list known 2> /dev/null | grep "\[ruby-" | tail -1 | tr -d '[]')"
+  latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
   if [[ "$(rvm list | grep 'No rvm rubies')" != "" ]]; then
     rvm install "$latest_ruby_version" --default
     rvm cleanup all
@@ -792,7 +792,7 @@ brews=(
   # fish
   fx # https://github.com/antonmedv/fx
   fzf # https://github.com/junegunn/fzf
-  gcc
+  # gcc
   # gem-completion
   git
   git-lfs
