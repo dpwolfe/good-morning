@@ -415,10 +415,9 @@ function checkRubyVersion {
       rvm get stable --auto-dotfiles
       # Upgrades of ruby versions disabled since there are gem incompatibilities.
       # At least it's not broken to just to install the latest version and migrate none of the gems.
-      # eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
-      # rvm upgrade "$current_ruby_version" "$latest_ruby_version"
-      eccho "Installing latest Ruby version: $latest_ruby_version..."
-      eccho "Gems will not be migrated to provide you with a more reliable install experience."
+      eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
+      rvm upgrade "$current_ruby_version" "$latest_ruby_version"
+      eccho "Gems will not be migrated to provide you with a more reliable post-upgrade experience."
       rvm install "$latest_ruby_version" --default
       rvm alias create default ruby
       rvm cleanup all
