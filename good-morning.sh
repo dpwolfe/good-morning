@@ -91,10 +91,12 @@ function setConfigValue {
   else
     errcho "Warning: Tried to set an unknown config key: $1"
   fi
-  echo "# This file stores settings and flags for the good-morning script." >> "$tempfile"
-  echo "keep_pass_for_session=$keep_pass_for_session" >> "$tempfile"
-  echo "applied_cask_depends_on_fix=$applied_cask_depends_on_fix" >> "$tempfile"
-  echo "last_node_lts_installed=$last_node_lts_installed" >> "$tempfile"
+  {
+    echo "# This file stores settings and flags for the good-morning script.";
+    echo "keep_pass_for_session=$keep_pass_for_session";
+    echo "applied_cask_depends_on_fix=$applied_cask_depends_on_fix";
+    echo "last_node_lts_installed=$last_node_lts_installed";
+  } > "$tempfile"
   mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
 }
 
@@ -114,6 +116,7 @@ function sudoit {
     done
     encryptToFile "$p" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
   fi
+  # shellcheck disable=SC2086
   decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo $sudoOpt -S -p "" "$@"
 }
 
