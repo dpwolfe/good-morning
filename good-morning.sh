@@ -177,7 +177,7 @@ function checkPerms {
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
     "$HOME/.pyenv"
-    /Applications/*.app
+    # /Applications/*.app
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
