@@ -277,8 +277,8 @@ function getLocalXcodeBuildVersion {
 
 function checkXcodeVersion {
   local xcode_version="11.0" # do not append prerelease names such as "Beta" to this version number.
-  local xcode_prerelease_stage="Beta 3" # leave blank when not installing a beta
-  local xcode_build_version="11M362v"
+  local xcode_prerelease_stage="Beta 4" # leave blank when not installing a beta
+  local xcode_build_version="11M374r"
   eccho "Checking Xcode version..."
   if ! /usr/bin/xcode-select -p &> /dev/null; then
     installXcode "$xcode_version"
@@ -288,8 +288,7 @@ function checkXcodeVersion {
     local_version="$(getLocalXcodeVersion)"
     local_build_version="$(getLocalXcodeBuildVersion)"
     if [[ "$local_build_version" != "$xcode_build_version" ]] \
-      && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) \ 
-        from $local_version (Build $local_build_version)..."; then
+      && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) from $local_version (Build $local_build_version)..."; then
 
       installXcode "$xcode_version"
       local new_local_version
