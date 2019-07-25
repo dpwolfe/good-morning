@@ -681,11 +681,6 @@ brewCasks=(
   virtualbox # A hypervisor like this is needed for Minikube
   visual-studio-code
   # visual-studio-code-insiders
-  wavtap # https://github.com/pje/WavTap
-  ## To use WavTap you'll need to take some extra steps that shall not be automated.
-  ## Run this from the Recovery terminal: csrutil disable && reboot
-  ## Run this in a terminal: sudo nvram boot-args=kext-dev-mode=1
-  ## Reboot again and WavTap should appear in the sound devices menu.
   wireshark
   # xmind-zen
   zoomus # Broken on macOS 10.15 Catalina (2019-06-21) - Infinite spinner on joining call. Use web version if impacted.
@@ -696,8 +691,9 @@ brew cask list > "$brew_list_temp_file"
 # Uninstall Homebrew casks that conflict with this script or are now obsolete
 # but may have been previously installed.
 nobrewcasks=(
-  insomniax # remove since this is now unmaintained
   docker # 2015 MacBooks and MacBooks with macOS 10.15 Catalina installed need to use docker-edge (2019-06-21)
+  insomniax # remove since this is now unmaintained
+  wavtap # deprecatec
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
