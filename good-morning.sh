@@ -822,6 +822,7 @@ brews=(
   readline # for pyenv installs of python
   # redis
   shellcheck # shell script linting
+  # swagger-codegen # requires brew cask install homebrew/cask-versions/adoptopenjdk8
   terraform
   tflint
   tmux
