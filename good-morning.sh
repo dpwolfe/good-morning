@@ -812,6 +812,7 @@ brews=(
   p7zip # provides 7z command
   packer
   # packer-completion
+  pandoc
   pgcli
   pgtune
   pgweb
