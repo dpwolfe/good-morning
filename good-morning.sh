@@ -196,9 +196,25 @@ function checkPerms {
 }
 checkPerms
 
+function updateGems {
+  eccho "Checking ruby gem versions..."
+  local outdated
+  outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
+  if [[ -n "$outdated" ]]; then
+    eccho "Updating these outdated ruby gems: $outdated"
+    # shellcheck disable=SC2086
+    gem update $outdated --force --no-document
+  fi
+}
+
 if type rvm &> /dev/null; then
-  eccho "Using default Ruby with rvm..."
-  rvm use default > /dev/null
+  if rvm list | grep -q 'No rvm rubies' &> /dev/null; then
+    eccho "Only the system Ruby is available."
+    updateGems
+  else
+    eccho "Using default Ruby with rvm..."
+    rvm use default > /dev/null
+  fi
 fi
 eccho "Checking for existence of xcode-install..."
 if ! gem list --local | grep "xcode-install" > /dev/null; then
@@ -438,17 +454,6 @@ checkRubyVersion
 
 # ensure we are not using the system version
 rvm use default > /dev/null
-
-function updateGems {
-  eccho "Checking system ruby gem versions..."
-  local outdated
-  outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
-  if [[ -n "$outdated" ]]; then
-    eccho "Updating these outdated ruby gems: $outdated"
-    # shellcheck disable=SC2086
-    gem update $outdated --force --no-document
-  fi
-}
 updateGems
 
 function installGems {
