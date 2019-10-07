@@ -475,11 +475,8 @@ function installGems {
   # remove once fastlane fixes this
   eccho "Applying workaround to fix xcode-install..."
   eccho "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
+  gem uninstall google-cloud-storage --all --force &> /dev/null
   gem install google-cloud-storage -v 1.16.0 --no-document &> /dev/null
-  gem uninstall google-cloud-storage -v 1.17.0 &> /dev/null
-  gem uninstall google-cloud-storage -v 1.18.0 &> /dev/null
-  gem uninstall google-cloud-storage -v 1.18.1 &> /dev/null
-  gem uninstall google-cloud-storage -v 1.18.2 &> /dev/null
   # end temp fix
   gem cleanup
 }
