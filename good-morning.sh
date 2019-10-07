@@ -207,14 +207,12 @@ function updateGems {
   fi
 }
 
-if type rvm &> /dev/null; then
-  if rvm list | grep -q 'No rvm rubies' &> /dev/null; then
-    eccho "Only the system Ruby is available."
-    updateGems
-  else
-    eccho "Using default Ruby with rvm..."
-    rvm use default > /dev/null
-  fi
+if ! type rvm &> /dev/null || rvm list | grep -q 'No rvm rubies' &> /dev/null; then
+  eccho "Using system Ruby."
+  updateGems
+else
+  eccho "Using RVM's default Ruby..."
+  rvm use default
 fi
 eccho "Checking for existence of xcode-install..."
 if ! gem list --local | grep "xcode-install" > /dev/null; then
