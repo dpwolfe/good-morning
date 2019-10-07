@@ -580,6 +580,8 @@ function checkBrewTaps {
   done
   taps=(
     wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
+    homebrew/cask-versions
+    homebrew/services
   )
   for tap in "${taps[@]}"; do
     if ! grep -E "^$tap$" "$brew_tap_file" > /dev/null; then
