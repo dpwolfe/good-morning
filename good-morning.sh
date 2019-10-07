@@ -858,7 +858,7 @@ unset brew_list_temp_file
 function checkPythonInstall {
   local pythonVersion="$1"
   if ! pyenv versions | grep "$pythonVersion" &> /dev/null; then
-    CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include" \
+    CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
     LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
     CPPFLAGS="-I$(brew --prefix zlib)/include" \
     pyenv install "$pythonVersion"
