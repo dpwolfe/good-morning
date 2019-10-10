@@ -855,16 +855,14 @@ unset brew_list_temp_file
 function checkPythonInstall {
   local pythonVersion="$1"
   if ! pyenv versions | grep "$pythonVersion" &> /dev/null; then
-    # CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
-    # LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
-    # CPPFLAGS="-I$(brew --prefix zlib)/include" \
-    PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig" pyenv install "$pythonVersion"
+    SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+    pyenv install "$pythonVersion"
   fi
 }
 
 function checkPythonVersions {
   local python2version="2.7.16"
-  local python3version="3.7.3"
+  local python3version="3.7.4"
   checkPythonInstall "$python2version"
   checkPythonInstall "$python3version"
   local globalPythonVersion
