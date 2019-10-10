@@ -637,7 +637,7 @@ brewCasks=(
   # discord
   # docker # need to run docker-edge on 2015 MacBooks or MacBooks using macOS Catalina
   docker-edge
-  dropbox
+  # dropbox   dropbox.com returns 403 on install
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   firefox
   font-fira-code
