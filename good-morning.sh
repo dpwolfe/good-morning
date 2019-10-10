@@ -858,7 +858,7 @@ function checkPythonInstall {
     # CFLAGS="-O2 -I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include" \
     # LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib" \
     # CPPFLAGS="-I$(brew --prefix zlib)/include" \
-    pyenv install "$pythonVersion"
+    PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig" pyenv install "$pythonVersion"
   fi
 }
 
