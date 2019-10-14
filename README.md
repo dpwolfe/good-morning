@@ -8,12 +8,9 @@ _A fresh install of macOS is ideal, but not required._
 
 - Your MacBook must be running macOS 10.14 (Mojave) or 10.15 (Catalina)
 - You must have admin privileges on your MacBook.
-- You must have System Integrity Protection disabled.
-   1. Boot into the Recovery mode and launch the Terminal
-   2. Run `csrutil disable; reboot`
 - You must have an Apple ID that has accepted the developer agreement, which you can do
    for free here: <https://developer.apple.com/account/>
-- A solid Internet connection at least for the first run.
+- A solid Internet connection at least for the first run since Xcode will be installed.
 
 ## Instructions
 
