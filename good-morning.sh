@@ -312,22 +312,6 @@ if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
 fi
 
-function setBuildEnv {
-  export SDK="$1"
-  export AR=$(xcrun --sdk $SDK --find ar)
-  export AS=$(xcrun --sdk $SDK --find as)
-  export ASCPP=$(xcrun --sdk $SDK --find as)
-  export CC=$(xcrun --sdk $SDK --find gcc)
-  export CPP="$(xcrun --sdk $SDK --find gcc) -E"
-  export CXX=$(xcrun --sdk $SDK --find g++)
-  export CXXCPP="$(xcrun --sdk $SDK --find g++) -E"
-  export LD=$(xcrun --sdk $SDK --find ld)
-  export NM=$(xcrun --sdk $SDK --find nm)
-  export RANLIB=$(xcrun --sdk $SDK --find ranlib)
-  export STRIP=$(xcrun --sdk $SDK --find strip)
-}
-# setBuildEnv macosx
-
 GIT_EMAIL="$(git config --global --get user.email)"
 if [[ -z "$GIT_EMAIL" ]]; then
   prompt "Enter the email address you use for git commits: " GIT_EMAIL
