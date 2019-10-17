@@ -249,24 +249,6 @@ function installXcode {
   eccho "Updating list of available Xcode versions..."
   xcversion update < /dev/tty
   eccho "Installing Xcode $xcode_version..."
-  if [[ "$(getOSVersion)" == "10.15" ]] || [[ "$(getOSVersion)" == "10.14.5" ]]; then
-    eccho ""
-    eccho "Xcode install has trouble using the Archive Utility on 10.14.5 and higher, including 10.15."
-    eccho "This script will hang after the Xcode download completes (i.e. progress bar reaches 100%)."
-    eccho "If this happens, do the following:"
-    eccho "1. Leave the Archive Utility application and this terminal session running."
-    eccho "2. Open up a second terminal session and run the following command:"
-    eccho "   (cd ~/Library/Caches/XcodeInstall; xip --expand ~/Library/Caches/XcodeInstall/*.xip)"
-    eccho "3. Wait several minutes for the extraction process to complete."
-    eccho "4. Run this command to fixup Xcode 11 Beta 2:"
-    eccho "   (cd ~/Library/Caches/XcodeInstall; find *.app -type l ! -exec test -e {} \; -delete)"
-    eccho "5. Manually quit the Archive Utility application."
-    eccho "6. Return to this terminal session and it enter your password to continue."
-    eccho ""
-    eccho "If you do not see a password prompt or encounter any issues, close this terminal window,"
-    eccho "open a new session, run 'xcversion cleanup' and then run 'good-morning' again."
-    eccho ""
-  fi
   xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta a simple process
   xcversion select "$xcode_short_version" < /dev/tty
   eccho "Installing Xcode command line tools..."
@@ -393,7 +375,7 @@ gpg_suite_new_install=
 if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
   eccho "Installing GPG Suite..."
   dmg="$HOME/Downloads/GPGSuite.dmg"
-  curl -JL https://releases.gpgtools.org/GPG_Suite-2018.5.dmg -o "$dmg"
+  curl -JL https://releases.gpgtools.org/GPG_Suite-2019.1_83.dmg -o "$dmg"
   hdiutil attach "$dmg"
   sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
   diskutil unmount "GPG Suite"
