@@ -1023,7 +1023,7 @@ if ! [[ -s "$HOME/.nvm/nvm.sh" ]] || ! nvm --version | grep "$nvm_version" > /de
   fi
   # https://github.com/creationix/nvm#install-script
   eccho "Installing Node Version Manager v$nvm_version"
-  curl -o- https://raw.githubusercontent.com/creationix/nvm/v$nvm_version/install.sh | bash
+  curl -o- "https://raw.githubusercontent.com/creationix/nvm/v${nvm_version}/install.sh" | bash
   loadNVM
   eccho "Installing latest Node.js..."
   checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
