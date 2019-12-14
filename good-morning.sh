@@ -1094,7 +1094,7 @@ function linkUtil {
 }
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
-function allowAllApps {
+function approveAllApps {
   if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
     local apps
     eccho "Auto-approving applications for Gatekeeper..."
@@ -1122,7 +1122,10 @@ if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   # and it might avoid prompting for the password until more of the work is done.
   reindexSpotlight
 fi
-allowAllApps
+approveAllApps
+# Check permissions again since new installs and updates will often undo
+# these important changes.
+checkPerms
 
 if (( FIRST_RUN == 1 )) || [[ -z "$GOOD_MORNING_RUN" ]] \
   && askto "set some opinionated starter system settings"; then
