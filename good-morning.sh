@@ -266,8 +266,6 @@ function installXcode {
   fi
   eccho "Cleaning up Xcode installers..."
   xcversion cleanup
-  eccho "Open up Settings > Software Update and install any updates."
-  prompt "Hit Enter once those updates are completed or run this script again if a restart was needed first..."
 }
 
 function getLocalXcodeVersion {
