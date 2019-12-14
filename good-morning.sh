@@ -8,9 +8,12 @@ set +o errexit
 
 bold=
 normal=
-if type tput &> /dev/null; then
-  bold=$(tput bold)
-  normal=$(tput sgr0)
+if type tput &> /dev/null && test -t 1; then
+  ncolors=$(tput colors)
+  if test -n "$ncolors" && test "$ncolors" -ge 8; then
+    bold=$(tput bold)
+    normal=$(tput sgr0)
+  fi
 fi
 
 function errcho {
