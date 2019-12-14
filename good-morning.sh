@@ -757,6 +757,7 @@ brews=(
   # ansible
   # automake
   # azure-cli
+  bash
   bash-completion@2
   brew-cask-completion
   # caddy
