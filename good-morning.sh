@@ -124,7 +124,7 @@ function sudoit {
 }
 
 function masinstall {
-  if ! mas list | grep "$1" > /dev/null; then
+  if ! mas list | grep -q "$1"; then
     # macOS Sierra issue for users who have never installed the given app - https://github.com/mas-cli/mas/issues/85
     mas install "$1" || \
       open "https://itunes.apple.com/us/app/id$1" && \
@@ -185,7 +185,7 @@ function checkPerms {
   )
   local userPerm="$USER:wheel"
   for dir in "${dirs[@]}"; do
-    if [[ -d "$dir" ]] && ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -E "^$userPerm$" > /dev/null; then
+    if [[ -d "$dir" ]] && ! stat -f "%Su:%Sg" "$dir" 2> /dev/null | grep -qE "^$userPerm$"; then
       eccho "Setting ownership of $dir to $USER..."
       sudoit chown -R "$userPerm" "$dir"
     fi
@@ -193,7 +193,7 @@ function checkPerms {
   # "Allow apps downloaded from: Anywhere" for app backwards compatibility with macOS 10.15 Catalina
   # Otherwise, some apps and quicklook extensions don't switch to the Allowed state properly from
   # the Security & Privacy settings.
-  if spctl --status | grep -E "assessments enabled" > /dev/null && [[ "$(getOSVersion)" == "10.15" ]]; then
+  if spctl --status | grep -q "assessments enabled" && getOSVersion | grep -q "10.15"; then
     sudoit spctl --master-disable
   fi
 }
@@ -210,7 +210,7 @@ function updateGems {
   fi
 }
 
-if ! type rvm &> /dev/null || rvm list | grep -q 'No rvm rubies' &> /dev/null; then
+if ! type rvm &> /dev/null || rvm list | grep -q 'No rvm rubies'; then
   eccho "Using system Ruby."
   updateGems
 else
@@ -218,7 +218,7 @@ else
   rvm use default
 fi
 eccho "Checking for existence of xcode-install..."
-if ! gem list --local | grep "xcode-install" > /dev/null; then
+if ! gem list --local | grep -q "xcode-install"; then
   eccho "Installing xcode-install for managing Xcode..."
   # https://github.com/KrauseFx/xcode-install
   # The alternative install instructions must be used since there is not a working
@@ -269,11 +269,11 @@ function installXcode {
 }
 
 function getLocalXcodeVersion {
-  /usr/bin/xcodebuild -version 2>&1 | grep Xcode | sed -E 's/Xcode ([0-9|.]*)/\1/'
+  /usr/bin/xcodebuild -version 2>&1 | grep "Xcode" | sed -E 's/Xcode ([0-9|.]*)/\1/'
 }
 
 function getLocalXcodeBuildVersion {
-  /usr/bin/xcodebuild -version 2>&1 | grep Build | sed -E 's/Build version ([0-9A-Za-z]+)/\1/'
+  /usr/bin/xcodebuild -version 2>&1 | grep "Build" | sed -E 's/Build version ([0-9A-Za-z]+)/\1/'
 }
 
 function checkXcodeVersion {
@@ -311,7 +311,7 @@ function checkXcodeVersion {
 }
 checkXcodeVersion
 
-if /usr/bin/xcrun clang 2>&1 | grep license > /dev/null; then
+if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
   eccho "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
   eccho "Installing Xcode packages..."
@@ -399,7 +399,7 @@ function installRVM {
 function checkRubyVersion {
   eccho "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
-  if [[ "$(rvm list | grep 'No rvm rubies')" != "" ]]; then
+  if rvm list | grep -q 'No rvm rubies'; then
     rvm install "$latest_ruby_version" --default
     rvm cleanup all
   else
@@ -442,7 +442,7 @@ function installGems {
   )
   gem list --local > "$gem_list_temp_file"
   for gem in "${gems[@]}"; do
-    if ! grep "$gem" "$gem_list_temp_file" > /dev/null; then
+    if ! grep -q "$gem" "$gem_list_temp_file"; then
       eccho "Installing $gem..."
       gem install "$gem" --no-document
     fi
@@ -552,7 +552,7 @@ function checkBrewTaps {
   brew_tap_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_tap"
   brew tap > "$brew_tap_file"
   for tap in "${notaps[@]}"; do
-    if grep -E "^$tap$" "$brew_tap_file" > /dev/null; then
+    if grep -qE "^$tap$" "$brew_tap_file"; then
       brew untap "$tap"
     fi
   done
@@ -563,7 +563,7 @@ function checkBrewTaps {
     wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
   )
   for tap in "${taps[@]}"; do
-    if ! grep -E "^$tap$" "$brew_tap_file" > /dev/null; then
+    if ! grep -qE "^$tap$" "$brew_tap_file"; then
       brew tap "$tap"
     fi
   done
@@ -677,13 +677,13 @@ nobrewcasks=(
   wavtap # deprecatec
 )
 for brew in "${nobrewcasks[@]}"; do
-  if grep -E "(^| )$brew($| )" "$brew_list_temp_file" > /dev/null; then
+  if grep -qE "(^| )$brew($| )" "$brew_list_temp_file"; then
     brew cask uninstall --force "$brew"
   fi
 done
 # Install Homebrew casks
 for cask in "${brewCasks[@]}"; do
-  if ! grep -E "(^| )$cask($| )" "$brew_list_temp_file" > /dev/null; then
+  if ! grep -qE "(^| )$cask($| )" "$brew_list_temp_file"; then
     eccho "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [[ -s "$cask_collision_file" ]]; then
@@ -720,7 +720,7 @@ function changeFormula {
   local brew_command="$2"
   local formula_ref="${3:-$formula_name}"
   ensureFormulaListCache
-  if ! grep -E "(^| )$formula_name($| )" "$brew_list_temp_file" > /dev/null; then
+  if ! grep -qE "(^| )$formula_name($| )" "$brew_list_temp_file"; then
     # shellcheck disable=SC2046
     brew "$brew_command" "$formula_ref" \
       $(if [[ "$brew_command" == "uninstall" ]]; then echo "--force --ignore-dependencies"; fi)
@@ -833,7 +833,7 @@ unset brew_list_temp_file
 
 function checkPythonInstall {
   local pythonVersion="$1"
-  if ! pyenv versions | grep "$pythonVersion" &> /dev/null; then
+  if ! pyenv versions | grep -q "$pythonVersion"; then
     SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
     pyenv install "$pythonVersion"
   fi
@@ -915,7 +915,7 @@ pips=(
   virtualenv
 )
 for pip in "${pips[@]}"; do
-  if ! grep -i "$pip==" "$piptempfile" &> /dev/null; then
+  if ! grep -qi "$pip==" "$piptempfile"; then
     CFLAGS="-I$(brew --prefix openssl)/include" \
     CPPFLAGS="-I$(brew --prefix openssl)/include" \
     LDFLAGS="-L$(brew --prefix openssl)/lib" \
@@ -926,7 +926,7 @@ unset pips
 rm -f "$piptempfile"
 unset piptempfile
 
-if ! pip-review | grep "Everything up-to-date" > /dev/null; then
+if ! pip-review | grep -q "Everything up-to-date"; then
   eccho "Upgrading pip installed packages..."
   pip-review --auto
   # temporary workaround until we can ignore upgrading deps beyond what is supported (i.e. awscli and prompt-toolkit)
@@ -1005,7 +1005,7 @@ function loadNVM {
     local last_node_lts_installed
     last_node_lts_installed="$(getConfigValue 'last_node_lts_installed')"
     if [[ -n "$last_node_lts_installed" ]] && \
-      nvm ls "$last_node_lts_installed" | grep "$last_node_lts_installed" > /dev/null
+      nvm ls "$last_node_lts_installed" | grep -q "$last_node_lts_installed"
     then
       # lts node was previously installed by good-morning and it is still installed
       nvm_local_lts="$last_node_lts_installed"
@@ -1026,7 +1026,7 @@ function checkNodeVersion {
   fi
 }
 
-if ! [[ -s "$HOME/.nvm/nvm.sh" ]] || ! nvm --version | grep "$nvm_version" > /dev/null; then
+if ! [[ -s "$HOME/.nvm/nvm.sh" ]] || ! nvm --version | grep -q "$nvm_version"; then
   if [[ -n "$NVM_DIR" ]]; then
     mkdir -p "$NVM_DIR" # ensure directory exists if environment variable is set by existing bash_profile
   fi
@@ -1071,7 +1071,7 @@ if [[ -n "$FIRST_RUN" ]] && askto "review and install some recommended applicati
     prompt "Hit Enter to open Atom..."
     open "/Applications/Atom.app"
     prompt "Select the menu item Atom > Install Shell Commands and hit Enter here when finished..."
-    if ! apm list | grep "── vim-mode@" > /dev/null && askto "install Atom vim-mode"; then
+    if ! apm list | grep -q "── vim-mode@" && askto "install Atom vim-mode"; then
       apm install vim-mode ex-mode
     fi
   fi
@@ -1104,13 +1104,13 @@ function linkUtil {
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
 function approveAllApps {
-  if xattr -v -- /Applications/* | grep -q com.apple.quarantine; then
+  if xattr -v -- /Applications/* | grep -q "com.apple.quarantine"; then
     local apps
     eccho "Auto-approving applications for Gatekeeper..."
     # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
     IFS=$'\n'
     # shellcheck disable=SC2207
-    apps=($(xattr -v -- /Applications/* | grep com.apple.quarantine | \
+    apps=($(xattr -v -- /Applications/* | grep "com.apple.quarantine" | \
       sed -E 's/^(.*\.app): com.apple.quarantine$/\1/'))
     unset IFS
     for app in "${apps[@]}"; do
