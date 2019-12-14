@@ -259,7 +259,7 @@ function installXcode {
   if getOSVersion | grep -q "10.14"; then
     eccho "Installing macOS SDK headers..."
     # This does not need to be re-installed after an Xcode update, but it is safe to blindly do it again.
-    sudoit installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+    sudoit installer -allowUntrusted -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
   else # assume 10.15 or greater
     # link to the header file locations
     sudoit ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/
