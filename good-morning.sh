@@ -659,7 +659,6 @@ brewCasks=(
   transmission # open source BitTorrent client from https://github.com/transmission/transmission
   tunnelblick # connect to your VPN
   vanilla # hide menu icons on your mac
-  virtualbox # A hypervisor like this is needed for Minikube
   visual-studio-code
   # visual-studio-code-insiders
   wireshark
@@ -674,7 +673,8 @@ brew cask list > "$brew_list_temp_file"
 nobrewcasks=(
   docker # 2015 MacBooks and MacBooks with macOS 10.15 Catalina installed need to use docker-edge (2019-06-21)
   insomniax # remove since this is now unmaintained
-  wavtap # deprecatec
+  virtualbox # deprecated since Docker for Desktop already comes with hyperkit
+  wavtap # deprecated
 )
 for brew in "${nobrewcasks[@]}"; do
   if grep -qE "(^| )$brew($| )" "$brew_list_temp_file"; then
