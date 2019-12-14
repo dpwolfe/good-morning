@@ -294,7 +294,7 @@ function checkXcodeVersion {
     local local_build_version
     local_version="$(getLocalXcodeVersion)"
     local_build_version="$(getLocalXcodeBuildVersion)"
-    if [[ "$local_build_version" \< "$xcode_build_version" ]] \
+    if [[ "$local_build_version" < "$xcode_build_version" ]] \
       && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) from $local_version (Build $local_build_version)..."; then
 
       installXcode "$xcode_version"
