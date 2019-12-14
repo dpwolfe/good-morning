@@ -625,8 +625,7 @@ brewCasks=(
   gpg-suite
   handbrake
   iterm2
-  java # DBeaver will freeze at 100% CPU on macOS 10.15 Catalina unless using an updated Java
-  # java8
+  java
   keeweb
   # keybase
   keyboard-maestro # keyboard macros
@@ -780,6 +779,7 @@ brews=(
   # highlight
   httpie # https://github.com/jakubroztocil/httpie
   # isl
+  jenv # manage multiple java versions
   jq
   # kops
   kubernetes-cli
