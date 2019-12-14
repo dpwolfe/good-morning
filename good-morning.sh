@@ -280,14 +280,21 @@ function checkXcodeVersion {
   local xcode_prerelease_stage="" # leave blank when not installing a beta
   local xcode_build_version="11C29"
   eccho "Checking Xcode version..."
-  if ! /usr/bin/xcode-select -p &> /dev/null; then
+  if ! /usr/bin/xcode-select --print-path &> /dev/null || \
+     ! [[ -d "$(/usr/bin/xcode-select --print-path)" ]] || \
+     [[ "$(/usr/bin/xcode-select --print-path)" = "/Library/Developer/CommandLineTools" ]]; then
+     # One of these cases is true, so an install is necessary (no prompt).
+     # 1) Calling xcode-select failed for any reason
+     # 2) xcode-select is pointing to a Developer directory that does not exist
+     # 3) xcode-select is pointing to the default /Library location when no Xcode is installed
     installXcode "$xcode_version"
   else
+    # Xcode appears to be installed. Check to see if an upgrade option should be offered.
     local local_version
     local local_build_version
     local_version="$(getLocalXcodeVersion)"
     local_build_version="$(getLocalXcodeBuildVersion)"
-    if [[ "$local_build_version" != "$xcode_build_version" ]] \
+    if [[ "$local_build_version" \< "$xcode_build_version" ]] \
       && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage (Build $xcode_build_version) from $local_version (Build $local_build_version)..."; then
 
       installXcode "$xcode_version"
@@ -563,7 +570,7 @@ function checkBrewTaps {
 }
 
 # Install homebrew - https://brew.sh
-if ! type "brew" &> /dev/null; then
+if ! type brew &> /dev/null; then
   yes '' | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 else
   eccho "Updating Homebrew..."
