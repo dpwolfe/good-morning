@@ -546,7 +546,7 @@ fi
 # Homebrew taps - add those needed and remove obosoleted that can create conflicts (example: java8)
 function checkBrewTaps {
   notaps=(
-    caskroom/cask
+    caskroom/caskroom
     caskroom/versions
   )
   brew_tap_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_tap"
@@ -557,6 +557,7 @@ function checkBrewTaps {
     fi
   done
   taps=(
+    homebrew/cask-drivers
     homebrew/cask-fonts
     homebrew/cask-versions
     homebrew/services
@@ -632,7 +633,6 @@ brewCasks=(
   # logitech-gaming-software # if you plug-in a logitech keyboard
   microsoft-office
   microsoft-teams
-  minikube
   # omnifocus
   # omnigraffle
   # onedrive
@@ -788,6 +788,7 @@ brews=(
   # lnav
   # maven
   # maven-completion
+  minikube
   # neovim
   openssl
   openssl@1.1
