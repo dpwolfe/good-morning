@@ -169,7 +169,7 @@ function checkPerms {
     /usr/local/sbin
     /usr/local/share
     /usr/local/share/locale
-    /usr/local/share/man
+    /usr/local/share/man/*
     /usr/local/var
     /usr/local/var/homebrew
     # Needed for pip installs without requiring sudo
