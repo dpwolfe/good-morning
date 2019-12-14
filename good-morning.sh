@@ -605,6 +605,7 @@ fi
 
 # Homebrew casks
 brewCasks=(
+  # adoptopenjdk8
   # android-platform-tools # uncomment if you need Android dev tools
   # android-studio # uncomment if you need Android dev tools
   # beyond-compare
