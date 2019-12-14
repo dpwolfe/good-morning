@@ -188,4 +188,7 @@ export DOCKER_BUILDKIT=1
 if [ -f "$(brew --prefix)/etc/bash_completion" ]; then
   # shellcheck source=/dev/null
   . "$(brew --prefix)/etc/bash_completion"
+elif [ -f "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]; then
+  # shellcheck source=/dev/null
+  . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
 fi
