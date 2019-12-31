@@ -938,13 +938,17 @@ fi
 function upgradeNPM {
   eccho "Checking Node.js $(node -v) global npm package versions..."
   # Upgrade all global packages other than npm to latest
-  for package in $(npm -g outdated --parseable --depth=0 | cut -d: -f4); do
+  for package in $(npm --global outdated --parseable --depth=0 | cut -d: -f4); do
     eccho "Upgrading global package $package for Node.js $(node -v)..."
-    npm -g install "$package"
+    npm install "$package" --global
   done
   if ! type "ncu" &> /dev/null; then
     eccho "Installing the npm-check-updates global package..."
-    npm install npm-check-updates -g
+    npm install npm-check-updates --global
+  fi
+  if ! type "lerna" &> /dev/null; then
+    eccho "Installing the lerna global package..."
+    npm install lerna --global
   fi
 }
 
