@@ -277,9 +277,9 @@ function getLocalXcodeBuildVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="11.3" # do not append prerelease names such as "Beta" to this version number.
+  local xcode_version="11.3.1" # do not append prerelease names such as "Beta" to this version number.
   local xcode_prerelease_stage="" # leave blank when not a beta or leave a trailing space at the end if it is (e.g "Beta 1 ")
-  local xcode_build_version="11C29"
+  local xcode_build_version="11C504"
   eccho "Checking Xcode version..."
   if ! /usr/bin/xcode-select --print-path &> /dev/null || \
      ! [[ -d "$(/usr/bin/xcode-select --print-path)" ]] || \
