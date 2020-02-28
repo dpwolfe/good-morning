@@ -12,7 +12,6 @@
   "files.autoSave": "onFocusChange",
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
-  "prettier.eslintIntegration": true,
   "prettier.jsxBracketSameLine": true,
   "prettier.printWidth": 120,
   "prettier.singleQuote": true,
