@@ -837,6 +837,7 @@ function checkPythonInstall {
   local pythonVersion="$1"
   if ! pyenv versions | grep -q "$pythonVersion"; then
     SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+    CPPFLAGS="-I/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.7/include" \
     pyenv install "$pythonVersion"
   fi
 }
