@@ -246,6 +246,7 @@ function ensureXcodeInstallUserSet {
 
 function installXcode {
   local xcode_version="$1"
+  local xcode_build_version="$2"
   local xcode_short_version
   xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
   ensureXcodeInstallUserSet
@@ -264,8 +265,11 @@ function installXcode {
     # link to the header file locations
     sudoit ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/
   fi
-  eccho "Cleaning up Xcode installers..."
-  xcversion cleanup
+  # run cleanup if the install was successful
+  if [[ "$(getLocalXcodeBuildVersion)" = "$xcode_build_version" ]]; then
+    eccho "Cleaning up Xcode installers..."
+    xcversion cleanup
+  fi
 }
 
 function getLocalXcodeVersion {
@@ -288,7 +292,7 @@ function checkXcodeVersion {
      # 1) Calling xcode-select failed for any reason
      # 2) xcode-select is pointing to a Developer directory that does not exist
      # 3) xcode-select is pointing to the default /Library location when no Xcode is installed
-    installXcode "$xcode_version"
+    installXcode "$xcode_version" "$xcode_build_version"
   else
     # Xcode appears to be installed. Check to see if an upgrade option should be offered.
     local local_version
@@ -298,7 +302,7 @@ function checkXcodeVersion {
     if [[ "$local_build_version" < "$xcode_build_version" ]] \
       && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage(Build $xcode_build_version) from $local_version (Build $local_build_version)..."; then
 
-      installXcode "$xcode_version"
+      installXcode "$xcode_version" "$xcode_build_version"
       local new_local_version
       new_local_version="$(getLocalXcodeVersion)"
       # If there was a previous version installed, but it wasn't a beta which will have the same version number...
