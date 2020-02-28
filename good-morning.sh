@@ -841,14 +841,15 @@ function checkPythonInstall {
   local pythonVersion="$1"
   if ! pyenv versions | grep -q "$pythonVersion"; then
     SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-    CPPFLAGS="-I/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.7/include" \
+    CFLAGS="-I$(brew --prefix openssl)/include -O2" \
+    LDFLAGS="-L$(brew --prefix openssl)/lib" \
     pyenv install "$pythonVersion"
   fi
 }
 
 function checkPythonVersions {
-  local python2version="2.7.16"
-  local python3version="3.7.4"
+  local python2version="2.7.17"
+  local python3version="3.8.1"
   checkPythonInstall "$python2version"
   checkPythonInstall "$python3version"
   local globalPythonVersion
@@ -923,8 +924,8 @@ pips=(
 )
 for pip in "${pips[@]}"; do
   if ! grep -qi "$pip==" "$piptempfile"; then
-    CFLAGS="-I$(brew --prefix openssl)/include" \
-    CPPFLAGS="-I$(brew --prefix openssl)/include" \
+    SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+    CFLAGS="-I$(brew --prefix openssl)/include -O2" \
     LDFLAGS="-L$(brew --prefix openssl)/lib" \
     "$(findpip)" install "$pip"
   fi
@@ -935,6 +936,9 @@ unset piptempfile
 
 if ! pip-review | grep -q "Everything up-to-date"; then
   eccho "Upgrading pip installed packages..."
+  SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+  CFLAGS="-I$(brew --prefix openssl)/include -O2" \
+  LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pip-review --auto
   # temporary workaround until we can ignore upgrading deps beyond what is supported (i.e. awscli and prompt-toolkit)
   pip install "prompt-toolkit<1.1.0,>=1.0.0" > /dev/null # fix previous upgrades that went to 2.0
