@@ -33,7 +33,8 @@ function kill-function {
     local pid
     pid="$(pgrep "$1" | tr '\n' ' ')"
     if [ -n "$pid" ]; then
-        kill -s KILL "$pid";
+        # shellcheck disable=SC2086
+        kill -s KILL $pid;
         echo "Killed $1 $pid"
     else
         echo "No proc to kill with the name '$1'"
