@@ -385,8 +385,8 @@ fi
 
 function installRVM {
   eccho "Installing RVM..."
-  gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-  curl -sSL https://get.rvm.io | bash -s stable --ruby
+  gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+  curl -sSL https://get.rvm.io | bash -s stable --ruby --with-openssl-dir=/usr/local/opt/openssl
   # shellcheck source=/dev/null
   source "$HOME/.profile" # load rvm
   rvm cleanup all
@@ -404,7 +404,7 @@ function checkRubyVersion {
   eccho "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
   if rvm list | grep -q 'No rvm rubies'; then
-    rvm install "$latest_ruby_version" --default
+    rvm install "$latest_ruby_version" --default --with-openssl-dir=/usr/local/opt/openssl
     rvm cleanup all
   else
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
