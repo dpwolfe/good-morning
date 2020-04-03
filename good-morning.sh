@@ -420,7 +420,7 @@ function checkRubyVersion {
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
-      eccho "The RVM upgrade feature is not used to provide you a more reliable post-upgrade experience."
+      eccho "The RVM upgrade feature is not used to provide you a more reliable experience."
       SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
       CFLAGS="-I$(brew --prefix openssl)/include -O2" \
       LDFLAGS="-L$(brew --prefix openssl)/lib" \
