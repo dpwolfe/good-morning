@@ -200,18 +200,21 @@ function checkPerms {
 checkPerms
 
 function updateGems {
-  eccho "Checking ruby gem versions..."
+  eccho "Checking Ruby system gem versions..."
+  gem update --system --force --no-document
+  eccho "Checking Ruby gem versions..."
   local outdated
   outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
   if [[ -n "$outdated" ]]; then
-    eccho "Updating these outdated ruby gems: $outdated"
+    eccho "Updating these Ruby gems:"
+    eccho "$outdated"
     # shellcheck disable=SC2086
     gem update $outdated --force --no-document
   fi
 }
 
 if ! type rvm &> /dev/null || rvm list | grep -q 'No rvm rubies'; then
-  eccho "Using system Ruby."
+  eccho "Using macOS Ruby."
   updateGems
 else
   eccho "Using RVM's default Ruby..."
@@ -407,22 +410,27 @@ function checkRubyVersion {
     SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
     CFLAGS="-I$(brew --prefix openssl)/include -O2" \
     LDFLAGS="-L$(brew --prefix openssl)/lib" \
-    rvm install "$latest_ruby_version" --default
+    rvm install "$latest_ruby_version"
+    rvm alias create default ruby "$latest_ruby_version"
+    rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
     rvm cleanup all
   else
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       eccho "Upgrading RVM..."
       rvm get stable --auto-dotfiles
-      # Upgrades of ruby versions disabled since there are gem incompatibilities.
-      # At least it's not broken to just to install the latest version and migrate none of the gems.
       eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
       rvm upgrade "$current_ruby_version" "$latest_ruby_version"
       eccho "Gems will not be migrated to provide you with a more reliable post-upgrade experience."
-      rvm install "$latest_ruby_version" --default
-      eccho "The previous version of Ruby is still available by running 'rvm use $current_ruby_version'."
-      rvm alias create default ruby
+      SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+      CFLAGS="-I$(brew --prefix openssl)/include -O2" \
+      LDFLAGS="-L$(brew --prefix openssl)/lib" \
+      rvm install "$latest_ruby_version"
+      gem pristine --all --binstubs # fail safe for some bad state in gems that rvm upgrade can create
+      rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
       rvm cleanup all
+      eccho "The previous version of Ruby is still available by running 'rvm use $current_ruby_version'."
+      rvm alias create default ruby "$latest_ruby_version"
     fi
     unset current_ruby_version
     unset latest_ruby_version
@@ -457,10 +465,10 @@ function installGems {
   rm -f "$gem_list_temp_file"
   # temp fix for fastlane having an internal version conflict with google-cloud-storage
   # remove once fastlane fixes this
-  eccho "Applying workaround to fix xcode-install..."
-  eccho "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
-  gem uninstall google-cloud-storage --all --force &> /dev/null
-  gem install google-cloud-storage -v 1.16.0 --no-document &> /dev/null
+  # eccho "Applying workaround to fix xcode-install..."
+  # eccho "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
+  # gem uninstall google-cloud-storage --all --force &> /dev/null
+  # gem install google-cloud-storage -v 1.16.0 --no-document &> /dev/null
   # end temp fix
   gem cleanup
 }
