@@ -386,15 +386,16 @@ if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
   gpg_suite_new_install=1
 fi
 
+rvm_version=1.29.10
 function installRVM {
   eccho "Installing RVM..."
   gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-  curl -sSL https://get.rvm.io | bash -s stable --ruby
+  curl -sSL https://get.rvm.io | bash -s $rvm_version
   # shellcheck source=/dev/null
   source "$HOME/.profile" # load rvm
   rvm cleanup all
   # enable rvm auto-update
-  echo rvm_autoupdate_flag=2 >> ~/.rvmrc
+  # echo rvm_autoupdate_flag=2 >> ~/.rvmrc
   # enable rvm auto-reload on update
   echo rvm_auto_reload_flag=2 >> ~/.rvmrc
   # enable progress bar when downloading RVM / Rubies
@@ -404,7 +405,6 @@ function installRVM {
 }
 
 function checkRubyVersion {
-  local rvm_version=1.29.10
   if rvm version | grep -qv "$rvm_version"; then
     eccho "Upgrading RVM to $rvm_version..."
     # hard-coded since auto upgrade check hits GitHub's rate limits too frequently
