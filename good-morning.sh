@@ -404,8 +404,12 @@ function installRVM {
 }
 
 function checkRubyVersion {
-  eccho "Checking RVM version..."
-  rvm get 1.29.10 --auto-dotfiles # auto upgrade hits GitHub rate limits frequently
+  local rvm_version=1.29.10
+  if rvm version | grep -qv "$rvm_version"; then
+    eccho "Upgrading RVM to $rvm_version..."
+    # hard-coded since auto upgrade check hits GitHub's rate limits too frequently
+    rvm get $rvm_version --auto-dotfiles
+  fi
   eccho "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
   if rvm list | grep -q 'No rvm rubies'; then
