@@ -181,7 +181,6 @@ function checkPerms {
     /Library/Ruby/Site/*
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
-    /System/Library/Frameworks/Ruby.framework/Versions/*
     "$HOME/.pyenv"
     # /Applications/*.app
   )
