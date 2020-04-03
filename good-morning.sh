@@ -404,6 +404,8 @@ function installRVM {
 }
 
 function checkRubyVersion {
+  eccho "Checking RVM version..."
+  rvm get 1.29.10 --auto-dotfiles # auto upgrade hits GitHub rate limits frequently
   eccho "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
   if rvm list | grep -q 'No rvm rubies'; then
@@ -417,16 +419,12 @@ function checkRubyVersion {
   else
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
-      eccho "Upgrading RVM..."
-      rvm get stable --auto-dotfiles
       eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
-      rvm upgrade "$current_ruby_version" "$latest_ruby_version"
-      eccho "Gems will not be migrated to provide you with a more reliable post-upgrade experience."
+      eccho "The RVM upgrade feature is not used to provide you a more reliable post-upgrade experience."
       SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
       CFLAGS="-I$(brew --prefix openssl)/include -O2" \
       LDFLAGS="-L$(brew --prefix openssl)/lib" \
       rvm install "$latest_ruby_version"
-      gem pristine --all --binstubs # fail safe for some bad state in gems that rvm upgrade can create
       rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
       rvm cleanup all
       eccho "The previous version of Ruby is still available by running 'rvm use $current_ruby_version'."
