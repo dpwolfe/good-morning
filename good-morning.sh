@@ -178,6 +178,7 @@ function checkPerms {
     # Needed for pip installs without requiring sudo
     /Library/Python/2.7/site-packages
     /Library/Ruby/Gems/*
+    /Library/Ruby/Site/*
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
     /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
     "$HOME/.pyenv"
