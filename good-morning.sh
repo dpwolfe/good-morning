@@ -391,7 +391,8 @@ rvm_version=1.29.10
 function installRVM {
   eccho "Installing RVM..."
   gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-  curl -sSL https://get.rvm.io | bash -s $rvm_version
+  curl -sSL https://get.rvm.io | bash -s $rvm_version --ruby
+  rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
   # shellcheck source=/dev/null
   source "$HOME/.profile" # load rvm
   rvm cleanup all
@@ -414,9 +415,6 @@ function checkRubyVersion {
   eccho "Checking Ruby version..."
   latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
   if rvm list | grep -q 'No rvm rubies'; then
-    SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-    CFLAGS="-I$(brew --prefix openssl)/include -O2" \
-    LDFLAGS="-L$(brew --prefix openssl)/lib" \
     rvm install "$latest_ruby_version"
     rvm alias create default ruby "$latest_ruby_version"
     rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
@@ -426,9 +424,6 @@ function checkRubyVersion {
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
       eccho "The RVM upgrade feature is not used to provide you a more reliable experience."
-      SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-      CFLAGS="-I$(brew --prefix openssl)/include -O2" \
-      LDFLAGS="-L$(brew --prefix openssl)/lib" \
       rvm install "$latest_ruby_version"
       rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
       rvm cleanup all
