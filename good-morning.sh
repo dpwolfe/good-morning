@@ -438,7 +438,11 @@ function checkRubyVersion {
 if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
   installRVM
 fi
-checkRubyVersion
+
+# 10.14 may now have issues trying to install Ruby with rvm.
+if getOSVersion | grep -qv "10.14"; then
+  checkRubyVersion
+fi
 
 # ensure we are not using the system version
 rvm use default > /dev/null
