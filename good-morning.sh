@@ -285,9 +285,9 @@ function getLocalXcodeBuildVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="11.4" # do not append prerelease names such as "Beta" to this version number.
+  local xcode_version="11.4.1" # do not append prerelease names such as "Beta" to this version number.
   local xcode_prerelease_stage="" # leave blank when not a beta or leave a trailing space at the end if it is (e.g "Beta 1 ")
-  local xcode_build_version="11E146"
+  local xcode_build_version="11E503a"
   eccho "Checking Xcode version..."
   if ! /usr/bin/xcode-select --print-path &> /dev/null || \
      ! [[ -d "$(/usr/bin/xcode-select --print-path)" ]] || \
@@ -1139,7 +1139,7 @@ function approveAllApps {
     IFS=$'\n'
     # shellcheck disable=SC2207
     apps=($(xattr -v -- /Applications/* | grep "com.apple.quarantine" | \
-      sed -E 's/^(.*\.app): com.apple.quarantine$/\1/'))
+      sed -E 's/^(.*): com.apple.quarantine$/\1/'))
     unset IFS
     for app in "${apps[@]}"; do
       eccho "Approving $(echo "$app" | sed -E 's/\/Applications\/(.*)\.app/\1/')..."
