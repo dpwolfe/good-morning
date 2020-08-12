@@ -780,6 +780,7 @@ brews=(
   certbot # For generating SSL certs with Let's Encrypt
   coreutils
   # dialog # https://invisible-island.net/dialog/
+  deno
   dep # go dependency manager
   direnv # https://direnv.net/
   docker-compose-completion
@@ -797,7 +798,7 @@ brews=(
   # highlight
   httpie # https://github.com/jakubroztocil/httpie
   # isl
-  jenv # manage multiple java versions
+  # jenv # manage multiple java versions
   jq
   # kops
   kubernetes-cli
@@ -814,9 +815,9 @@ brews=(
   packer
   # packer-completion
   pandoc
-  pgcli
-  pgtune
-  pgweb
+  # pgcli
+  # pgtune
+  # pgweb
   pip-completion
   postgresql
   pyenv
