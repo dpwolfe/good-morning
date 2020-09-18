@@ -604,7 +604,7 @@ else
     brew doctor
   fi
   eccho "Checking for outdated Homebrew Casks..."
-  for outdatedCask in $(brew cask outdated | sed -E 's/^([^ ]*) .*$/\1/'); do
+  for outdatedCask in $(brew outdated --cask | sed -E 's/^([^ ]*) .*$/\1/'); do
     eccho "Upgrading $outdatedCask..."
     brew cask reinstall "$outdatedCask"
     BREW_CLEANUP_NEEDED=1
@@ -684,7 +684,7 @@ brewCasks=(
 )
 brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
-brew cask list > "$brew_list_temp_file"
+brew list --cask > "$brew_list_temp_file"
 # Uninstall Homebrew casks that conflict with this script or are now obsolete
 # but may have been previously installed.
 nobrewcasks=(
