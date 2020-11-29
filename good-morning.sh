@@ -606,7 +606,7 @@ else
   eccho "Checking for outdated Homebrew Casks..."
   for outdatedCask in $(brew outdated --cask | sed -E 's/^([^ ]*) .*$/\1/'); do
     eccho "Upgrading $outdatedCask..."
-    brew cask reinstall "$outdatedCask"
+    brew reinstall "$outdatedCask"
     BREW_CLEANUP_NEEDED=1
   done
 fi
