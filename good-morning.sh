@@ -728,7 +728,7 @@ fi
 
 function ensureFormulaListCache {
   if ! [[ -s "$brew_list_temp_file" ]]; then
-    brew list > "$brew_list_temp_file"
+    brew list --formula > "$brew_list_temp_file"
   fi
 }
 
