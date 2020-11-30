@@ -753,7 +753,6 @@ function ensureFormulaUninstalled {
 # previously installed by earlier versions of this script.
 problem_formulas=(
   bash-completion
-  wireshark # installed as cask
 )
 for formula in "${problem_formulas[@]}"; do
   ensureFormulaUninstalled "$formula"
