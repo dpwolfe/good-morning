@@ -1513,7 +1513,7 @@ function cleanupGoodMorning {
     unset GOOD_MORNING_RUN
     local keep_pass_for_session
     keep_pass_for_session="$(getConfigValue 'keep_pass_for_session' 'not-asked')"
-    if ( [[ -z "$keep_pass_for_session" ]] || [[ "$keep_pass_for_session" == "not-asked" ]] ) \
+    if [[ -z "$keep_pass_for_session" || "$keep_pass_for_session" == "not-asked" ]] \
       && [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
 
       if askto "always be prompted for your password if needed when you run good-morning again in the same session"; then
