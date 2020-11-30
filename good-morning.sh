@@ -621,7 +621,7 @@ if [[ "$(getConfigValue 'applied_cask_depends_on_fix')" != "yes" ]]; then
 fi
 
 # Homebrew casks
-brewCasks=(
+casks=(
   # adoptopenjdk8
   # android-platform-tools # uncomment if you need Android dev tools
   # android-studio # uncomment if you need Android dev tools
@@ -682,25 +682,26 @@ brewCasks=(
   # xmind-zen
   zoomus # Broken on macOS 10.15 Catalina (2019-06-21) - Infinite spinner on joining call. Use web version if impacted.
 )
-brew_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_list"
+cask_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
-brew list --cask > "$brew_list_temp_file"
-# Uninstall Homebrew casks that conflict with this script or are now obsolete
-# but may have been previously installed.
-nobrewcasks=(
-  docker # 2015 MacBooks and MacBooks with macOS 10.15 Catalina installed need to use docker-edge (2019-06-21)
+brew list --cask > "$cask_list_temp_file"
+
+# Uninstall specific Homebrew casks that conflict with this script if installed.
+problem_casks=(
+  docker # docker-edge is preferred as this has aided with compatibility issues in the past.
   insomniax # remove since this is now unmaintained
   virtualbox # deprecated since Docker for Desktop already comes with hyperkit
   wavtap # deprecated
 )
-for brew in "${nobrewcasks[@]}"; do
-  if grep -qE "(^| )$brew($| )" "$brew_list_temp_file"; then
-    brew cask uninstall --force "$brew"
+for cask in "${problem_casks[@]}"; do
+  if grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
+    brew cask uninstall --force "$cask"
   fi
 done
+
 # Install Homebrew casks
-for cask in "${brewCasks[@]}"; do
-  if ! grep -qE "(^| )$cask($| )" "$brew_list_temp_file"; then
+for cask in "${casks[@]}"; do
+  if ! grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
     eccho "Installing $cask with Homebrew..."
     brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [[ -s "$cask_collision_file" ]]; then
@@ -713,22 +714,15 @@ for cask in "${brewCasks[@]}"; do
     BREW_CLEANUP_NEEDED=1
   fi
 done
-rm -f "$cask_collision_file"
-rm -f "$brew_list_temp_file"
+rm -f "$cask_collision_file" "$cask_list_temp_file"
 unset cask_collision_file
 unset brewCasks
 
-if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
-  unset BREW_CLEANUP_NEEDED;
-  eccho "Cleaning up Homebrew cache..."
-  brew cleanup -s # -s clears even the latest versions of uninstalled formulas and casks
-fi
-
 # Install Homebrew formulas
-
+formula_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""formula_list"
 function ensureFormulaListCache {
-  if ! [[ -s "$brew_list_temp_file" ]]; then
-    brew list --formula > "$brew_list_temp_file"
+  if ! [[ -s "$formula_list_temp_file" ]]; then
+    brew list --formula > "$formula_list_temp_file"
   fi
 }
 
@@ -737,7 +731,7 @@ function changeFormula {
   local brew_command="$2"
   local formula_ref="${3:-$formula_name}"
   ensureFormulaListCache
-  if ! grep -qE "(^| )$formula_name($| )" "$brew_list_temp_file"; then
+  if ! grep -qE "(^| )$formula_name($| )" "$formula_list_temp_file"; then
     # shellcheck disable=SC2046
     brew "$brew_command" "$formula_ref" \
       $(if [[ "$brew_command" == "uninstall" ]]; then echo "--force --ignore-dependencies"; fi)
@@ -755,20 +749,19 @@ function ensureFormulaUninstalled {
   changeFormula "$formula_name" uninstall
 }
 
-
-# Uninstall brews that conflict with this script
-# but may have been previously installed.
-nobrews=(
+# Uninstall formulas that create conflicts and may or may not have been
+# previously installed by earlier versions of this script.
+problem_formulas=(
   bash-completion
   wireshark # installed as cask
 )
-for brew in "${nobrews[@]}"; do
-  ensureFormulaUninstalled "$brew"
+for formula in "${problem_formulas[@]}"; do
+  ensureFormulaUninstalled "$formula"
 done
-unset nobrews
+unset problem_formulas
 
 # shellcheck disable=SC2034
-brews=(
+formulas=(
   # ansible
   # automake
   # azure-cli
@@ -781,7 +774,6 @@ brews=(
   coreutils
   # dialog # https://invisible-island.net/dialog/
   deno
-  dep # go dependency manager
   direnv # https://direnv.net/
   docker-compose-completion
   docker-machine-completion
@@ -801,18 +793,18 @@ brews=(
   # jenv # manage multiple java versions
   jq
   # kops
-  kubernetes-cli
-  kubernetes-helm
+  # kubernetes-cli
+  # kubernetes-helm
   # launchctl-completion
   # lnav
   # maven
   # maven-completion
-  minikube
+  # minikube
   # neovim
   openssl
   openssl@1.1
   p7zip # provides 7z command
-  packer
+  # packer
   # packer-completion
   pandoc
   # pgcli
@@ -838,16 +830,25 @@ brews=(
   zsh
   zsh-completions
 )
-for brew in "${brews[@]}"; do
-  ensureFormulaInstalled "$brew"
+for formula in "${formulas[@]}"; do
+  ensureFormulaInstalled "$formula"
 done
 
-# install sshpass, which is not for ssh novices
-ensureFormulaInstalled sshpass "https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb"
+unset formulas
+rm -f "$formula_list_temp_file"
+unset formula_list_temp_file
 
-unset brews
-rm -f "$brew_list_temp_file"
-unset brew_list_temp_file
+# Install sshpass, which is not for ssh novices. This step is preferably disabled.
+# ensureFormulaInstalled sshpass "https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb"
+
+if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
+  unset BREW_CLEANUP_NEEDED;
+  eccho "Cleaning up Homebrew cache..."
+  # The -s option clears even the latest versions of uninstalled formulas and casks.
+  # This does not clear the cache of versions currently installed.
+  brew cleanup -s
+fi
+
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
 
