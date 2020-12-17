@@ -680,7 +680,7 @@ casks=(
   # visual-studio-code-insiders
   wireshark
   # xmind-zen
-  zoomus # Broken on macOS 10.15 Catalina (2019-06-21) - Infinite spinner on joining call. Use web version if impacted.
+  zoom # Broken on macOS 10.15 Catalina (2019-06-21) - Infinite spinner on joining call. Use web version if impacted.
 )
 cask_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
