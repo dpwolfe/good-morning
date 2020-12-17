@@ -692,6 +692,7 @@ problem_casks=(
   insomniax # remove since this is now unmaintained
   virtualbox # deprecated since Docker for Desktop already comes with hyperkit
   wavtap # deprecated
+  zoomus # replaced with zoom
 )
 for cask in "${problem_casks[@]}"; do
   if grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
