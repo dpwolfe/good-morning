@@ -768,7 +768,7 @@ formulas=(
   bash
   bash-completion@2
   brew-cask-completion
-  # caddy
+  caddy
   # cassandra
   certbot # For generating SSL certs with Let's Encrypt
   coreutils
