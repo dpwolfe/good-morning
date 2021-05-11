@@ -812,7 +812,7 @@ formulas=(
   # pgweb
   pip-completion
   postgresql
-  pyenv
+  # pyenv
   python # vim was failing load without this even though we have pyenv - 3/2/2018
   readline # for pyenv installs of python
   # redis
@@ -852,30 +852,30 @@ fi
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
 
-function checkPythonInstall {
-  local pythonVersion="$1"
-  if ! pyenv versions | grep -q "$pythonVersion"; then
-    SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-    CFLAGS="-I$(brew --prefix openssl)/include -O2" \
-    LDFLAGS="-L$(brew --prefix openssl)/lib" \
-    pyenv install "$pythonVersion"
-  fi
-}
+# function checkPythonInstall {
+#   local pythonVersion="$1"
+#   if ! pyenv versions | grep -q "$pythonVersion"; then
+#     SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+#     CFLAGS="-I$(brew --prefix openssl)/include -O2" \
+#     LDFLAGS="-L$(brew --prefix openssl)/lib" \
+#     pyenv install "$pythonVersion"
+#   fi
+# }
 
-function checkPythonVersions {
-  local python2version="2.7.17"
-  local python3version="3.8.1"
-  checkPythonInstall "$python2version"
-  checkPythonInstall "$python3version"
-  local globalPythonVersion
-  if [[ "$GOOD_MORNING_USE_LEGACY_PYTHON" == 1 ]]; then
-    globalPythonVersion="$python2version"
-  else
-    globalPythonVersion="$python3version"
-  fi
-  pyenv global "$globalPythonVersion"
-}
-checkPythonVersions
+# function checkPythonVersions {
+#   local python2version="2.7.17"
+#   local python3version="3.8.1"
+#   checkPythonInstall "$python2version"
+#   checkPythonInstall "$python3version"
+#   local globalPythonVersion
+#   if [[ "$GOOD_MORNING_USE_LEGACY_PYTHON" == 1 ]]; then
+#     globalPythonVersion="$python2version"
+#   else
+#     globalPythonVersion="$python3version"
+#   fi
+#   pyenv global "$globalPythonVersion"
+# }
+# checkPythonVersions
 
 function checkOhMyFish {
   if ! type "omf" &> /dev/null; then
