@@ -801,6 +801,7 @@ formulas=(
   # maven-completion
   # minikube
   # neovim
+  nss # needed by caddy for certutil
   openssl
   openssl@1.1
   p7zip # provides 7z command
