@@ -142,6 +142,13 @@ function getOSVersion {
   sw_vers | grep -E "ProductVersion" | sed -E "s/^.*(10\.[.0-9]+)/\1/"
 }
 
+function checkOSRequirement {
+  if getOSVersion | grep -qvE ' 1(0\.15|1\.)'; then
+    errcho "Good Morning must be run on either macOS 10.15 (Catalina) or 11.x (Big Sur)."
+    exit 1
+  fi
+}
+
 function checkPerms {
   eccho "Checking directory permissions..."
   # shellcheck disable=SC2207
@@ -206,7 +213,6 @@ function updateGems {
 
 if ! type rvm &> /dev/null || rvm list | grep -q 'No rvm rubies'; then
   eccho "Using macOS Ruby."
-  updateGems
 else
   eccho "Using RVM's default Ruby..."
   rvm use default
@@ -236,14 +242,8 @@ function installXcode {
   xcversion select "$xcode_short_version" < /dev/tty
   eccho "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
-  if getOSVersion | grep -q "10.14"; then
-    eccho "Installing macOS SDK headers..."
-    # This does not need to be re-installed after an Xcode update, but it is safe to blindly do it again.
-    sudoit installer -allowUntrusted -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
-  else # assume 10.15 or greater
-    # link to the header file locations
-    sudoit ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/
-  fi
+  # link to the header file locations
+  sudoit ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/
   # run cleanup if the install was successful
   if [[ "$(getLocalXcodeBuildVersion)" = "$xcode_build_version" ]]; then
     eccho "Cleaning up Xcode installers..."
@@ -414,9 +414,7 @@ if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
   installRVM
 fi
 
-# if getOSVersion | grep -qv "10.14"; then
 checkRubyVersion
-# fi
 
 # ensure we are not using the system version
 rvm use default > /dev/null
@@ -666,7 +664,7 @@ casks=(
   # visual-studio-code-insiders
   wireshark
   # xmind-zen
-  zoom # Broken on macOS 10.15 Catalina (2019-06-21) - Infinite spinner on joining call. Use web version if impacted.
+  zoom
 )
 cask_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
