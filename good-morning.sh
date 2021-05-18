@@ -362,7 +362,7 @@ if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
   gpg_suite_new_install=1
 fi
 
-rvm_version=1.29.10
+rvm_version=1.29.12
 function installRVM {
   eccho "Installing RVM..."
   gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
@@ -410,18 +410,16 @@ function checkRubyVersion {
   fi
 }
 
-# Disable installing RVM as it's not reliable enough to continue including by default.
-# if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
-#   installRVM
-# fi
+if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
+  installRVM
+fi
 
-# 10.14 may now have issues trying to install Ruby with rvm.
 # if getOSVersion | grep -qv "10.14"; then
-#   checkRubyVersion
+checkRubyVersion
 # fi
 
 # ensure we are not using the system version
-# rvm use default > /dev/null
+rvm use default > /dev/null
 updateGems
 
 function installGems {
@@ -825,7 +823,7 @@ unset formulas
 rm -f "$formula_list_temp_file"
 unset formula_list_temp_file
 
-# Install sshpass, which is not for ssh novices. This step is preferably disabled.
+# sshpass is not for ssh novices. Leave this step disabled unless you understand the risks of it.
 # ensureFormulaInstalled sshpass "https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb"
 
 if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
@@ -864,16 +862,16 @@ fi
 # }
 # checkPythonVersions
 
-function checkOhMyFish {
-  if ! type "omf" &> /dev/null; then
-    local temp_omf_install_file="$HOME/.good_morning_omf_install.temp"
-    curl -L https://get.oh-my.fish > "$temp_omf_install_file"
-    fish "$temp_omf_install_file" < /dev/tty
-    rm -f "$temp_omf_install_file"
-  else
-    omf update
-  fi
-}
+# function checkOhMyFish {
+#   if ! type "omf" &> /dev/null; then
+#     local temp_omf_install_file="$HOME/.good_morning_omf_install.temp"
+#     curl -L https://get.oh-my.fish > "$temp_omf_install_file"
+#     fish "$temp_omf_install_file" < /dev/tty
+#     rm -f "$temp_omf_install_file"
+#   else
+#     omf update
+#   fi
+# }
 # checkOhMyFish - Need to find a way to avoid it immediately entering fish
 # and stopping the rest of the script. Might try creating a process fork for this.
 
@@ -888,7 +886,7 @@ function pickbin {
 }
 
 function findpip {
-  pickbin 'pip pip2 pip2.7 pip3 pip3.6'
+  pickbin 'pip pip3 pip3.9'
 }
 
 eccho "Checking pip install..."
