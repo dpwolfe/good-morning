@@ -123,16 +123,6 @@ function sudoit {
   decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo $sudoOpt -S -p "" "$@"
 }
 
-function masinstall {
-  if ! mas list | grep -q "$1"; then
-    # macOS Sierra issue for users who have never installed the given app - https://github.com/mas-cli/mas/issues/85
-    mas install "$1" || \
-      open "https://itunes.apple.com/us/app/id$1" && \
-      eccho "GitHub issue: https://github.com/mas-cli/mas/issues/85" && \
-      prompt "Install $2 from the Mac App Store and hit Enter when finished..."
-  fi
-}
-
 function dmginstall {
   local appPath="/Applications/$1.app"
   local appPathUser="$HOME/Applications/$1.app"
