@@ -6,7 +6,7 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 
 _A fresh install of macOS is ideal, but not required._
 
-- Your MacBook must be running macOS 10.14 (Mojave) or 10.15 (Catalina)
+- Your MacBook must be running macOS 10.15 (Catalina) or greater.
 - You must have admin privileges on your MacBook.
 - You must have an Apple ID that has accepted the developer agreement, which you can do
    for free here: <https://developer.apple.com/account/>
@@ -35,16 +35,14 @@ and feel free to open issues for feedback.
 1. Xcode latest, plus the command line tools and for Mojave installs the C headers
    that were no longer present by default. Catalina does not have this problem.
 2. Node Version Manager (nvm) with latest Node.js and latest LTS of Node.js
-3. Homebrew, installing a number of frequently used apps and utilities.
-   - Includes: Microsoft Office, Docker (Edge), Visual Studio Code, Slack, Skype, Minikube + VirtuaBox,
-     Spotify, Wireshark, Postman, iTerm2, Charles, DBeaver, TablePlus
-4. Pyenv w/ Python 2.x and 3.x versions along with pip
-5. A new SSH key and GPG key by walking you through their creation and the steps to add
-   them to GitHub
-6. Ruby Version Manager (rvm) with the latest Ruby
-7. Primes your .bash_profile with references to dotfiles containing aliases, git bash completion,
+3. Homebrew, installing an opinionated number of popular used apps and utilities.
+   - Includes: Microsoft Office, Docker, Visual Studio Code, Slack, Skype, Minikube + VirtualBox,
+     Wireshark, Postman, iTerm2, Charles, TablePlus
+4. A new SSH key and GPG key, walking you through their creation and the steps to add
+   them to GitHub.
+5. Primes your .bash_profile with references to dotfiles containing aliases, git bash completion,
    environment variables, paths, etc.
-   - Feel free to bring your own dotfiles or edit as needed after the first run.
+   - Feel free to bring your own dotfiles after the first run.
 
 ### _Run good-morning... every morning_ to keep it all up-to-date, including:
 
@@ -55,10 +53,10 @@ and feel free to open issues for feedback.
    - The version that is immediately before any next version being installed will be uninstalled automatically.
      That only happens during an upgrade. Installs/re-installs of older versions are untouched.
 3. Update npm and globally installed node_modules in the latest Node.js and Node.js LTS.
-4. Fix ownership to be yours on directories recommended by Homebrew or as discovered through trial and error.
-5. Update all apps installed via Homebrew in addition to brew formulas.
-6. Update Python 2, 3 and pip versions. Occasionally fix the pip install since Python environments are fragile.
-7. Update Xcode, uninstalling the version immediately prior. This is similar to how Node.js upgrades are done.
-8. Update Ruby and Ruby gems.
-9. Keep installer caches clean, freeing up disk space.
-10. Apply/re-apply workarounds needed to keep the latest tools, apps or macOS version working in harmony.
+4. Fix file and directory ownership to be yours where recommended by Homebrew or as I discovered through trial and error.
+5. Update all Applications installed via Homebrew in addition to brew formulas.
+6. Update Xcode, uninstalling the version immediately prior. This is similar to how Node.js upgrades are done.
+   - You are only prompted if your Xcode version is lower than the last version supported on Catalina.
+7. Update system Ruby gems.
+8. Clean installer file caches, freeing up disk space.
+9. Apply/re-apply workarounds needed to keep the latest tools, apps or macOS version working in harmony.
