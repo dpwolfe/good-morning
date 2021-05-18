@@ -229,6 +229,21 @@ if ! gem list --local | grep -q "xcode-install"; then
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
+function ensureXcodeInstallUserSet {
+  if [[ -z "$XCODE_INSTALL_USER" ]]; then
+    local xcode_install_user
+    eccho "Your Apple Developer ID is required to install Xcode and essential build tools."
+    eccho "The Apple ID you use must have accepted the Apple Developer Agreement."
+    eccho "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
+    prompt "Enter your Apple Developer ID: " xcode_install_user
+    export XCODE_INSTALL_USER="$xcode_install_user"
+    if [[ -f ~/.bash_profile ]]; then
+      # append to .bash_profile since unlikely to change
+      echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
+    fi
+  fi
+}
+
 function installXcode {
   local xcode_version="$1"
   local xcode_build_version="$2"
@@ -502,21 +517,6 @@ if ! [[ -d "$REPO_ROOT" ]]; then
   eccho "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
-
-function ensureXcodeInstallUserSet {
-  if [[ -z "$XCODE_INSTALL_USER" ]]; then
-    local xcode_install_user
-    eccho "Your Apple Developer ID is required to install Xcode and essential build tools."
-    eccho "The Apple ID you use must have accepted the Apple Developer Agreement."
-    eccho "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
-    prompt "Enter your Apple Developer ID: " xcode_install_user
-    export XCODE_INSTALL_USER="$xcode_install_user"
-    if [[ -f ~/.bash_profile ]]; then
-      # append to .bash_profile since unlikely to change
-      echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
-    fi
-  fi
-}
 
 # Setup clone of good-morning repository
 GOOD_MORNING_REPO_ROOT="$REPO_ROOT/good-morning"
