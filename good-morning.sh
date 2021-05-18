@@ -223,21 +223,6 @@ if ! gem list --local | grep -q "xcode-install"; then
   rm -f ~/Downloads/domain_name-0.5.99999999.gem
 fi
 
-function ensureXcodeInstallUserSet {
-  if [[ -z "$XCODE_INSTALL_USER" ]]; then
-    local xcode_install_user
-    eccho "Your Apple Developer ID is required to install Xcode and essential build tools."
-    eccho "The Apple ID you use must have accepted the Apple Developer Agreement."
-    eccho "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
-    prompt "Enter your Apple Developer ID: " xcode_install_user
-    export XCODE_INSTALL_USER="$xcode_install_user"
-    if [[ -f ~/.bash_profile ]]; then
-      # append to .bash_profile since unlikely to change
-      echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
-    fi
-  fi
-}
-
 function installXcode {
   local xcode_version="$1"
   local xcode_build_version="$2"
@@ -275,17 +260,17 @@ function getLocalXcodeBuildVersion {
 }
 
 function checkXcodeVersion {
-  local xcode_version="11.4.1" # do not append prerelease names such as "Beta" to this version number.
+  local xcode_version="12.1" # do not append prerelease names such as "Beta" to this version number.
   local xcode_prerelease_stage="" # leave blank when not a beta or leave a trailing space at the end if it is (e.g "Beta 1 ")
   local xcode_build_version="11E503a"
   eccho "Checking Xcode version..."
   if ! /usr/bin/xcode-select --print-path &> /dev/null || \
-     ! [[ -d "$(/usr/bin/xcode-select --print-path)" ]] || \
-     [[ "$(/usr/bin/xcode-select --print-path)" = "/Library/Developer/CommandLineTools" ]]; then
-     # One of these cases is true, so an install is necessary (no prompt).
-     # 1) Calling xcode-select failed for any reason
-     # 2) xcode-select is pointing to a Developer directory that does not exist
-     # 3) xcode-select is pointing to the default /Library location when no Xcode is installed
+      ! [[ -d "$(/usr/bin/xcode-select --print-path)" ]] || \
+      [[ "$(/usr/bin/xcode-select --print-path)" = "/Library/Developer/CommandLineTools" ]]; then
+      # One of these cases is true, so an install is necessary (no prompt).
+      # 1) Calling xcode-select failed for any reason
+      # 2) xcode-select is pointing to a Developer directory that does not exist
+      # 3) xcode-select is pointing to the default /Library location when no Xcode is installed
     installXcode "$xcode_version" "$xcode_build_version"
   else
     # Xcode appears to be installed. Check to see if an upgrade option should be offered.
@@ -425,17 +410,18 @@ function checkRubyVersion {
   fi
 }
 
-if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
-  installRVM
-fi
+# Disable installing RVM as it's not reliable enough to continue including by default.
+# if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
+#   installRVM
+# fi
 
 # 10.14 may now have issues trying to install Ruby with rvm.
-if getOSVersion | grep -qv "10.14"; then
-  checkRubyVersion
-fi
+# if getOSVersion | grep -qv "10.14"; then
+#   checkRubyVersion
+# fi
 
 # ensure we are not using the system version
-rvm use default > /dev/null
+# rvm use default > /dev/null
 updateGems
 
 function installGems {
@@ -520,6 +506,22 @@ if ! [[ -d "$REPO_ROOT" ]]; then
   eccho "Creating $REPO_ROOT"
   mkdir -p "$REPO_ROOT"
 fi
+
+function ensureXcodeInstallUserSet {
+  if [[ -z "$XCODE_INSTALL_USER" ]]; then
+    local xcode_install_user
+    eccho "Your Apple Developer ID is required to install Xcode and essential build tools."
+    eccho "The Apple ID you use must have accepted the Apple Developer Agreement."
+    eccho "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
+    prompt "Enter your Apple Developer ID: " xcode_install_user
+    export XCODE_INSTALL_USER="$xcode_install_user"
+    if [[ -f ~/.bash_profile ]]; then
+      # append to .bash_profile since unlikely to change
+      echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
+    fi
+  fi
+}
+
 # Setup clone of good-morning repository
 GOOD_MORNING_REPO_ROOT="$REPO_ROOT/good-morning"
 if ! [[ -d "$GOOD_MORNING_REPO_ROOT/.git" ]]; then
@@ -612,28 +614,27 @@ fi
 
 # Homebrew casks
 casks=(
-  # adoptopenjdk8
   # android-platform-tools # uncomment if you need Android dev tools
   # android-studio # uncomment if you need Android dev tools
   # beyond-compare
+  brave-browser
   charles
   # controlplane # mac automation based on hardware events
   # cord # remote desktop into windows machines from macOS
   # dash # https://kapeli.com/dash
-  dbeaver-community
+  # dbeaver-community
   # discord
-  # docker # need to run docker-edge on 2015 MacBooks or MacBooks using macOS Catalina
-  docker-edge
+  docker
+  # docker-edge
   # dropbox   dropbox.com returns 403 on install
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
-  firefox
+  # firefox
   font-fira-code
   # google-backup-and-sync
   google-chrome
   gpg-suite
   handbrake
   iterm2
-  java
   keeweb
   # keybase
   keyboard-maestro # keyboard macros
@@ -643,25 +644,22 @@ casks=(
   # omnifocus
   # omnigraffle
   # onedrive
-  openconnect-gui # connect to a Cisco Connect VPN
+  # openconnect-gui # connect to a Cisco Connect VPN
   # opera
   # parallels
   postman
   provisionql # quick-look for iOS provisioning profiles
-  qladdict
-  qlcolorcode
-  qlmarkdown
-  qlstephen
-  quicklook-json
+  # qladdict # Need to check all these quick-look extensions for Big Sur compatibility.
+  # qlcolorcode
+  # qlmarkdown
+  # qlstephen
+  # quicklook-json
   rocket # utf-8 emoji quick lookup and insert in any macOS app
   # sketch
   skitch
-  # skype
-  # skype-for-business
   slack
   # sourcetree
-  spotify
-  tableplus # dbeaver incompatible with macOS 10.15 Catalina for the moment
+  tableplus
   the-unarchiver
   transmission # open source BitTorrent client from https://github.com/transmission/transmission
   tunnelblick # connect to your VPN
@@ -678,7 +676,6 @@ brew list --cask > "$cask_list_temp_file"
 
 # Uninstall specific Homebrew casks that conflict with this script if installed.
 problem_casks=(
-  docker # docker-edge is preferred as this has aided with compatibility issues in the past.
   insomniax # remove since this is now unmaintained
   virtualbox # deprecated since Docker for Desktop already comes with hyperkit
   wavtap # deprecated
@@ -780,7 +777,6 @@ formulas=(
   # highlight
   httpie # https://github.com/jakubroztocil/httpie
   # isl
-  # jenv # manage multiple java versions
   jq
   # kops
   # kubernetes-cli
@@ -804,7 +800,7 @@ formulas=(
   pip-completion
   postgresql
   # pyenv
-  python # vim was failing load without this even though we have pyenv - 3/2/2018
+  python # vim was failing load without this - 3/2/2018
   readline # for pyenv installs of python
   # redis
   shellcheck # shell script linting
