@@ -380,7 +380,9 @@ fi
 rvm_version=1.29.12
 function installRVM {
   eccho "Installing RVM..."
-  gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+  if type rvm &> /dev/null; then
+    gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+  fi
   curl -sSL https://get.rvm.io | bash -s $rvm_version --ruby
   rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
   # shellcheck source=/dev/null
@@ -578,7 +580,8 @@ function checkBrewTaps {
 
 # Install homebrew - https://brew.sh
 if ! type brew &> /dev/null; then
-  yes '' | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  eccho "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/tty
 else
   eccho "Updating Homebrew..."
   checkBrewTaps
