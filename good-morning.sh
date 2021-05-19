@@ -365,7 +365,8 @@ fi
 # This install is an artifact for first-run that is overridden by the brew cask install
 # Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
 gpg_suite_new_install=
-if ! [[ -d "/Applications/GPG Keychain.app" ]]; then
+if ! [[ -d "/Applications/GPG Keychain.app" ]] \
+    && askto "install GPG Suite"; then
   eccho "Installing GPG Suite..."
   dmg="$HOME/Downloads/GPGSuite.dmg"
   curl -JL https://releases.gpgtools.org/GPG_Suite-2019.1_83.dmg -o "$dmg"
