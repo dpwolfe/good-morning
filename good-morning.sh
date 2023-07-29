@@ -36,11 +36,11 @@ if [[ -z "$GOOD_MORNING_PASSPHRASE" ]]; then
   GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
 function encryptToFile {
-  echo "$1" | openssl enc -aes-256-cbc -k "$GOOD_MORNING_PASSPHRASE" > "$2"
+  echo "$1" | openssl enc -aes-256-cbc -pbkdf2 -k "$GOOD_MORNING_PASSPHRASE" > "$2"
 }
 
 function decryptFromFile {
-  openssl enc -aes-256-cbc -d -k "$GOOD_MORNING_PASSPHRASE" < "$1"
+  openssl enc -aes-256-cbc -pbkdf2 -d -k "$GOOD_MORNING_PASSPHRASE" < "$1"
 }
 
 function askto {
@@ -362,7 +362,7 @@ if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL
   fi
 fi
 
-# This install is an artifact for first-run that is overridden by the brew cask install
+# This install is an artifact for first-run that is overridden by the brew install
 # Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
 gpg_suite_new_install=
 if ! [[ -d "/Applications/GPG Keychain.app" ]] \
@@ -554,6 +554,7 @@ fi
 # Homebrew taps - add those needed and remove obosoleted that can create conflicts (example: java8)
 function checkBrewTaps {
   notaps=(
+    homebrew/cask-drivers
     caskroom/caskroom
     caskroom/versions
   )
@@ -565,7 +566,6 @@ function checkBrewTaps {
     fi
   done
   taps=(
-    homebrew/cask-drivers
     homebrew/cask-fonts
     homebrew/cask-versions
     homebrew/services
@@ -683,7 +683,7 @@ problem_casks=(
 )
 for cask in "${problem_casks[@]}"; do
   if grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
-    brew cask uninstall --force "$cask"
+    brew uninstall --cask --force "$cask"
   fi
 done
 
@@ -691,12 +691,12 @@ done
 for cask in "${casks[@]}"; do
   if ! grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
     eccho "Installing $cask with Homebrew..."
-    brew cask install "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
+    brew install --cask "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [[ -s "$cask_collision_file" ]]; then
       # Remove non-brew installed version of app and retry.
       sudoit rm -rf "$(cat "$cask_collision_file")"
       rm -f "$cask_collision_file"
-      brew cask install "$cask"
+      brew install --cask "$cask"
     fi
     NEW_BREW_CASK_INSTALLS=1
     BREW_CLEANUP_NEEDED=1
@@ -762,8 +762,6 @@ formulas=(
   # dialog # https://invisible-island.net/dialog/
   deno
   direnv # https://direnv.net/
-  docker-compose-completion
-  docker-machine-completion
   docker-squash # https://github.com/goldmann/docker-squash
   fd # https://github.com/sharkdp/fd
   # fish
@@ -804,7 +802,7 @@ formulas=(
   readline # for pyenv installs of python
   # redis
   shellcheck # shell script linting
-  # swagger-codegen # requires brew cask install homebrew/cask-versions/adoptopenjdk8
+  # swagger-codegen # requires brew install --cask homebrew/cask-versions/adoptopenjdk8
   terraform
   tflint
   tmux
