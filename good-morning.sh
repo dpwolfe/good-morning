@@ -788,8 +788,8 @@ formulas=(
   # minikube
   # neovim
   nss # needed by caddy for certutil
-  openssl
   openssl@1.1
+  openssl@3
   p7zip # provides 7z command
   # packer
   # packer-completion
@@ -799,7 +799,7 @@ formulas=(
   # pgweb
   pip-completion
   # pyenv
-  python # vim was failing load without this - 3/2/2018
+  python@3.12 # vim was failing load without this - 3/2/2018
   readline # for pyenv installs of python
   # redis
   shellcheck # shell script linting
