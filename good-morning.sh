@@ -408,7 +408,7 @@ function checkRubyVersion {
   eccho "Checking Ruby version..."
   # rvm list known is only showing 3.0.0, which is outdated. Hard-coding until there is a better way found.
   # latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
-  latest_ruby_version="3.2.2"
+  latest_ruby_version="ruby-3.2.2"
   if rvm list | grep -q 'No rvm rubies'; then
     rvm install "$latest_ruby_version"
     rvm alias create default ruby "$latest_ruby_version"
