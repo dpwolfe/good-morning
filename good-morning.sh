@@ -406,7 +406,9 @@ function checkRubyVersion {
     rvm get $rvm_version --auto-dotfiles
   fi
   eccho "Checking Ruby version..."
-  latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
+  # rvm list known is only showing 3.0.0, which is outdated. Hard-coding until there is a better way found.
+  # latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
+  latest_ruby_version="3.2.2"
   if rvm list | grep -q 'No rvm rubies'; then
     rvm install "$latest_ruby_version"
     rvm alias create default ruby "$latest_ruby_version"
@@ -668,7 +670,7 @@ casks=(
   # visual-studio-code-insiders
   wireshark
   # xmind-zen
-  zoom
+  # zoom
 )
 cask_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_list"
 cask_collision_file="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_collision"
@@ -796,7 +798,6 @@ formulas=(
   # pgtune
   # pgweb
   pip-completion
-  postgresql
   # pyenv
   python # vim was failing load without this - 3/2/2018
   readline # for pyenv installs of python
