@@ -633,7 +633,7 @@ casks=(
   # firefox
   font-fira-code
   # google-backup-and-sync
-  google-chrome
+  # google-chrome
   gpg-suite
   handbrake
   iterm2
@@ -641,8 +641,8 @@ casks=(
   # keybase
   keyboard-maestro # keyboard macros
   # logitech-gaming-software # if you plug-in a logitech keyboard
-  microsoft-office
-  microsoft-teams
+  # microsoft-office
+  # microsoft-teams
   # omnifocus
   # omnigraffle
   # onedrive
