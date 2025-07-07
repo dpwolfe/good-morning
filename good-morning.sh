@@ -559,6 +559,8 @@ function checkBrewTaps {
     homebrew/cask-drivers
     caskroom/caskroom
     caskroom/versions
+    homebrew/homebrew-cask-fonts
+    homebrew/homebrew-cask-versions
   )
   brew_tap_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_tap"
   brew tap > "$brew_tap_file"
