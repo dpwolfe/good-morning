@@ -160,7 +160,7 @@ alias pullrm='git pull --rebase origin master'
 alias mm='git merge master'
 alias push='git push'
 alias pushs='git push --set-upstream origin $(parse_git_branch)'
-alias cm='git checkout master'
+cm() { if git show-ref -q --verify refs/heads/main; then git checkout main; else git checkout master; fi; }
 alias gco='git checkout'
 alias gbd='askto "delete all local git branches except master" "git branch | grep -Ev master | xargs -n 1 git branch -D"'
 
