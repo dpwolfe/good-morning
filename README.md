@@ -2,25 +2,26 @@
 
 First thing to run on a new MacBook and every morning thereafter to keep it up to date.
 
-## Pre-requisites
+## Prerequisites
 
 _A fresh install of macOS is ideal, but not required._
 
-- Your MacBook must be running macOS 10.15 (Catalina) or greater.
+- Your MacBook must be running macOS 10.15 (Catalina) or greater. Tahoe support coming.
 - You must have admin privileges on your MacBook.
-- You must have an Apple ID that has accepted the developer agreement, which you can do
-   for free here: <https://developer.apple.com/account/>
+- You must have an Apple ID that has accepted the developer agreement, which you can do for free here: <https://developer.apple.com/account/>
 - A solid Internet connection at least for the first run since Xcode will be installed.
 
 ## Instructions
 
-1. Install all system updates (_Apple Menu > System Preferences... > Software Update_).
+1. Install all system updates (_Apple Menu > System Settings > General > Software Update_).
 2. Open up a Terminal session (_Command + Space_ for Spotlight Search and type "Terminal")
 3. Run this command:
 
    ```sh
    curl -sL https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh | bash
    ```
+
+> **Security note:** Please feel free to review the script before piping to bash: <https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh>
 
 ## What does it do?
 
@@ -32,12 +33,10 @@ and feel free to open issues for feedback.
 
 ### Avoid wasting hours manually installing and setting up the usual laundry list of tools like:
 
-1. Xcode latest, plus the command line tools and for Mojave installs the C headers
-   that were no longer present by default. Catalina does not have this problem.
+1. Xcode latest, plus the command line tools.
 2. Node Version Manager (nvm) with latest Node.js and latest LTS of Node.js
-3. Homebrew, installing an opinionated number of popular used apps and utilities.
-   - Includes: Microsoft Office, Docker, Visual Studio Code, Slack, Skype, Minikube + VirtualBox,
-     Wireshark, Postman, iTerm2, Charles, TablePlus
+3. Homebrew, installing an opinionated set of popular apps and utilities.
+   - Includes: Docker, Visual Studio Code, Slack, Wireshark, Postman, iTerm2, Charles, TablePlus
 4. A new SSH key and GPG key, walking you through their creation and the steps to add
    them to GitHub.
 5. Primes your .bash_profile with references to dotfiles containing aliases, git bash completion,
@@ -47,7 +46,7 @@ and feel free to open issues for feedback.
 ### _Run good-morning... every morning_ to keep it all up-to-date, including:
 
 1. Update Node Version Manager (nvm)
-2. Update you to the latest Node.js and latest LTS of Node.js with nvm
+2. Update your system to the latest Node.js and latest LTS of Node.js with nvm
    - Simple way to discover when a new Node.js version releases.
    - Globally installed packages are automatically re-installed into new Node.js versions.
    - The version that is immediately before any next version being installed will be uninstalled automatically.
@@ -60,3 +59,7 @@ and feel free to open issues for feedback.
 7. Update system Ruby gems.
 8. Clean installer file caches, freeing up disk space.
 9. Apply/re-apply workarounds needed to keep the latest tools, apps or macOS version working in harmony.
+
+## License
+
+Released under the [MIT License](LICENSE).
