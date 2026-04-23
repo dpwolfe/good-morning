@@ -49,7 +49,7 @@ function askto {
   echo # echo newline after input
   # shellcheck disable=SC2091
   case $yn in
-    y|Y ) $($2); return 0;;
+    y|Y ) eval "$2"; return 0;;
     n|N ) return 1;;
   esac
 }
@@ -528,9 +528,9 @@ GOOD_MORNING_REPO_ROOT="$REPO_ROOT/good-morning"
 if ! [[ -d "$GOOD_MORNING_REPO_ROOT/.git" ]]; then
   eccho "Cloning good-morning repository..."
   git clone https://github.com/dpwolfe/good-morning.git "$GOOD_MORNING_REPO_ROOT"
-  if [[ -s "$HOME\.bash_profile" ]]; then
+  if [[ -s "$HOME/.bash_profile" ]]; then
     eccho "Renaming previous ~/.bash_profile to ~/.old_bash_profile..."
-    mv "$HOME\.bash_profile" "$HOME\.old_bash_profile_$(date +%Y%m%d%H%M%S)"
+    mv "$HOME/.bash_profile" "$HOME/.old_bash_profile_$(date +%Y%m%d%H%M%S)"
   fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
 source \"\$REPO_ROOT/good-morning/dotfiles/.bash_profile\"
@@ -592,7 +592,8 @@ else
   checkBrewTaps
   brew update 2> /dev/null
   eccho "Checking for outdated Homebrew formulas..."
-  if [[ -n "$(brew upgrade)" ]]; then
+  if brew outdated | grep -q .; then
+    brew upgrade
     BREW_CLEANUP_NEEDED=1
     # If there was any output from the cleanup task, assume a formula changed or was installed.
     # Homebrew Doctor can take a long time to run, so now running only after formula changes...
@@ -600,11 +601,13 @@ else
     brew doctor
   fi
   eccho "Checking for outdated Homebrew Casks..."
-  for outdatedCask in $(brew outdated --cask | sed -E 's/^([^ ]*) .*$/\1/'); do
-    eccho "Upgrading $outdatedCask..."
-    brew reinstall "$outdatedCask"
-    BREW_CLEANUP_NEEDED=1
-  done
+  while IFS= read -r outdatedCask; do
+    if [[ -n "$outdatedCask" ]]; then
+      eccho "Upgrading $outdatedCask..."
+      brew reinstall "$outdatedCask"
+      BREW_CLEANUP_NEEDED=1
+    fi
+  done < <(brew outdated --cask | sed -E 's/^([^ ]*) .*$/\1/')
 fi
 
 # Homebrew cask depends_on fix from: https://github.com/Homebrew/homebrew-cask/issues/58046
@@ -695,7 +698,7 @@ done
 for cask in "${casks[@]}"; do
   if ! grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
     eccho "Installing $cask with Homebrew..."
-    brew install --cask "$cask" 2>&1 > /dev/null | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
+    brew install --cask "$cask" 2>&1 | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [[ -s "$cask_collision_file" ]]; then
       # Remove non-brew installed version of app and retry.
       sudoit rm -rf "$(cat "$cask_collision_file")"
@@ -950,10 +953,12 @@ fi
 function upgradeNPM {
   eccho "Checking Node.js $(node -v) global npm package versions..."
   # Upgrade all global packages other than npm to latest
-  for package in $(npm --global outdated --parseable --depth=0 | cut -d: -f4); do
-    eccho "Upgrading global package $package for Node.js $(node -v)..."
-    npm install "$package" --global
-  done
+  while IFS= read -r package; do
+    if [[ -n "$package" ]]; then
+      eccho "Upgrading global package $package for Node.js $(node -v)..."
+      npm install "$package" --global
+    fi
+  done < <(npm --global outdated --parseable --depth=0 | cut -d: -f4)
   if ! type "ncu" &> /dev/null; then
     eccho "Installing the npm-check-updates global package..."
     npm install npm-check-updates --global
@@ -985,7 +990,7 @@ function upgradeNode {
       active_version="$new_version"
     fi
     local reinstall_version
-    reinstall_version="$(if [[ \"$old_version\" == \"N/A\" ]]; then echo "$active_version"; else echo "$old_version"; fi)"
+    reinstall_version="$(if [[ "$old_version" == "N/A" ]]; then echo "$active_version"; else echo "$old_version"; fi)"
     if [[ "$reinstall_version" != "N/A" ]] && [[ "$reinstall_version" != "$new_version" ]]; then
       eccho "Installing global Node.js packages used by $reinstall_version into $new_version..."
       nvm reinstall-packages "$reinstall_version"
@@ -1154,8 +1159,8 @@ approveAllApps
 # these important changes.
 checkPerms
 
-if (( FIRST_RUN == 1 )) || [[ -z "$GOOD_MORNING_RUN" ]] \
-  && askto "set some opinionated starter system settings"; then
+if (( FIRST_RUN == 1 )) || ([[ -z "$GOOD_MORNING_RUN" ]] \
+  && askto "set some opinionated starter system settings"); then
 
   eccho "Optimizing System Settings"
   eccho "Only show icons of running apps in app bar, using Spotlight to launch"
