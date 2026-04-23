@@ -156,7 +156,7 @@ alias gc='git commit -m'
 alias gca='git commit -a -m'
 alias pull='git pull'
 alias pullr='git pull --rebase origin'
-alias pullrm='git pull --rebase origin master'
+pullrm() { if git show-ref -q --verify refs/heads/main; then git pull --rebase origin main; else git pull --rebase origin master; fi; }
 alias mm='git merge master'
 alias push='git push'
 alias pushs='git push --set-upstream origin $(parse_git_branch)'
