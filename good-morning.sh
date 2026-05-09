@@ -229,7 +229,24 @@ checkPerms
 
 function updateGems {
   eccho "Checking Ruby system gem versions..."
-  gem update --system --force --no-document
+  local update_log update_rc
+  update_log="$(gem update --system --force --no-document 2>&1)"
+  update_rc=$?
+  printf '%s\n' "$update_log"
+  # An older RVM helper (`rvm rubygems latest --force`) used to install
+  # rubygems 3.0.9 onto modern Ruby, which then errors with
+  # "undefined method 'wait_readable' for #<TCPSocket:(closed)>" on every
+  # network gem op. Detect that pattern and recover by reinstalling Ruby.
+  if (( update_rc != 0 )) && \
+    printf '%s' "$update_log" | grep -qE "wait_readable|TCPSocket"; then
+    errcho "Detected broken rubygems on $(rvm current 2> /dev/null) (TCPSocket wait_readable)."
+    eccho "Reinstalling $latest_ruby_version to recover..."
+    rvm reinstall "$latest_ruby_version"
+    rvm alias create default ruby "$latest_ruby_version"
+    rvm use default > /dev/null
+    eccho "Retrying gem update after reinstall..."
+    gem update --system --force --no-document
+  fi
   eccho "Checking Ruby gem versions..."
   local outdated
   outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
@@ -364,13 +381,16 @@ if ! [[ -d "/Applications/GPG Keychain.app" ]] \
 fi
 
 rvm_version=1.29.12
+# Track the current Ruby stable line; bump as new patch versions ship.
+# https://www.ruby-lang.org/en/downloads/releases/
+latest_ruby_version="ruby-3.4.9"
+
 function installRVM {
   eccho "Installing RVM..."
   if type rvm &> /dev/null; then
     gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
   fi
   curl -sSL https://get.rvm.io | bash -s $rvm_version --ruby
-  rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
   # shellcheck source=/dev/null
   source "$HOME/.profile" # load rvm
   rvm cleanup all
@@ -391,27 +411,39 @@ function checkRubyVersion {
     rvm get $rvm_version --auto-dotfiles
   fi
   eccho "Checking Ruby version..."
-  # rvm list known is only showing 3.0.0, which is outdated. Hard-coding until there is a better way found.
-  # latest_ruby_version="$(rvm list known 2> /dev/null | tr -d '[]' | grep -E "^ruby-[0-9.]+$" | tail -1)"
-  latest_ruby_version="ruby-3.2.2"
   if rvm list | grep -q 'No rvm rubies'; then
     rvm install "$latest_ruby_version"
     rvm alias create default ruby "$latest_ruby_version"
-    rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
     rvm cleanup all
   else
+    local current_ruby_version
     current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
     if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
       eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
       eccho "The RVM upgrade feature is not used to provide you a more reliable experience."
       rvm install "$latest_ruby_version"
-      rvm rubygems latest --force # gets updated immediately, but fixes issues that show up when running xcversion
       rvm cleanup all
       eccho "The previous version of Ruby is still available by running 'rvm use $current_ruby_version'."
       rvm alias create default ruby "$latest_ruby_version"
     fi
-    unset current_ruby_version
-    unset latest_ruby_version
+  fi
+  # Make sure RVM's default alias actually resolves to the target Ruby.
+  # When `rvm install` partially fails the alias can stay pointed at the
+  # previous (often EOL/broken) version, which silently breaks every gem op.
+  rvm use default > /dev/null
+  local active
+  active="$(rvm current 2> /dev/null)"
+  if [[ "$active" != "$latest_ruby_version"* ]]; then
+    errcho "RVM default is '$active' after upgrade; expected '$latest_ruby_version'."
+    errcho "Re-aliasing default and retrying..."
+    rvm alias create default ruby "$latest_ruby_version"
+    rvm use default > /dev/null
+    active="$(rvm current 2> /dev/null)"
+    if [[ "$active" != "$latest_ruby_version"* ]]; then
+      errcho "Could not switch RVM default to $latest_ruby_version (still '$active')."
+      errcho "Manually run: rvm reinstall $latest_ruby_version && rvm alias create default ruby $latest_ruby_version"
+      exit 1
+    fi
   fi
 }
 
