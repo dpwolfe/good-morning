@@ -261,41 +261,6 @@ if ! /usr/bin/xcode-select -p &> /dev/null \
   eccho "Xcode Command Line Tools installed."
 fi
 
-function ensureXcodeInstallUserSet {
-  if [[ -z "$XCODE_INSTALL_USER" ]]; then
-    local xcode_install_user
-    eccho "Your Apple Developer ID is required to install Xcode and essential build tools."
-    eccho "The Apple ID you use must have accepted the Apple Developer Agreement."
-    eccho "You can do this by signing in or creating a new Apple ID at https://developer.apple.com/account/"
-    prompt "Enter your Apple Developer ID: " xcode_install_user
-    export XCODE_INSTALL_USER="$xcode_install_user"
-    if [[ -f ~/.bash_profile ]]; then
-      # append to .bash_profile since unlikely to change
-      echo "export XCODE_INSTALL_USER=\"$xcode_install_user\"" >> ~/.bash_profile
-    fi
-  fi
-}
-
-function installXcode {
-  local xcode_version="$1"
-  local xcode_build_version="$2"
-  local xcode_short_version
-  xcode_short_version="$(echo "$1" | sed -E 's/^([0-9|.]*).*/\1/')"
-  ensureXcodeInstallUserSet
-  eccho "Updating list of available Xcode versions..."
-  xcversion update < /dev/tty
-  eccho "Installing Xcode $xcode_version..."
-  xcversion install "$xcode_version" --force < /dev/tty # force makes upgrades from beta a simple process
-  xcversion select "$xcode_short_version" < /dev/tty
-  eccho "Installing Xcode command line tools..."
-  xcversion install-cli-tools < /dev/tty
-  # run cleanup if the install was successful
-  if [[ "$(getLocalXcodeBuildVersion)" = "$xcode_build_version" ]]; then
-    eccho "Cleaning up Xcode installers..."
-    xcversion cleanup
-  fi
-}
-
 function getLocalXcodeVersion {
   /usr/bin/xcodebuild -version 2>&1 | grep "Xcode" | sed -E 's/Xcode ([0-9|.]*)/\1/'
 }
@@ -304,37 +269,27 @@ function getLocalXcodeBuildVersion {
   /usr/bin/xcodebuild -version 2>&1 | grep "Build" | sed -E 's/Build version ([0-9A-Za-z]+)/\1/'
 }
 
+# Full Xcode installs are user-driven via the Mac App Store.
+# Command Line Tools are handled by xcode-select --install
 function checkXcodeVersion {
-  local xcode_version="12.1" # do not append prerelease names such as "Beta" to this version number.
-  local xcode_prerelease_stage="" # leave blank when not a beta or leave a trailing space at the end if it is (e.g "Beta 1 ")
-  local xcode_build_version="11E503a"
-  eccho "Checking Xcode version..."
-  if ! /usr/bin/xcode-select --print-path &> /dev/null || \
-      ! [[ -d "$(/usr/bin/xcode-select --print-path)" ]] || \
-      [[ "$(/usr/bin/xcode-select --print-path)" = "/Library/Developer/CommandLineTools" ]]; then
-      # One of these cases is true, so an install is necessary (no prompt).
-      # 1) Calling xcode-select failed for any reason
-      # 2) xcode-select is pointing to a Developer directory that does not exist
-      # 3) xcode-select is pointing to the default /Library location when no Xcode is installed
-    installXcode "$xcode_version" "$xcode_build_version"
-  else
-    # Xcode appears to be installed. Check to see if an upgrade option should be offered.
-    local local_version
-    local local_build_version
-    local_version="$(getLocalXcodeVersion)"
-    local_build_version="$(getLocalXcodeBuildVersion)"
-    if [[ "$local_build_version" < "$xcode_build_version" ]] \
-      && askto "upgrade Xcode to $xcode_version $xcode_prerelease_stage(Build $xcode_build_version) from $local_version (Build $local_build_version)..."; then
-
-      installXcode "$xcode_version" "$xcode_build_version"
-      local new_local_version
-      new_local_version="$(getLocalXcodeVersion)"
-      # If there was a previous version installed, but it wasn't a beta which will have the same version number...
-      if [[ -n "$local_version" ]] && [[ "$local_version" != "$new_local_version" ]]; then
-        eccho "Uninstalling Xcode $local_version (Build $local_build_version)..."
-        xcversion uninstall "$local_version" < /dev/tty
-      fi
+  eccho "Checking Xcode developer directory..."
+  local dev_path=""
+  if /usr/bin/xcode-select --print-path &> /dev/null; then
+    dev_path="$(/usr/bin/xcode-select --print-path)"
+  fi
+  if [[ -z "$dev_path" ]] || ! [[ -d "$dev_path" ]]; then
+    errcho "No Xcode developer directory is set. Re-run after Command Line Tools install completes."
+    return
+  fi
+  if [[ -d "/Applications/Xcode.app" ]]; then
+    local xcode_dev_path="/Applications/Xcode.app/Contents/Developer"
+    if [[ "$dev_path" != "$xcode_dev_path" ]]; then
+      eccho "Switching xcode-select to /Applications/Xcode.app..."
+      sudoit /usr/bin/xcode-select --switch "$xcode_dev_path"
     fi
+    eccho "Xcode $(getLocalXcodeVersion) (Build $(getLocalXcodeBuildVersion)) is active."
+  else
+    eccho "Full Xcode.app is not installed; Command Line Tools at $dev_path will be used."
   fi
 }
 checkXcodeVersion
@@ -571,7 +526,6 @@ if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
 # RVM is sourced from the .profile file, make sure this happens last or RVM will complain
 [ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\"
 " > "$HOME/.bash_profile"
-  ensureXcodeInstallUserSet
 
   # copy some starter shell dot files
   cp "$GOOD_MORNING_REPO_ROOT/dotfiles/.inputrc" "$HOME/.inputrc"
