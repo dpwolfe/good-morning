@@ -792,12 +792,11 @@ unset problem_formulas
 formulas=(
   # ansible
   # automake
-  # azure-cli
+  awscli # AWS CLI v2
   bash
   bash-completion@2
   brew-cask-completion
   caddy
-  # cassandra
   certbot # For generating SSL certs with Let's Encrypt
   coreutils
   # dialog # https://invisible-island.net/dialog/
@@ -805,7 +804,6 @@ formulas=(
   direnv # https://direnv.net/
   docker-squash # https://github.com/goldmann/docker-squash
   fd # https://github.com/sharkdp/fd
-  # fish
   fx # https://github.com/antonmedv/fx
   fzf # https://github.com/junegunn/fzf
   # gcc
@@ -945,9 +943,19 @@ export PYCURL_SSL_LIBRARY=openssl
 # Install pips in Python
 piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
-pips=(
+# Drop legacy pip packages that pin obsolete deps and fight pip-review
+legacy_pips=(
   aws-shell
   awscli
+)
+for legacy_pip in "${legacy_pips[@]}"; do
+  if grep -qiE "^${legacy_pip}==" "$piptempfile"; then
+    eccho "Uninstalling legacy pip package $legacy_pip..."
+    "$(findpip)" uninstall -y "$legacy_pip" > /dev/null
+  fi
+done
+unset legacy_pips
+pips=(
   boto
   gitpython
   glances
@@ -979,8 +987,6 @@ if ! pip-review | grep -q "Everything up-to-date"; then
   CFLAGS="-I$(brew --prefix openssl)/include -O2" \
   LDFLAGS="-L$(brew --prefix openssl)/lib" \
   pip-review --auto
-  # temporary workaround until we can ignore upgrading deps beyond what is supported (i.e. awscli and prompt-toolkit)
-  pip install "prompt-toolkit<1.1.0,>=1.0.0" > /dev/null # fix previous upgrades that went to 2.0
 fi
 
 function upgradeNPM {
