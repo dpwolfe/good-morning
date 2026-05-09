@@ -444,10 +444,8 @@ function installGems {
   local gem_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gem_list"
   local gems=(
     cocoapods
-    # fastlane # installed as dependency of xcode-install
     sqlint
     terraform_landscape
-    xcode-install # Will also replace the other xcode-install gem that was installed while bootstrapping...
   )
   gem list --local > "$gem_list_temp_file"
   for gem in "${gems[@]}"; do
@@ -793,7 +791,6 @@ formulas=(
   # minikube
   # neovim
   nss # needed by caddy for certutil
-  openssl@1.1
   openssl@3
   p7zip # provides 7z command
   # packer
