@@ -1210,19 +1210,35 @@ function linkUtil {
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
 function approveAllApps {
-  if xattr -v -- /Applications/* | grep -q "com.apple.quarantine"; then
-    local apps
-    eccho "Auto-approving applications for Gatekeeper..."
-    # get list of apps that have the com.apple.quarantine extended attribute set and then remove the attribute
-    IFS=$'\n'
-    # shellcheck disable=SC2207
-    apps=($(xattr -v -- /Applications/* | grep "com.apple.quarantine" | \
-      sed -E 's/^(.*): com.apple.quarantine$/\1/'))
-    unset IFS
-    for app in "${apps[@]}"; do
-      eccho "Approving $(echo "$app" | sed -E 's/\/Applications\/(.*)\.app/\1/')..."
-      sudoit xattr -d com.apple.quarantine "$app"
+  if ! xattr -v -- /Applications/* 2> /dev/null | grep -q "com.apple.quarantine"; then
+    return
+  fi
+  eccho "Auto-approving applications for Gatekeeper..."
+  local apps=()
+  local failed=()
+  IFS=$'\n'
+  # shellcheck disable=SC2207
+  apps=($(xattr -v -- /Applications/* 2> /dev/null | grep "com.apple.quarantine" | \
+    sed -E 's/^(.*): com.apple.quarantine$/\1/'))
+  unset IFS
+  local app app_name
+  for app in "${apps[@]}"; do
+    app_name="$(echo "$app" | sed -E 's|/Applications/(.*)\.app|\1|')"
+    eccho "Approving $app_name..."
+    # On modern macOS some apps' quarantine bit is protected by SIP and
+    # cannot be cleared even via sudo (xattr returns EPERM). Suppress the
+    # noise and surface a single manual-approval hint at the end.
+    if ! sudoit xattr -d com.apple.quarantine "$app" 2> /dev/null; then
+      failed+=("$app_name")
+    fi
+  done
+  if (( ${#failed[@]} > 0 )); then
+    eccho "Could not auto-approve these apps (Gatekeeper protected on modern macOS):"
+    for app_name in "${failed[@]}"; do
+      eccho "  - $app_name"
     done
+    eccho "Open each app manually from /Applications, then click 'Open' in the"
+    eccho "Gatekeeper dialog (or approve via System Settings > Privacy & Security)."
   fi
 }
 
