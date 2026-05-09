@@ -949,23 +949,41 @@ function pickbin {
 }
 
 function findpip {
-  pickbin 'pip pip3 pip3.9'
+  # Prefer the Homebrew Python's libexec pip
+  local brew_pip
+  for prefix in /opt/homebrew /usr/local; do
+    for py in python@3.13 python@3.12 python@3.11; do
+      brew_pip="$prefix/opt/$py/libexec/bin/pip"
+      if [[ -x "$brew_pip" ]]; then
+        echo "$brew_pip"
+        return
+      fi
+    done
+  done
+  pickbin 'pip pip3 pip3.13 pip3.12 pip3.11'
 }
 
 eccho "Checking pip install..."
 localpip="$(findpip)"
-if [[ "$localpip" != "pip" ]] || ! pip &> /dev/null; then
-  eccho "Installing pip..."
+if [[ -z "$localpip" ]]; then
+  eccho "No pip found; bootstrapping via get-pip.py..."
   wget https://bootstrap.pypa.io/get-pip.py --output-document ~/get-pip.py
   python ~/get-pip.py --user
   rm -f ~/get-pip.py
+elif [[ "$localpip" == /opt/homebrew/* ]] || [[ "$localpip" == /usr/local/* ]]; then
+  eccho "Using Homebrew Python pip at $localpip (brew owns updates, skipping self-upgrade)."
 else
-  eccho "Checking for update to pip..."
-  pip install --upgrade pip --upgrade-strategy eager > /dev/null
+  eccho "Checking for update to pip at $localpip..."
+  "$localpip" install --upgrade pip --upgrade-strategy eager > /dev/null
 fi
 unset localpip
 
 export PYCURL_SSL_LIBRARY=openssl
+# Some macOS Python installs (notably Homebrew's) ship an EXTERNALLY-MANAGED
+# marker that makes pip refuse system-wide installs. Honor the documented
+# escape hatch via env var so all pip invocations in this section (including
+# pip-review, which calls pip internally) can install/upgrade global tools.
+export PIP_BREAK_SYSTEM_PACKAGES=1
 # Install pips in Python
 piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
