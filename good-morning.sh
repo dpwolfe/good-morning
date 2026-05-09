@@ -360,20 +360,13 @@ if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL
   fi
 fi
 
-# This install is an artifact for first-run that is overridden by the brew install
-# Some careful re-ordering will be able to eliminate this without breaking the first-run use case.
-gpg_suite_new_install=
+# Decide up-front whether to offer GPG signing setup. Defer the actual key
+# creation prompt until after Homebrew installs the gpg-suite cask.
+gpg_setup_wanted=
 if ! [[ -d "/Applications/GPG Keychain.app" ]] \
-    && askto "install GPG Suite"; then
-  eccho "Installing GPG Suite..."
-  dmg="$HOME/Downloads/GPGSuite.dmg"
-  curl -JL https://releases.gpgtools.org/GPG_Suite-2019.1_83.dmg -o "$dmg"
-  hdiutil attach "$dmg"
-  sudoit installer -pkg "/Volumes/GPG Suite/Install.pkg" -target /
-  diskutil unmount "GPG Suite"
-  rm -f "$dmg"
-  unset dmg
-  gpg_suite_new_install=1
+    && [[ -z "$(git config --global --get user.signingkey 2> /dev/null)" ]] \
+    && askto "set up GPG signing for git commits (installs GPG Suite via Homebrew)"; then
+  gpg_setup_wanted=1
 fi
 
 rvm_version=1.29.12
@@ -471,51 +464,6 @@ function installGems {
   gem cleanup
 }
 installGems
-
-if (( gpg_suite_new_install == 1 )); then
-  unset gpg_suite_new_install
-  eccho "Creating a GPG key for you to use when signing commits is an excellent way to guarantee the"
-  eccho "integrity of your code changes for others."
-  eccho "Learn more about this here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
-  eccho "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
-  if askto "create a GPG signing key for signing your git commits"; then
-    eccho "Generating a GPG key for signing Git operations..."
-    promptsecret "Enter a passphrase for the GPG key" GPG_PASSPHRASE
-    gpg --batch --gen-key <<EOF
-Key-Type: RSA
-Key-Length: 4096
-Subkey-Type: RSA
-Subkey-Length: 4096
-Name-Real: $GIT_NAME
-Name-Comment: Git signing key
-Name-Email: $GIT_EMAIL
-Expire-Date: 2y
-Passphrase: $GPG_PASSPHRASE
-%commit
-EOF
-    unset GPG_PASSPHRASE
-
-    eccho "Signing key created."
-    gpg_todays_date=$(date -u +"%Y-%m-%d")
-    gpg_expr="sec.*4096.*\/([[:xdigit:]]{16}) $gpg_todays_date.*"
-    gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
-    # copy the GPG public key for GitHub
-    gpg --armor --export "$gpg_key_id" | pbcopy
-    eccho "Your new GPG key is copied to the clipboard."
-    if askto "open up GitHub's settings page for adding GPG keys"; then
-      eccho "After GitHub opens, click 'New GPG key' and paste in the copied key."
-      prompt "Hit Enter to open up $GITHUB_KEYS_URL ..."
-      open "$GITHUB_KEYS_URL"
-      prompt "Hit Enter to continue after you have saved the GPG key on GitHub..."
-    fi
-    eccho "Enabling auto-signing of all commits and other git actions..."
-    git config --global commit.gpgsign true
-    git config --global user.signingkey "$gpg_key_id"
-    eccho "Finishing up GPG setup with a test that will complete the setup..."
-    eccho "Please accept the GPG related dialog box if it opens."
-    echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
-  fi
-fi
 
 # Pick a default repo root unless one is already set
 if [[ -z "${REPO_ROOT+x}" ]]; then
@@ -885,6 +833,53 @@ if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
   # This does not clear the cache of versions currently installed.
   brew cleanup -s
 fi
+
+# GPG signing setup. Runs after Homebrew installed gpg-suite (cask) so that
+# both `gpg` and GPG Keychain.app are guaranteed to be present.
+if [[ -n "$gpg_setup_wanted" ]] && type gpg &> /dev/null; then
+  unset gpg_setup_wanted
+  eccho "Creating a GPG key for you to use when signing commits is an excellent way to guarantee the"
+  eccho "integrity of your code changes for others."
+  eccho "Learn more about this here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
+  eccho "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
+  if askto "create a GPG signing key for signing your git commits"; then
+    eccho "Generating a GPG key for signing Git operations..."
+    promptsecret "Enter a passphrase for the GPG key" GPG_PASSPHRASE
+    gpg --batch --gen-key <<EOF
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: $GIT_NAME
+Name-Comment: Git signing key
+Name-Email: $GIT_EMAIL
+Expire-Date: 2y
+Passphrase: $GPG_PASSPHRASE
+%commit
+EOF
+    unset GPG_PASSPHRASE
+
+    eccho "Signing key created."
+    gpg_todays_date=$(date -u +"%Y-%m-%d")
+    gpg_expr="sec.*4096.*\/([[:xdigit:]]{16}) $gpg_todays_date.*"
+    gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
+    gpg --armor --export "$gpg_key_id" | pbcopy
+    eccho "Your new GPG key is copied to the clipboard."
+    if askto "open up GitHub's settings page for adding GPG keys"; then
+      eccho "After GitHub opens, click 'New GPG key' and paste in the copied key."
+      prompt "Hit Enter to open up $GITHUB_KEYS_URL ..."
+      open "$GITHUB_KEYS_URL"
+      prompt "Hit Enter to continue after you have saved the GPG key on GitHub..."
+    fi
+    eccho "Enabling auto-signing of all commits and other git actions..."
+    git config --global commit.gpgsign true
+    git config --global user.signingkey "$gpg_key_id"
+    eccho "Finishing up GPG setup with a test that will complete the setup..."
+    eccho "Please accept the GPG related dialog box if it opens."
+    echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
+  fi
+fi
+unset gpg_setup_wanted
 
 # Run this to set your shell to use fish (user, not root)
 # chsh -s `which fish`
