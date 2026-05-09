@@ -1002,11 +1002,15 @@ pips=(
   requests
   virtualenv
 )
+# Resolve build env once. xcrun finds the active SDK whether the user has full
+# Xcode or only the Command Line Tools.
+pip_sdkroot="$(/usr/bin/xcrun --show-sdk-path 2> /dev/null)"
+pip_openssl_prefix="$(brew --prefix openssl 2> /dev/null)"
 for pip in "${pips[@]}"; do
   if ! grep -qi "$pip==" "$piptempfile"; then
-    SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-    CFLAGS="-I$(brew --prefix openssl)/include -O2" \
-    LDFLAGS="-L$(brew --prefix openssl)/lib" \
+    SDKROOT="$pip_sdkroot" \
+    CFLAGS="-I$pip_openssl_prefix/include -O2" \
+    LDFLAGS="-L$pip_openssl_prefix/lib" \
     "$(findpip)" install "$pip"
   fi
 done
@@ -1016,11 +1020,12 @@ unset piptempfile
 
 if ! pip-review | grep -q "Everything up-to-date"; then
   eccho "Upgrading pip installed packages..."
-  SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-  CFLAGS="-I$(brew --prefix openssl)/include -O2" \
-  LDFLAGS="-L$(brew --prefix openssl)/lib" \
+  SDKROOT="$pip_sdkroot" \
+  CFLAGS="-I$pip_openssl_prefix/include -O2" \
+  LDFLAGS="-L$pip_openssl_prefix/lib" \
   pip-review --auto
 fi
+unset pip_sdkroot pip_openssl_prefix
 
 function upgradeNPM {
   eccho "Checking Node.js $(node -v) global npm package versions..."
