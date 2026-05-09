@@ -217,16 +217,18 @@ else
   eccho "Using RVM's default Ruby..."
   rvm use default
 fi
-eccho "Checking for existence of xcode-install..."
-if ! gem list --local | grep -q "xcode-install"; then
-  eccho "Installing xcode-install for managing Xcode..."
-  # https://github.com/KrauseFx/xcode-install
-  # The alternative install instructions must be used since there is not a working
-  # compiler on the system at this point in the setup.
-  curl -sL https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem -o ~/Downloads/domain_name-0.5.99999999.gem
-  sudoit gem install ~/Downloads/domain_name-0.5.99999999.gem --no-document < /dev/tty
-  sudoit gem install --conservative xcode-install --no-document < /dev/tty
-  rm -f ~/Downloads/domain_name-0.5.99999999.gem
+eccho "Checking for Xcode Command Line Tools..."
+if ! /usr/bin/xcode-select -p &> /dev/null \
+    || ! [[ -d "$(/usr/bin/xcode-select -p 2> /dev/null)" ]]; then
+  # Use Apple's xcode-select to trigger the GUI installer for Command Line Tools.
+  eccho "Installing Xcode Command Line Tools (a GUI prompt will appear)..."
+  /usr/bin/xcode-select --install &> /dev/null || true
+  eccho "Waiting for Command Line Tools install to finish..."
+  until /usr/bin/xcode-select -p &> /dev/null \
+      && [[ -d "$(/usr/bin/xcode-select -p 2> /dev/null)" ]]; do
+    sleep 5
+  done
+  eccho "Xcode Command Line Tools installed."
 fi
 
 function ensureXcodeInstallUserSet {
