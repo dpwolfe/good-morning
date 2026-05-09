@@ -155,6 +155,7 @@ function checkPerms {
   local dirs=(
     # Block of dirs that Homebrew needs the user to own for successful operation.
     # The redundancy of nested dirs is left here intentionally even though we use -R.
+    # Intel Homebrew
     /usr/local/bin
     /usr/local/Caskroom
     /usr/local/Cellar
@@ -172,6 +173,23 @@ function checkPerms {
     /usr/local/share/man/*
     /usr/local/var
     /usr/local/var/homebrew
+    # Apple Silicon Homebrew
+    /opt/homebrew
+    /opt/homebrew/bin
+    /opt/homebrew/Caskroom
+    /opt/homebrew/Cellar
+    /opt/homebrew/etc
+    /opt/homebrew/Frameworks
+    /opt/homebrew/include
+    /opt/homebrew/lib
+    /opt/homebrew/lib/pkgconfig
+    /opt/homebrew/opt
+    /opt/homebrew/sbin
+    /opt/homebrew/share
+    /opt/homebrew/share/locale
+    /opt/homebrew/share/man/*
+    /opt/homebrew/var
+    /opt/homebrew/var/homebrew
     # Needed for pip installs without requiring sudo
     /Library/Python/2.7/site-packages
     /Library/Ruby/Gems/*
