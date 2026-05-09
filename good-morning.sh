@@ -589,6 +589,8 @@ function checkBrewTaps {
     caskroom/versions
     homebrew/homebrew-cask-fonts
     homebrew/homebrew-cask-versions
+    homebrew/cask-fonts
+    homebrew/cask-versions
   )
   brew_tap_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_tap"
   brew tap > "$brew_tap_file"
@@ -598,8 +600,6 @@ function checkBrewTaps {
     fi
   done
   taps=(
-    homebrew/cask-fonts
-    homebrew/cask-versions
     homebrew/services
     wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
   )
