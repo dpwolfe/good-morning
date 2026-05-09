@@ -259,8 +259,6 @@ function installXcode {
   xcversion select "$xcode_short_version" < /dev/tty
   eccho "Installing Xcode command line tools..."
   xcversion install-cli-tools < /dev/tty
-  # link to the header file locations
-  sudoit ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/* /usr/local/include/
   # run cleanup if the install was successful
   if [[ "$(getLocalXcodeBuildVersion)" = "$xcode_build_version" ]]; then
     eccho "Cleaning up Xcode installers..."
@@ -311,7 +309,7 @@ function checkXcodeVersion {
 }
 checkXcodeVersion
 
-if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
+if [[ -d "/Applications/Xcode.app" ]] && /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
   eccho "Accepting the Xcode license..."
   sudoit xcodebuild -license accept
   eccho "Installing Xcode packages..."
