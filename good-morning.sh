@@ -754,7 +754,13 @@ function changeFormula {
   local brew_command="$2"
   local formula_ref="${3:-$formula_name}"
   ensureFormulaListCache
-  if ! grep -qE "(^| )$formula_name($| )" "$formula_list_temp_file"; then
+  local installed=0
+  if grep -qE "(^| )$formula_name($| )" "$formula_list_temp_file"; then
+    installed=1
+  fi
+  # Install only when missing; uninstall only when present.
+  if { [[ "$brew_command" == "install" ]] && (( installed == 0 )); } \
+    || { [[ "$brew_command" == "uninstall" ]] && (( installed == 1 )); }; then
     # shellcheck disable=SC2046
     brew "$brew_command" "$formula_ref" \
       $(if [[ "$brew_command" == "uninstall" ]]; then echo "--force --ignore-dependencies"; fi)
