@@ -732,6 +732,45 @@ function ensureFormulaUninstalled {
   changeFormula "$formula_name" uninstall
 }
 
+# Detect Homebrew formulas still linked against openssl@1.1 (now uninstalled)
+# and reinstall them so they relink against the current openssl. Returns
+# early when openssl@1.1 is still present (links resolve fine). Uses
+# `otool -L` against Mach-O files in each keg's bin/sbin/lib/libexec so
+# only real LC_LOAD_DYLIB dependencies are matched (no false positives
+# from header text or docs). Parallelism via `xargs -P` keeps it fast.
+function rebuildBrokenOpensslLinks {
+  local brew_prefix cellar
+  brew_prefix="$(brew --prefix 2> /dev/null)"
+  cellar="$(brew --cellar 2> /dev/null)"
+  if [[ -z "$brew_prefix" ]] || [[ -z "$cellar" ]] || ! [[ -d "$cellar" ]]; then
+    return
+  fi
+  if [[ -d "$brew_prefix/opt/openssl@1.1" ]]; then
+    return
+  fi
+  local affected
+  affected="$(/usr/bin/find "$cellar"/*/* -type f \
+      \( -path '*/bin/*' -o -path '*/sbin/*' \
+         -o \( \( -path '*/lib/*' -o -path '*/libexec/*' \) \
+              -a \( -name '*.dylib' -o -name '*.so' \) \) \
+      \) -print0 2> /dev/null \
+    | /usr/bin/xargs -0 -P 8 /usr/bin/otool -L 2> /dev/null \
+    | /usr/bin/awk -v pat='lib(ssl|crypto)\\.1\\.1\\.dylib' \
+        'sub(/:$/, "") { fname = $0; next } $0 ~ pat { print fname }' \
+    | sed -E "s|^${cellar}/([^/]+)/.*|\1|" \
+    | sort -u)"
+  if [[ -z "$affected" ]]; then
+    return
+  fi
+  eccho "These Homebrew formulas are still linked against openssl@1.1 and"
+  eccho "will be reinstalled to relink against the current openssl:"
+  eccho "$affected"
+  while IFS= read -r formula; do
+    [[ -z "$formula" ]] && continue
+    brew reinstall "$formula"
+  done <<< "$affected"
+}
+
 # Uninstall formulas that create conflicts and may or may not have been
 # previously installed by earlier versions of this script.
 problem_formulas=(
@@ -819,6 +858,7 @@ unset formula_list_temp_file
 
 if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
   unset BREW_CLEANUP_NEEDED;
+  rebuildBrokenOpensslLinks
   eccho "Cleaning up Homebrew cache..."
   # The -s option clears even the latest versions of uninstalled formulas and casks.
   # This does not clear the cache of versions currently installed.
