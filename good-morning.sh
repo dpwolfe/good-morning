@@ -182,7 +182,6 @@ function checkPerms {
     /usr/local/include
     /usr/local/lib
     /usr/local/lib/pkgconfig
-    /usr/local/lib/python2.7/site-packages
     /usr/local/opt
     /usr/local/sbin
     /usr/local/share
@@ -208,11 +207,8 @@ function checkPerms {
     /opt/homebrew/var
     /opt/homebrew/var/homebrew
     # Needed for pip installs without requiring sudo
-    /Library/Python/2.7/site-packages
     /Library/Ruby/Gems/*
     /Library/Ruby/Site/*
-    /System/Library/Frameworks/Python.framework/Versions/2.7/share/doc
-    /System/Library/Frameworks/Python.framework/Versions/2.7/share/man
     "$HOME/.pyenv"
     # /Applications/*.app
   )
@@ -1129,9 +1125,9 @@ if ! [[ -s "$HOME/.nvm/nvm.sh" ]] || ! nvm --version | grep -q "$nvm_version"; t
   if [[ -n "$NVM_DIR" ]]; then
     mkdir -p "$NVM_DIR" # ensure directory exists if environment variable is set by existing bash_profile
   fi
-  # https://github.com/creationix/nvm#install-script
+  # https://github.com/nvm-sh/nvm#install--update-script
   eccho "Installing Node Version Manager v$nvm_version"
-  curl -o- "https://raw.githubusercontent.com/creationix/nvm/v${nvm_version}/install.sh" | bash
+  curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${nvm_version}/install.sh" | bash
   loadNVM
   eccho "Installing latest Node.js..."
   checkNodeVersion "$nvm_local_node" "$nvm_latest_node"
