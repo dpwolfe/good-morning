@@ -138,13 +138,30 @@ function dmginstall {
   fi
 }
 
+# Minimum supported macOS version. Bump when a new macOS major ships and this
+# script has been validated on it. Anything older is rejected with a hint.
+# Apple switched to calendar-aligned numbering in 2025 (macOS 15 Sequoia ->
+# macOS 26 Tahoe), so versions are compared as-is via `sort -V`.
+GOOD_MORNING_MIN_MACOS_VERSION="26.0"
+
 function getOSVersion {
-  sw_vers | grep -E "ProductVersion" | sed -E "s/^.*(10\.[.0-9]+)/\1/"
+  /usr/bin/sw_vers -productVersion
 }
 
 function checkOSRequirement {
-  if getOSVersion | grep -qvE ' 1(0\.15|1\.)'; then
-    errcho "Good Morning must be run on either macOS 10.15 (Catalina) or 11.x (Big Sur)."
+  local current
+  current="$(getOSVersion)"
+  if [[ -z "$current" ]]; then
+    errcho "Could not determine macOS version (sw_vers failed)."
+    exit 1
+  fi
+  # sort -V puts the lower version first; if min is the lower (or equal),
+  # the current version meets the minimum.
+  local lowest
+  lowest="$(printf '%s\n%s\n' "$GOOD_MORNING_MIN_MACOS_VERSION" "$current" | sort -V | head -n 1)"
+  if [[ "$lowest" != "$GOOD_MORNING_MIN_MACOS_VERSION" ]]; then
+    errcho "Good Morning requires macOS $GOOD_MORNING_MIN_MACOS_VERSION or newer (detected $current)."
+    errcho "Upgrade macOS via System Settings > General > Software Update and run again."
     exit 1
   fi
 }
@@ -206,13 +223,8 @@ function checkPerms {
       sudoit chown -R "$userPerm" "$dir"
     fi
   done
-  # "Allow apps downloaded from: Anywhere" for app backwards compatibility with macOS 10.15 Catalina
-  # Otherwise, some apps and quicklook extensions don't switch to the Allowed state properly from
-  # the Security & Privacy settings.
-  if spctl --status | grep -q "assessments enabled" && getOSVersion | grep -q "10.15"; then
-    sudoit spctl --master-disable
-  fi
 }
+checkOSRequirement
 checkPerms
 
 function updateGems {
