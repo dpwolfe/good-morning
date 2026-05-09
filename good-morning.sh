@@ -472,13 +472,6 @@ function installGems {
     fi
   done
   rm -f "$gem_list_temp_file"
-  # temp fix for fastlane having an internal version conflict with google-cloud-storage
-  # remove once fastlane fixes this
-  # eccho "Applying workaround to fix xcode-install..."
-  # eccho "See https://github.com/fastlane/fastlane/issues/14242 to learn more."
-  # gem uninstall google-cloud-storage --all --force &> /dev/null
-  # gem install google-cloud-storage -v 1.16.0 --no-document &> /dev/null
-  # end temp fix
   gem cleanup
 }
 installGems
@@ -1169,18 +1162,6 @@ if [[ -n "$FIRST_RUN" ]] && askto "review and install some recommended applicati
   prompt "Hit Enter to continue..."
   # todo: insert directly into plist located here $HOME/Library/Preferences/com.googlecode.iterm2.plist
   # todo: change plist directly for scroll back Root > New Bookmarks > Item 0 > Unlimited Scrollback > Boolean YES
-
-  # Ensure Atom Shell Commands are installed
-  if [[ -d "/Applications/Atom.app" ]] && ! type "apm" > /dev/null; then
-    eccho "You need to install the Atom shell commands from inside Atom."
-    eccho "After Atom opens, go to the Atom menu and select Atom > Install Shell Commands."
-    prompt "Hit Enter to open Atom..."
-    open "/Applications/Atom.app"
-    prompt "Select the menu item Atom > Install Shell Commands and hit Enter here when finished..."
-    if ! apm list | grep -q "── vim-mode@" && askto "install Atom vim-mode"; then
-      apm install vim-mode ex-mode
-    fi
-  fi
 fi
 
 if [[ -n "$FIRST_RUN" ]] && ! (defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled && \
