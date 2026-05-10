@@ -615,7 +615,6 @@ casks=(
   gpg-suite
   handbrake
   iterm2
-  keeweb
   # keybase
   keyboard-maestro # keyboard macros
   # logitech-gaming-software # if you plug-in a logitech keyboard
@@ -636,7 +635,6 @@ casks=(
   # quicklook-json
   rocket # utf-8 emoji quick lookup and insert in any macOS app
   # sketch
-  skitch
   slack
   # sourcetree
   tableplus
@@ -657,6 +655,8 @@ brew list --cask > "$cask_list_temp_file"
 # Uninstall specific Homebrew casks that conflict with this script if installed.
 problem_casks=(
   insomniax # remove since this is now unmaintained
+  keeweb # upstream looking for new maintainer since 2022, no commits in 2026; security smell for a password manager
+  skitch # dev stopped at v2.9 in 2020; fails to launch on macOS Tahoe
   virtualbox # deprecated since Docker for Desktop already comes with hyperkit
   wavtap # deprecated
   zoomus # replaced with zoom
@@ -779,14 +779,12 @@ formulas=(
   awscli # AWS CLI v2
   bash
   bash-completion@2
-  brew-cask-completion
   caddy
   certbot # For generating SSL certs with Let's Encrypt
   coreutils
   # dialog # https://invisible-island.net/dialog/
   deno
   direnv # https://direnv.net/
-  docker-squash # https://github.com/goldmann/docker-squash
   fd # https://github.com/sharkdp/fd
   fx # https://github.com/antonmedv/fx
   fzf # https://github.com/junegunn/fzf
@@ -810,7 +808,7 @@ formulas=(
   # neovim
   nss # needed by caddy for certutil
   openssl@3
-  p7zip # provides 7z command
+  sevenzip # provides 7zz command (replacement for unmaintained p7zip)
   # packer
   # packer-completion
   pandoc
