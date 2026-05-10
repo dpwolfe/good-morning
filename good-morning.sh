@@ -39,7 +39,14 @@ GM_ORIG_STDOUT=
 GM_ORIG_STDERR=
 if mkdir -p "$GOOD_MORNING_LOG_DIR" 2> /dev/null; then
   exec {GM_ORIG_STDOUT}>&1 {GM_ORIG_STDERR}>&2
-  exec > >(tee -a "$GOOD_MORNING_LOG_FILE") 2>&1
+  # Tee to terminal (raw, with color) AND to the log file (ANSI-stripped via
+  # perl). macOS BSD `sed` cannot match \e/\x1b in regex, so use perl which
+  # handles both CSI sequences (\e[...m, \e[...K, etc.) and the SGR-followup
+  # G0 charset designator (\e(B) that bash emits after colored output.
+  # `BEGIN{$|=1}` disables perl's block buffering so the file stays current
+  # in real time -- otherwise an aborted run could lose its tail.
+  exec > >(tee >(perl -pe 'BEGIN{$|=1} s/\e\[[0-9;?]*[A-Za-z]//g; s/\e\([AB012]//g' \
+    >> "$GOOD_MORNING_LOG_FILE")) 2>&1
   ln -sfn "$GOOD_MORNING_LOG_FILE" "$GOOD_MORNING_LOG_DIR/latest.log"
   eccho "Logging this run to $GOOD_MORNING_LOG_FILE"
 fi
