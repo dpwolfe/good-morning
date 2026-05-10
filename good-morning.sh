@@ -35,10 +35,9 @@ function eccho {
 # inspect after the fact, regardless of how the run ended.
 GOOD_MORNING_LOG_DIR="$HOME/.good-morning-logs"
 GOOD_MORNING_LOG_FILE="$GOOD_MORNING_LOG_DIR/run-$(date +%Y%m%d-%H%M%S).log"
-GM_ORIG_STDOUT=
-GM_ORIG_STDERR=
+GM_LOGGING_ACTIVE=
 if mkdir -p "$GOOD_MORNING_LOG_DIR" 2> /dev/null; then
-  exec {GM_ORIG_STDOUT}>&1 {GM_ORIG_STDERR}>&2
+  exec 7>&1 8>&2
   # Tee to terminal (raw, with color) AND to the log file (ANSI-stripped via
   # perl). macOS BSD `sed` cannot match \e/\x1b in regex, so use perl which
   # handles both CSI sequences (\e[...m, \e[...K, etc.) and the SGR-followup
@@ -48,16 +47,16 @@ if mkdir -p "$GOOD_MORNING_LOG_DIR" 2> /dev/null; then
   exec > >(tee >(perl -pe 'BEGIN{$|=1} s/\e\[[0-9;?]*[A-Za-z]//g; s/\e\([AB012]//g' \
     >> "$GOOD_MORNING_LOG_FILE")) 2>&1
   ln -sfn "$GOOD_MORNING_LOG_FILE" "$GOOD_MORNING_LOG_DIR/latest.log"
+  GM_LOGGING_ACTIVE=1
   eccho "Logging this run to $GOOD_MORNING_LOG_FILE"
 fi
 
 # Restore the user's original stdout/stderr. Essential when sourced into an interactive shell.
 function gm_restore_stdio {
-  if [[ -n "$GM_ORIG_STDOUT" ]]; then
-    exec 1>&"$GM_ORIG_STDOUT" 2>&"$GM_ORIG_STDERR"
-    exec {GM_ORIG_STDOUT}>&- {GM_ORIG_STDERR}>&-
-    GM_ORIG_STDOUT=
-    GM_ORIG_STDERR=
+  if [[ -n "$GM_LOGGING_ACTIVE" ]]; then
+    exec 1>&7 2>&8
+    exec 7>&- 8>&-
+    GM_LOGGING_ACTIVE=
   fi
 }
 
