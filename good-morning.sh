@@ -28,6 +28,38 @@ function eccho {
   echo -e "${bold}${light_blue}$*${nc}${normal}"
 }
 
+# Persistent log of every run. The script is normally sourced into the user's
+# interactive shell (see the `good-morning` alias in dotfiles/.bash_profile),
+# which means a hard exit closes their terminal window and loses scrollback.
+# Tee everything to a timestamped log file so there is always something to
+# inspect after the fact, regardless of how the run ended.
+GOOD_MORNING_LOG_DIR="$HOME/.good-morning-logs"
+GOOD_MORNING_LOG_FILE="$GOOD_MORNING_LOG_DIR/run-$(date +%Y%m%d-%H%M%S).log"
+GM_ORIG_STDOUT=
+GM_ORIG_STDERR=
+if mkdir -p "$GOOD_MORNING_LOG_DIR" 2> /dev/null; then
+  exec {GM_ORIG_STDOUT}>&1 {GM_ORIG_STDERR}>&2
+  exec > >(tee -a "$GOOD_MORNING_LOG_FILE") 2>&1
+  ln -sfn "$GOOD_MORNING_LOG_FILE" "$GOOD_MORNING_LOG_DIR/latest.log"
+  eccho "Logging this run to $GOOD_MORNING_LOG_FILE"
+fi
+
+# Restore the user's original stdout/stderr. Essential when sourced into an interactive shell.
+function gm_restore_stdio {
+  if [[ -n "$GM_ORIG_STDOUT" ]]; then
+    exec 1>&"$GM_ORIG_STDOUT" 2>&"$GM_ORIG_STDERR"
+    exec {GM_ORIG_STDOUT}>&- {GM_ORIG_STDERR}>&-
+    GM_ORIG_STDOUT=
+    GM_ORIG_STDERR=
+  fi
+}
+
+# Prep for an abort: print where to find the log and tear down the tee.
+function gm_abort_prep {
+  errcho "good-morning aborted. Full log: $GOOD_MORNING_LOG_FILE"
+  gm_restore_stdio
+}
+
 function randstring32 {
   env LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1
 }
@@ -153,7 +185,7 @@ function checkOSRequirement {
   current="$(getOSVersion)"
   if [[ -z "$current" ]]; then
     errcho "Could not determine macOS version (sw_vers failed)."
-    exit 1
+    return 1
   fi
   # sort -V puts the lower version first; if min is the lower (or equal),
   # the current version meets the minimum.
@@ -162,7 +194,7 @@ function checkOSRequirement {
   if [[ "$lowest" != "$GOOD_MORNING_MIN_MACOS_VERSION" ]]; then
     errcho "Good Morning requires macOS $GOOD_MORNING_MIN_MACOS_VERSION or newer (detected $current)."
     errcho "Upgrade macOS via System Settings > General > Software Update and run again."
-    exit 1
+    return 1
   fi
 }
 
@@ -220,29 +252,12 @@ function checkPerms {
     fi
   done
 }
-checkOSRequirement
+checkOSRequirement || { gm_abort_prep; return 1 2> /dev/null || exit 1; }
 checkPerms
 
 function updateGems {
   eccho "Checking Ruby system gem versions..."
-  local update_log update_rc
-  update_log="$(gem update --system --force --no-document 2>&1)"
-  update_rc=$?
-  printf '%s\n' "$update_log"
-  # An older RVM helper (`rvm rubygems latest --force`) used to install
-  # rubygems 3.0.9 onto modern Ruby, which then errors with
-  # "undefined method 'wait_readable' for #<TCPSocket:(closed)>" on every
-  # network gem op. Detect that pattern and recover by reinstalling Ruby.
-  if (( update_rc != 0 )) && \
-    printf '%s' "$update_log" | grep -qE "wait_readable|TCPSocket"; then
-    errcho "Detected broken rubygems on $(rvm current 2> /dev/null) (TCPSocket wait_readable)."
-    eccho "Reinstalling $latest_ruby_version to recover..."
-    rvm reinstall "$latest_ruby_version"
-    rvm alias create default ruby "$latest_ruby_version"
-    rvm use default > /dev/null
-    eccho "Retrying gem update after reinstall..."
-    gem update --system --force --no-document
-  fi
+  gem update --system --force --no-document
   eccho "Checking Ruby gem versions..."
   local outdated
   outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
@@ -253,13 +268,6 @@ function updateGems {
     gem update $outdated --force --no-document
   fi
 }
-
-if ! type rvm &> /dev/null || rvm list | grep -q 'No rvm rubies'; then
-  eccho "Using macOS Ruby."
-else
-  eccho "Using RVM's default Ruby..."
-  rvm use default
-fi
 eccho "Checking for Xcode Command Line Tools..."
 if ! /usr/bin/xcode-select -p &> /dev/null \
     || ! [[ -d "$(/usr/bin/xcode-select -p 2> /dev/null)" ]]; then
@@ -316,6 +324,19 @@ if [[ -d "/Applications/Xcode.app" ]] && /usr/bin/xcrun clang 2>&1 | grep -q "li
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
 fi
 
+# Apple's CLT clang on macOS Tahoe (CLT 21.x) does not auto-discover the SDK,
+# so anything that shells out to clang during a build (ruby-build, gem install
+# native extensions via mkmf, pip C extensions) fails with either
+# `fatal error: 'stdio.h' file not found` or `ld: library 'System' not found`.
+# Setting SDKROOT once at the top of the script makes every child process
+# inherit the right sysroot. xcrun resolves the active SDK whether the user
+# has full Xcode or just Command Line Tools.
+SDKROOT_RESOLVED="$(/usr/bin/xcrun --show-sdk-path 2> /dev/null)"
+if [[ -n "$SDKROOT_RESOLVED" ]]; then
+  export SDKROOT="$SDKROOT_RESOLVED"
+fi
+unset SDKROOT_RESOLVED
+
 GIT_EMAIL="$(git config --global --get user.email)"
 if [[ -z "$GIT_EMAIL" ]]; then
   prompt "Enter the email address you use for git commits: " GIT_EMAIL
@@ -369,81 +390,75 @@ if ! [[ -d "/Applications/GPG Keychain.app" ]] \
   gpg_setup_wanted=1
 fi
 
-rvm_version=1.29.12
 # Track the current Ruby stable line; bump as new patch versions ship.
 # https://www.ruby-lang.org/en/downloads/releases/
-latest_ruby_version="ruby-3.4.9"
+latest_ruby_version="3.4.9"
 
-function installRVM {
-  eccho "Installing RVM..."
-  if type rvm &> /dev/null; then
-    gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-  fi
-  curl -sSL https://get.rvm.io | bash -s $rvm_version --ruby
-  # shellcheck source=/dev/null
-  source "$HOME/.profile" # load rvm
-  rvm cleanup all
-  # enable rvm auto-update
-  # echo rvm_autoupdate_flag=2 >> ~/.rvmrc
-  # enable rvm auto-reload on update
-  echo rvm_auto_reload_flag=2 >> ~/.rvmrc
-  # enable progress bar when downloading RVM / Rubies
-  echo progress-bar >> ~/.curlrc
-  # rvm loads in the profile file, not the same way with auto-dot files, so ignore next error
-  echo rvm_silence_path_mismatch_check_flag=1 >> ~/.rvmrc
+function migrateFromRVM {
+  [[ -d "$HOME/.rvm" ]] || return
+  eccho "Detected legacy RVM install at \$HOME/.rvm. good-morning now uses rbenv."
+  eccho "RVM is harmless when left dormant but adds shell startup overhead."
+  eccho "To remove it cleanly when you're ready:"
+  eccho "  rvm implode"
+  eccho "  rm -f \$HOME/.rvmrc \$HOME/.profile  # if RVM-only"
+  eccho "  Then remove this line from ~/.bash_profile:"
+  eccho "    [ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\""
 }
 
-function checkRubyVersion {
-  if rvm version | grep -qv "$rvm_version"; then
-    eccho "Upgrading RVM to $rvm_version..."
-    # hard-coded since auto upgrade check hits GitHub's rate limits too frequently
-    rvm get $rvm_version --auto-dotfiles
-  fi
-  eccho "Checking Ruby version..."
-  if rvm list | grep -q 'No rvm rubies'; then
-    rvm install "$latest_ruby_version"
-    rvm alias create default ruby "$latest_ruby_version"
-    rvm cleanup all
-  else
-    local current_ruby_version
-    current_ruby_version="$(ruby --version | sed -E 's/ ([0-9.]+)(p[0-9]+)?([^ ]*).*/-\1-\3/' | sed -E 's/-$//')"
-    if [[ "$current_ruby_version" != "$latest_ruby_version" ]]; then
-      eccho "Upgrading Ruby from $current_ruby_version to $latest_ruby_version..."
-      eccho "The RVM upgrade feature is not used to provide you a more reliable experience."
-      rvm install "$latest_ruby_version"
-      rvm cleanup all
-      eccho "The previous version of Ruby is still available by running 'rvm use $current_ruby_version'."
-      rvm alias create default ruby "$latest_ruby_version"
+function checkRbenvRuby {
+  # Bootstrap Homebrew on first-run since rbenv installs via brew.
+  if ! type brew &> /dev/null; then
+    eccho "Installing Homebrew (required for rbenv)..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/tty
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+      eval "$(/usr/local/bin/brew shellenv)"
     fi
   fi
-  # Make sure RVM's default alias actually resolves to the target Ruby.
-  # When `rvm install` partially fails the alias can stay pointed at the
-  # previous (often EOL/broken) version, which silently breaks every gem op.
-  rvm use default > /dev/null
-  local active
-  active="$(rvm current 2> /dev/null)"
-  if [[ "$active" != "$latest_ruby_version"* ]]; then
-    errcho "RVM default is '$active' after upgrade; expected '$latest_ruby_version'."
-    errcho "Re-aliasing default and retrying..."
-    rvm alias create default ruby "$latest_ruby_version"
-    rvm use default > /dev/null
-    active="$(rvm current 2> /dev/null)"
-    if [[ "$active" != "$latest_ruby_version"* ]]; then
-      errcho "Could not switch RVM default to $latest_ruby_version (still '$active')."
-      errcho "Manually run: rvm reinstall $latest_ruby_version && rvm alias create default ruby $latest_ruby_version"
-      exit 1
+  if ! type rbenv &> /dev/null; then
+    eccho "Installing rbenv + ruby-build..."
+    brew install --quiet rbenv ruby-build
+  fi
+  # Initialize rbenv into the current script shell so `rbenv install/global`
+  # and `gem` invocations immediately see the right ruby.
+  eval "$(rbenv init - bash)"
+  # RVM's shell hooks (sourced from ~/.profile in legacy bash_profiles) export
+  # GEM_HOME/GEM_PATH pointing at ~/.rvm/gems/<old-ruby>. If we leave those set,
+  # `gem update` and `gem install` resolve rbenv's ruby binary but write to and
+  # iterate over RVM's gemset, then try to rebuild RVM-installed native
+  # extensions against the new Ruby's ABI producing hundreds of mkmf errors.
+  # Strip every RVM-injected variable so all gem ops resolve via the rbenv
+  # ruby's own site config. Becomes a no-op once the user `rvm implode`s.
+  unset GEM_HOME GEM_PATH MY_RUBY_HOME IRBRC \
+    rvm_bin_path rvm_path rvm_prefix rvm_version rvm_ruby_string
+  if ! rbenv versions --bare 2> /dev/null | grep -qx "$latest_ruby_version"; then
+    eccho "Installing Ruby $latest_ruby_version via rbenv..."
+    # SDKROOT is exported globally near the top of the script so ruby-build's
+    # ./configure can find libSystem on Tahoe with the CLT-only clang.
+    rbenv install -s "$latest_ruby_version"
+    # ruby-build leaves the build dir on failure but exits non-zero; either
+    # way, verify by asking rbenv directly. Surface the build log path on
+    # failure so the user has something to read.
+    if ! rbenv versions --bare 2> /dev/null | grep -qx "$latest_ruby_version"; then
+      errcho "rbenv install $latest_ruby_version did not produce a working Ruby."
+      local build_log
+      build_log="$(/bin/ls -1t /var/folders/*/T/ruby-build.*.log 2> /dev/null | head -n 1)"
+      [[ -n "$build_log" ]] && errcho "ruby-build log: $build_log"
+      errcho "To retry with verbose output:"
+      errcho "  SDKROOT=\"\$(xcrun --show-sdk-path)\" rbenv install --verbose $latest_ruby_version"
+      return 1
     fi
   fi
+  if [[ "$(rbenv global 2> /dev/null)" != "$latest_ruby_version" ]]; then
+    eccho "Setting rbenv global Ruby to $latest_ruby_version..."
+    rbenv global "$latest_ruby_version"
+  fi
+  rbenv rehash
 }
 
-if ! [[ -s "$HOME/.rvm/scripts/rvm" ]] && ! type rvm &> /dev/null; then
-  installRVM
-fi
-
-checkRubyVersion
-
-# ensure we are not using the system version
-rvm use default > /dev/null
+migrateFromRVM
+checkRbenvRuby || { gm_abort_prep; return 1 2> /dev/null || exit 1; }
 updateGems
 
 function installGems {
@@ -462,6 +477,8 @@ function installGems {
   done
   rm -f "$gem_list_temp_file"
   gem cleanup
+  # Make any gem-installed binaries (cocoapods, etc.) immediately available via rbenv's shim layer.
+  type rbenv &> /dev/null && rbenv rehash
 }
 installGems
 
@@ -492,8 +509,7 @@ export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/bash_completion\" ] && \. \"\$NVM_DIR/bash_completion\"  # load nvm bash_completion
 [ -f /usr/local/etc/bash_completion ] && \. /usr/local/etc/bash_completion
 if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
-# RVM is sourced from the .profile file, make sure this happens last or RVM will complain
-[ -s \"\$HOME/.profile\" ] && source \"\$HOME/.profile\"
+if command -v rbenv 1> /dev/null 2>&1; then eval \"\$(rbenv init - bash)\"; fi
 " > "$HOME/.bash_profile"
 
   # copy some starter shell dot files
@@ -798,7 +814,9 @@ formulas=(
   pip-completion
   # pyenv
   python@3.12 # vim was failing load without this - 3/2/2018
-  readline # for pyenv installs of python
+  rbenv
+  ruby-build
+  readline # for pyenv installs of python and ruby-build
   # redis
   shellcheck # shell script linting
   # swagger-codegen # requires brew install --cask homebrew/cask-versions/adoptopenjdk8
@@ -956,13 +974,11 @@ pips=(
   requests
   virtualenv
 )
-# Resolve build env once. xcrun finds the active SDK whether the user has full
-# Xcode or only the Command Line Tools.
-pip_sdkroot="$(/usr/bin/xcrun --show-sdk-path 2> /dev/null)"
+# SDKROOT is exported globally near the top of the script. We still need to
+# point pip-built C extensions at brew's openssl headers/libs.
 pip_openssl_prefix="$(brew --prefix openssl 2> /dev/null)"
 for pip in "${pips[@]}"; do
   if ! grep -qi "$pip==" "$piptempfile"; then
-    SDKROOT="$pip_sdkroot" \
     CFLAGS="-I$pip_openssl_prefix/include -O2" \
     LDFLAGS="-L$pip_openssl_prefix/lib" \
     "$(findpip)" install "$pip"
@@ -974,12 +990,11 @@ unset piptempfile
 
 if ! pip-review | grep -q "Everything up-to-date"; then
   eccho "Upgrading pip installed packages..."
-  SDKROOT="$pip_sdkroot" \
   CFLAGS="-I$pip_openssl_prefix/include -O2" \
   LDFLAGS="-L$pip_openssl_prefix/lib" \
   pip-review --auto
 fi
-unset pip_sdkroot pip_openssl_prefix
+unset pip_openssl_prefix
 
 function upgradeNPM {
   eccho "Checking Node.js $(node -v) global npm package versions..."
@@ -1571,5 +1586,8 @@ function greeting {
   else
     eccho "Done. Good evening!"
   fi
+  eccho "Run log: $GOOD_MORNING_LOG_FILE"
 }
 greeting
+
+gm_restore_stdio
