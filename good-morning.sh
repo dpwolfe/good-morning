@@ -881,47 +881,6 @@ EOF
 fi
 unset gpg_setup_wanted
 
-# Run this to set your shell to use fish (user, not root)
-# chsh -s `which fish`
-
-# function checkPythonInstall {
-#   local pythonVersion="$1"
-#   if ! pyenv versions | grep -q "$pythonVersion"; then
-#     SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-#     CFLAGS="-I$(brew --prefix openssl)/include -O2" \
-#     LDFLAGS="-L$(brew --prefix openssl)/lib" \
-#     pyenv install "$pythonVersion"
-#   fi
-# }
-
-# function checkPythonVersions {
-#   local python2version="2.7.17"
-#   local python3version="3.8.1"
-#   checkPythonInstall "$python2version"
-#   checkPythonInstall "$python3version"
-#   local globalPythonVersion
-#   if [[ "$GOOD_MORNING_USE_LEGACY_PYTHON" == 1 ]]; then
-#     globalPythonVersion="$python2version"
-#   else
-#     globalPythonVersion="$python3version"
-#   fi
-#   pyenv global "$globalPythonVersion"
-# }
-# checkPythonVersions
-
-# function checkOhMyFish {
-#   if ! type "omf" &> /dev/null; then
-#     local temp_omf_install_file="$HOME/.good_morning_omf_install.temp"
-#     curl -L https://get.oh-my.fish > "$temp_omf_install_file"
-#     fish "$temp_omf_install_file" < /dev/tty
-#     rm -f "$temp_omf_install_file"
-#   else
-#     omf update
-#   fi
-# }
-# checkOhMyFish - Need to find a way to avoid it immediately entering fish
-# and stopping the rest of the script. Might try creating a process fork for this.
-
 function pickbin {
   local versions="$1"
   for version in $versions; do
