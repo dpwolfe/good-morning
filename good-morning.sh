@@ -101,8 +101,13 @@ function prompt {
 }
 
 function promptsecret {
-  read -r -s -p "$1: " "$2" < /dev/tty
-  echo # echo newline after input
+  # Write the prompt directly to /dev/tty rather than relying on `read -p`,
+  # which prints to stderr. Some callers (e.g. the silent `2> /dev/null` loop
+  # in approveAllApps) redirect stderr, which would otherwise hide the prompt
+  # and make the script look hung while it actually waits on /dev/tty input.
+  printf '%s: ' "$1" > /dev/tty
+  read -r -s "$2" < /dev/tty
+  printf '\n' > /dev/tty
 }
 
 GOOD_MORNING_CONFIG_FILE="$HOME/.good_morning"
@@ -1169,6 +1174,11 @@ function approveAllApps {
     return
   fi
   eccho "Auto-approving applications for Gatekeeper..."
+  # Prime sudo's cached credential BEFORE the silent loop below. The loop
+  # redirects stderr to /dev/null to hide xattr's SIP/EPERM noise, which would
+  # also hide any password prompt that sudoit emits -- making the script look
+  # hung while it silently waits for input on /dev/tty.
+  sudoit true || true
   local apps=()
   local failed=()
   IFS=$'\n'
