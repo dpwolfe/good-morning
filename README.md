@@ -6,15 +6,15 @@ First thing to run on a new MacBook and every morning thereafter to keep it up t
 
 _A fresh install of macOS is ideal, but not required._
 
-- Your MacBook must be running macOS 10.15 (Catalina) or greater. Tahoe support coming.
-- You must have admin privileges on your MacBook.
-- You must have an Apple ID that has accepted the developer agreement, which you can do for free here: <https://developer.apple.com/account/>
+- macOS 26 (Tahoe) or newer.
+- Admin privileges on your MacBook.
+- An Apple ID that has accepted the developer agreement, which you can do for free here: <https://developer.apple.com/account/>
 - A solid Internet connection at least for the first run since Xcode will be installed.
 
 ## Instructions
 
 1. Install all system updates (_Apple Menu > System Settings > General > Software Update_).
-2. Open up a Terminal session (_Command + Space_ for Spotlight Search and type "Terminal")
+2. Open up a Terminal session (_Command + Space_ for Spotlight Search and type "Terminal").
 3. Run this command:
 
    ```sh
@@ -22,6 +22,8 @@ _A fresh install of macOS is ideal, but not required._
    ```
 
 > **Security note:** Please feel free to review the script before piping to bash: <https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh>
+
+After the first run, you can simply type `good-morning` from any new shell to run it again.
 
 ## What does it do?
 
@@ -33,32 +35,55 @@ and feel free to open issues for feedback.
 
 ### Avoid wasting hours manually installing and setting up the usual laundry list of tools like:
 
-1. Xcode latest, plus the command line tools.
-2. Node Version Manager (nvm) with latest Node.js and latest LTS of Node.js
-3. Homebrew, installing an opinionated set of popular apps and utilities.
-   - Includes: Docker, Visual Studio Code, Slack, Wireshark, Postman, iTerm2, Charles, TablePlus
+1. Xcode and the Command Line Tools.
+2. Homebrew, with an opinionated set of casks and formulas.
+   - Casks include: iTerm2, Visual Studio Code, Docker, Slack, Brave, Charles, Wireshark,
+     Keyboard Maestro, GPG Suite, Handbrake, Fira Code, The Unarchiver, ProvisionQL.
+   - Formulas include: `git`, `git-lfs`, `bash`, `zsh`, `go`, `awscli`, `terraform`,
+     `tflint`, `jq`, `fzf`, `fd`, `httpie`, `direnv`, `tmux`, `vim`, `wget`, `caddy`,
+     `certbot`, `shellcheck`, `pandoc`, `vegeta`, `watchman`, `rbenv`, `ruby-build`,
+     `python@3.14`, `openssl@3`, `coreutils`, `sevenzip`, and more.
+3. Node Version Manager (nvm) with the latest Node.js and the latest LTS of Node.js.
 4. A new SSH key and GPG key, walking you through their creation and the steps to add
    them to GitHub.
-5. Primes your .bash_profile with references to dotfiles containing aliases, git bash completion,
-   environment variables, paths, etc.
+5. Primes your `.bash_profile` with references to dotfiles containing aliases, git bash
+   completion, environment variables, paths, etc.
    - Feel free to bring your own dotfiles after the first run.
 
 ### _Run good-morning... every morning_ to keep it all up-to-date, including:
 
-1. Update Node Version Manager (nvm)
-2. Update your system to the latest Node.js and latest LTS of Node.js with nvm
+1. Update Homebrew along with every installed formula and cask.
+2. Update Node Version Manager (nvm), the latest Node.js, and the latest LTS of Node.js.
    - Simple way to discover when a new Node.js version releases.
    - Globally installed packages are automatically re-installed into new Node.js versions.
-   - The version that is immediately before any next version being installed will be uninstalled automatically.
-     That only happens during an upgrade. Installs/re-installs of older versions are untouched.
-3. Update npm and globally installed node_modules in the latest Node.js and Node.js LTS.
-4. Fix file and directory ownership to be yours where recommended by Homebrew or as I discovered through trial and error.
-5. Update all Applications installed via Homebrew in addition to brew formulas.
-6. Update Xcode, uninstalling the version immediately prior. This is similar to how Node.js upgrades are done.
-   - You are only prompted if your Xcode version is lower than the last version supported on Catalina.
-7. Update system Ruby gems.
+   - The version immediately before any next version being installed gets uninstalled
+     automatically. That only happens during an upgrade. Installs/re-installs of older
+     versions are untouched.
+3. Update npm and globally installed `node_modules` in the latest Node.js and Node.js LTS.
+4. Keep the active Xcode developer directory pointed at `/Applications/Xcode.app` when
+   it's installed, accept the Xcode license on your behalf, and install any bundled
+   packages that a fresh Xcode drop ships with.
+5. Update system Ruby gems.
+6. Fix file and directory ownership to be yours where recommended by Homebrew or as
+   was discovered through trial and error.
+7. Auto-approve quarantined apps for Gatekeeper where SIP allows it, and surface a
+   short list of ones you'll need to approve by hand where it doesn't.
 8. Clean installer file caches, freeing up disk space.
-9. Apply/re-apply workarounds needed to keep the latest tools, apps or macOS version working in harmony.
+9. Apply or re-apply workarounds needed to keep the latest tools, apps, or macOS
+   version working in harmony.
+
+## Logs
+
+Every run is tee'd to a timestamped, ANSI-stripped log file under
+`~/.good-morning-logs/`, with `latest.log` symlinked to the most recent one. Handy when
+something failed and your terminal scrollback is already gone.
+
+## Password handling
+
+Steps that need `sudo` are batched through a single prompt. The password is held in
+memory encrypted with a random per-session key and discarded when the run ends. The
+first time you run it, the script will ask whether to keep it cached between runs in
+the same shell session and remember your answer in `~/.good_morning`.
 
 ## License
 

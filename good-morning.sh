@@ -513,14 +513,20 @@ if ! [[ -d "$GOOD_MORNING_REPO_ROOT/.git" ]]; then
     mv "$HOME/.bash_profile" "$HOME/.old_bash_profile_$(date +%Y%m%d%H%M%S)"
   fi
   echo "export REPO_ROOT=\"\$HOME/repo\"
+# Apple Silicon installs Homebrew at /opt/homebrew; Intel at /usr/local.
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval \"\$(/opt/homebrew/bin/brew shellenv)\"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval \"\$(/usr/local/bin/brew shellenv)\"
+fi
 source \"\$REPO_ROOT/good-morning/dotfiles/.bash_profile\"
 if ! contains \$(pwd) \"\$REPO_ROOT\"; then cd \"\$REPO_ROOT\"; fi
 export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"  # load nvm
 [ -s \"\$NVM_DIR/bash_completion\" ] && \. \"\$NVM_DIR/bash_completion\"  # load nvm bash_completion
-[ -f /usr/local/etc/bash_completion ] && \. /usr/local/etc/bash_completion
 if command -v pyenv 1> /dev/null 2>&1; then eval \"\$(pyenv init -)\"; fi
 if command -v rbenv 1> /dev/null 2>&1; then eval \"\$(rbenv init - bash)\"; fi
+[ -s \"\$HOME/.iterm2_shell_integration.bash\" ] && source \"\$HOME/.iterm2_shell_integration.bash\"
 " > "$HOME/.bash_profile"
 
   # copy some starter shell dot files
@@ -631,22 +637,22 @@ casks=(
   # openconnect-gui # connect to a Cisco Connect VPN
   # opera
   # parallels
-  postman
+  # postman
   provisionql # quick-look for iOS provisioning profiles
   # qladdict # Need to check all these quick-look extensions for Big Sur compatibility.
   # qlcolorcode
   # qlmarkdown
   # qlstephen
   # quicklook-json
-  rocket # utf-8 emoji quick lookup and insert in any macOS app
+  # rocket # utf-8 emoji quick lookup and insert in any macOS app
   # sketch
   slack
   # sourcetree
-  tableplus
+  # tableplus
   the-unarchiver
-  transmission # open source BitTorrent client from https://github.com/transmission/transmission
-  tunnelblick # connect to your VPN
-  vanilla # hide menu icons on your mac
+  # transmission # open source BitTorrent client from https://github.com/transmission/transmission
+  # tunnelblick # connect to your VPN
+  # vanilla # hide menu icons on your mac
   visual-studio-code
   # visual-studio-code-insiders
   wireshark
@@ -788,7 +794,7 @@ formulas=(
   certbot # For generating SSL certs with Let's Encrypt
   coreutils
   # dialog # https://invisible-island.net/dialog/
-  deno
+  # deno
   direnv # https://direnv.net/
   fd # https://github.com/sharkdp/fd
   fx # https://github.com/antonmedv/fx
@@ -822,7 +828,7 @@ formulas=(
   # pgweb
   pip-completion
   # pyenv
-  python@3.12 # vim was failing load without this - 3/2/2018
+  python@3.14
   rbenv
   ruby-build
   readline # for pyenv installs of python and ruby-build
@@ -922,7 +928,7 @@ function findpip {
   # Prefer the Homebrew Python's libexec pip
   local brew_pip
   for prefix in /opt/homebrew /usr/local; do
-    for py in python@3.13 python@3.12 python@3.11; do
+    for py in python@3.14 python@3.13 python@3.12 python@3.11; do
       brew_pip="$prefix/opt/$py/libexec/bin/pip"
       if [[ -x "$brew_pip" ]]; then
         echo "$brew_pip"
@@ -930,7 +936,7 @@ function findpip {
       fi
     done
   done
-  pickbin 'pip pip3 pip3.13 pip3.12 pip3.11'
+  pickbin 'pip pip3 pip3.14 pip3.13 pip3.12 pip3.11'
 }
 
 eccho "Checking pip install..."
