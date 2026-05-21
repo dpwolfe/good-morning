@@ -627,7 +627,7 @@ casks=(
   handbrake
   iterm2
   # keybase
-  keyboard-maestro # keyboard macros
+  # keyboard-maestro # keyboard macros
   # logitech-gaming-software # if you plug-in a logitech keyboard
   # microsoft-office
   # microsoft-teams
@@ -646,7 +646,7 @@ casks=(
   # quicklook-json
   # rocket # utf-8 emoji quick lookup and insert in any macOS app
   # sketch
-  slack
+  # slack
   # sourcetree
   # tableplus
   the-unarchiver
@@ -655,7 +655,7 @@ casks=(
   # vanilla # hide menu icons on your mac
   visual-studio-code
   # visual-studio-code-insiders
-  wireshark
+  # wireshark
   # xmind-zen
   # zoom
 )
@@ -1221,9 +1221,11 @@ function reindexSpotlight {
 # Spotlight Search Privacy paths to exclude from indexing
 SPOTLIGHT_VOLUME_CONFIG="/System/Volumes/Data/.Spotlight-V100/VolumeConfiguration.plist"
 spotlight_exclusion_paths=(
-  "$REPO_ROOT" "/opt/homebrew" "/usr/local/Homebrew"
-  "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.rbenv" "$HOME/.cache" "$HOME/.cursor" "$HOME/.vscode" "$HOME/.docker"
-  "$HOME/Library/Caches" "$HOME/Library/Developer" "$HOME/Library/Containers"
+  "/opt/homebrew" "/usr/local/Homebrew" "$HOME/.bundle" "$HOME/.cache" "$HOME/.claude" "$HOME/.codeium" "$HOME/.codex"
+  "$HOME/.cursor" "$HOME/.docker" "$HOME/.dotnet" "$HOME/.gem" "$HOME/.gradle" "$HOME/.k8slens" "$HOME/.mono"
+  "$HOME/.npm" "$HOME/.nuget" "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.rbenv" "$HOME/.terraform.d" "$HOME/.vscode"
+  "$HOME/.vscode-shared" "$HOME/.windsurf" "$HOME/go" "$HOME/Library/Caches" "$HOME/Library/Containers"
+  "$HOME/Library/Developer" "$REPO_ROOT"
 )
 
 function checkSpotlightExclusions {
