@@ -1218,6 +1218,52 @@ function reindexSpotlight {
   sudoit mdutil -E /
 }
 
+# Spotlight Search Privacy paths to exclude from indexing
+SPOTLIGHT_VOLUME_CONFIG="/System/Volumes/Data/.Spotlight-V100/VolumeConfiguration.plist"
+spotlight_exclusion_paths=(
+  "$REPO_ROOT" "/opt/homebrew" "/usr/local/Homebrew"
+  "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.rbenv" "$HOME/.cache" "$HOME/.cursor" "$HOME/.vscode" "$HOME/.docker"
+  "$HOME/Library/Caches" "$HOME/Library/Developer" "$HOME/Library/Containers"
+)
+
+function checkSpotlightExclusions {
+  eccho "Checking Spotlight Search Privacy list..."
+  # /System/Volumes/Data/.Spotlight-V100/ is TCC-protected; even sudo cannot
+  # read it unless the calling terminal has Full Disk Access.
+  local plist_xml current missing=() p
+  if ! plist_xml="$(sudoit plutil -extract Exclusions xml1 -o - \
+      "$SPOTLIGHT_VOLUME_CONFIG" 2> /dev/null)"; then
+    local app="${TERM_PROGRAM:-your terminal}"
+    case "$app" in
+      iTerm.app) app="iTerm" ;; Apple_Terminal) app="Terminal" ;;
+      vscode) app="VS Code / Cursor" ;;
+    esac
+    errcho "Cannot read Spotlight config; grant Full Disk Access to $app via"
+    errcho "System Settings > Privacy & Security > Full Disk Access, then re-run."
+    askto "open the Full Disk Access settings pane now" \
+      "open 'x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AllFiles'"
+    return
+  fi
+  current="$(sed -nE 's/.*<string>([^<]*)<\/string>.*/\1/p' <<< "$plist_xml")"
+  if [[ -n "$current" ]]; then
+    eccho "Spotlight Search Privacy currently excludes:"
+    while IFS= read -r p; do eccho "  $p"; done <<< "$current"
+  fi
+  for p in "${spotlight_exclusion_paths[@]}"; do
+    [[ -e "$p" ]] && ! grep -Fxq "$p" <<< "$current" && missing+=("$p")
+  done
+  (( ${#missing[@]} == 0 )) && { eccho "All recommended Spotlight exclusions in place."; return; }
+  eccho "Recommended exclusions missing from Spotlight Privacy:"
+  for p in "${missing[@]}"; do eccho "  $p"; done
+  if askto "add these to the Spotlight Search Privacy list"; then
+    for p in "${missing[@]}"; do
+      sudoit /usr/libexec/PlistBuddy -c "Add :Exclusions: string \"$p\"" \
+        "$SPOTLIGHT_VOLUME_CONFIG"
+    done
+    sudoit launchctl kickstart -k system/com.apple.metadata.mds > /dev/null 2>&1
+  fi
+}
+
 if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   unset NEW_BREW_CASK_INSTALLS
   # Moved this lower since it's not important to do this earlier in the script
@@ -1228,6 +1274,7 @@ approveAllApps
 # Check permissions again since new installs and updates will often undo
 # these important changes.
 checkPerms
+checkSpotlightExclusions
 
 if (( FIRST_RUN == 1 )) || ([[ -z "$GOOD_MORNING_RUN" ]] \
   && askto "set some opinionated starter system settings"); then
