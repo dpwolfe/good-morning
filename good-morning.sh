@@ -28,22 +28,19 @@ function eccho {
   echo -e "${bold}${light_blue}$*${nc}${normal}"
 }
 
-# Persistent log of every run. The script is normally sourced into the user's
-# interactive shell (see the `good-morning` alias in dotfiles/.bash_profile),
-# which means a hard exit closes their terminal window and loses scrollback.
-# Tee everything to a timestamped log file so there is always something to
-# inspect after the fact, regardless of how the run ended.
+# Persistent log of every run. The script is normally sourced into the user's interactive shell (see the
+# `good-morning` alias in dotfiles/.bash_profile), which means a hard exit closes their terminal window and loses
+# scrollback. Tee everything to a timestamped log file so there is always something to inspect after the fact,
+# regardless of how the run ended.
 GOOD_MORNING_LOG_DIR="$HOME/.good-morning-logs"
 GOOD_MORNING_LOG_FILE="$GOOD_MORNING_LOG_DIR/run-$(date +%Y%m%d-%H%M%S).log"
 GM_LOGGING_ACTIVE=
 if mkdir -p "$GOOD_MORNING_LOG_DIR" 2> /dev/null; then
   exec 7>&1 8>&2
-  # Tee to terminal (raw, with color) AND to the log file (ANSI-stripped via
-  # perl). macOS BSD `sed` cannot match \e/\x1b in regex, so use perl which
-  # handles both CSI sequences (\e[...m, \e[...K, etc.) and the SGR-followup
-  # G0 charset designator (\e(B) that bash emits after colored output.
-  # `BEGIN{$|=1}` disables perl's block buffering so the file stays current
-  # in real time -- otherwise an aborted run could lose its tail.
+  # Tee to terminal (raw, with color) AND to the log file (ANSI-stripped via perl). macOS BSD `sed` cannot match
+  # \e/\x1b in regex, so use perl which handles both CSI sequences (\e[...m, \e[...K, etc.) and the SGR-followup G0
+  # charset designator (\e(B) that bash emits after colored output. `BEGIN{$|=1}` disables perl's block buffering so
+  # the file stays current in real time -- otherwise an aborted run could lose its tail.
   exec > >(tee >(perl -pe 'BEGIN{$|=1} s/\e\[[0-9;?]*[A-Za-z]//g; s/\e\([AB012]//g' \
     >> "$GOOD_MORNING_LOG_FILE")) 2>&1
   ln -sfn "$GOOD_MORNING_LOG_FILE" "$GOOD_MORNING_LOG_DIR/latest.log"
@@ -101,10 +98,9 @@ function prompt {
 }
 
 function promptsecret {
-  # Write the prompt directly to /dev/tty rather than relying on `read -p`,
-  # which prints to stderr. Some callers (e.g. the silent `2> /dev/null` loop
-  # in approveAllApps) redirect stderr, which would otherwise hide the prompt
-  # and make the script look hung while it actually waits on /dev/tty input.
+  # Write the prompt directly to /dev/tty rather than relying on `read -p`, which prints to stderr. Some callers
+  # (e.g. the silent `2> /dev/null` loop in approveAllApps) redirect stderr, which would otherwise hide the prompt and
+  # make the script look hung while it actually waits on /dev/tty input.
   printf '%s: ' "$1" > /dev/tty
   read -r -s "$2" < /dev/tty
   printf '\n' > /dev/tty
@@ -118,8 +114,7 @@ function getConfigValue {
 }
 
 function setConfigValue {
-  # macOS uses Bash 3.x which does not support associative arrays yet
-  # faking it is not worth the added complexity
+    # macOS uses Bash 3.x which does not support associative arrays yet; faking it is not worth the added complexity.
   local keep_pass_for_session
   keep_pass_for_session="$(getConfigValue "keep_pass_for_session" "not-asked")" # "not-asked", "no" or "yes"
   local applied_cask_depends_on_fix
@@ -181,9 +176,8 @@ function dmginstall {
   fi
 }
 
-# Minimum supported macOS version. Bump when a new macOS major ships and this
-# script has been validated on it. Anything older is rejected with a hint.
-# Apple switched to calendar-aligned numbering in 2025 (macOS 15 Sequoia ->
+# Minimum supported macOS version. Bump when a new macOS major ships and this script has been validated on it.
+# Anything older is rejected with a hint. Apple switched to calendar-aligned numbering in 2025 (macOS 15 Sequoia ->
 # macOS 26 Tahoe), so versions are compared as-is via `sort -V`.
 GOOD_MORNING_MIN_MACOS_VERSION="26.0"
 
@@ -198,8 +192,7 @@ function checkOSRequirement {
     errcho "Could not determine macOS version (sw_vers failed)."
     return 1
   fi
-  # sort -V puts the lower version first; if min is the lower (or equal),
-  # the current version meets the minimum.
+  # sort -V puts the lower version first; if min is the lower (or equal), the current version meets the minimum.
   local lowest
   lowest="$(printf '%s\n%s\n' "$GOOD_MORNING_MIN_MACOS_VERSION" "$current" | sort -V | head -n 1)"
   if [[ "$lowest" != "$GOOD_MORNING_MIN_MACOS_VERSION" ]]; then
@@ -335,13 +328,11 @@ if [[ -d "/Applications/Xcode.app" ]] && /usr/bin/xcrun clang 2>&1 | grep -q "li
   sudoit installer -pkg /Applications/Xcode.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
 fi
 
-# Apple's CLT clang on macOS Tahoe (CLT 21.x) does not auto-discover the SDK,
-# so anything that shells out to clang during a build (ruby-build, gem install
-# native extensions via mkmf, pip C extensions) fails with either
-# `fatal error: 'stdio.h' file not found` or `ld: library 'System' not found`.
-# Setting SDKROOT once at the top of the script makes every child process
-# inherit the right sysroot. xcrun resolves the active SDK whether the user
-# has full Xcode or just Command Line Tools.
+# Apple's CLT clang on macOS Tahoe (CLT 21.x) does not auto-discover the SDK, so anything that shells out to clang
+# during a build (ruby-build, gem install native extensions via mkmf, pip C extensions) fails with either `fatal error:
+# 'stdio.h' file not found` or `ld: library 'System' not found`. Setting SDKROOT once at the top of the script makes
+# every child process inherit the right sysroot. xcrun resolves the active SDK whether the user has full Xcode or just
+# Command Line Tools.
 SDKROOT_RESOLVED="$(/usr/bin/xcrun --show-sdk-path 2> /dev/null)"
 if [[ -n "$SDKROOT_RESOLVED" ]]; then
   export SDKROOT="$SDKROOT_RESOLVED"
@@ -392,8 +383,8 @@ if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL
   fi
 fi
 
-# Decide up-front whether to offer GPG signing setup. Defer the actual key
-# creation prompt until after Homebrew installs the gpg-suite cask.
+# Decide up-front whether to offer GPG signing setup. Defer the actual key creation prompt until after Homebrew
+# installs the gpg-suite cask.
 gpg_setup_wanted=
 if ! [[ -d "/Applications/GPG Keychain.app" ]] \
     && [[ -z "$(git config --global --get user.signingkey 2> /dev/null)" ]] \
@@ -434,23 +425,20 @@ function checkRbenvRuby {
   # Initialize rbenv into the current script shell so `rbenv install/global`
   # and `gem` invocations immediately see the right ruby.
   eval "$(rbenv init - bash)"
-  # RVM's shell hooks (sourced from ~/.profile in legacy bash_profiles) export
-  # GEM_HOME/GEM_PATH pointing at ~/.rvm/gems/<old-ruby>. If we leave those set,
-  # `gem update` and `gem install` resolve rbenv's ruby binary but write to and
-  # iterate over RVM's gemset, then try to rebuild RVM-installed native
-  # extensions against the new Ruby's ABI producing hundreds of mkmf errors.
-  # Strip every RVM-injected variable so all gem ops resolve via the rbenv
-  # ruby's own site config. Becomes a no-op once the user `rvm implode`s.
+  # RVM's shell hooks (sourced from ~/.profile in legacy bash_profiles) export GEM_HOME/GEM_PATH pointing at
+  # ~/.rvm/gems/<old-ruby>. If we leave those set, `gem update` and `gem install` resolve rbenv's ruby binary but write
+  # to and iterate over RVM's gemset, then try to rebuild RVM-installed native extensions against the new Ruby's ABI
+  # producing hundreds of mkmf errors. Strip every RVM-injected variable so all gem ops resolve via the rbenv ruby's
+  # own site config. Becomes a no-op once the user `rvm implode`s.
   unset GEM_HOME GEM_PATH MY_RUBY_HOME IRBRC \
     rvm_bin_path rvm_path rvm_prefix rvm_version rvm_ruby_string
   if ! rbenv versions --bare 2> /dev/null | grep -qx "$latest_ruby_version"; then
     eccho "Installing Ruby $latest_ruby_version via rbenv..."
-    # SDKROOT is exported globally near the top of the script so ruby-build's
-    # ./configure can find libSystem on Tahoe with the CLT-only clang.
+    # SDKROOT is exported globally near the top of the script so ruby-build's ./configure can find libSystem on Tahoe
+    # with the CLT-only clang.
     rbenv install -s "$latest_ruby_version"
-    # ruby-build leaves the build dir on failure but exits non-zero; either
-    # way, verify by asking rbenv directly. Surface the build log path on
-    # failure so the user has something to read.
+    # ruby-build leaves the build dir on failure but exits non-zero; either way, verify by asking rbenv directly.
+    # Surface the build log path on failure so the user has something to read.
     if ! rbenv versions --bare 2> /dev/null | grep -qx "$latest_ruby_version"; then
       errcho "rbenv install $latest_ruby_version did not produce a working Ruby."
       local build_log
@@ -537,16 +525,48 @@ if command -v rbenv 1> /dev/null 2>&1; then eval \"\$(rbenv init - bash)\"; fi
   FIRST_RUN=1
 fi
 
+# Auto-recover from two common post-`brew upgrade` states surfaced by `brew doctor`:
+#   1. "You have unlinked kegs" - The new keg was poured but a conflicting file blocked `brew link`.
+#      We force-link with --overwrite so the new version actually takes effect.
+#   2. "Some installed kegs have no formulae" - A previously-tapped formula source is gone, leaving an orphaned keg
+#      that brew can never upgrade. We defensively uninstall it, but if it's still wanted, the formulas[] install
+#      loop will reinstall it from currently tapped sources.
+function fixBrewDoctorIssues {
+  local doctor unlinked orphaned formula
+  doctor="$(brew doctor 2>&1)"
+  unlinked="$(awk '
+    /^Warning: You have unlinked kegs in your Cellar/ {flag=1; next}
+    flag && /^Warning:/ {flag=0}
+    flag && /^  [A-Za-z0-9_@.+-]+$/ {sub(/^ +/, ""); print}' <<< "$doctor")"
+  while IFS= read -r formula; do
+    [[ -z "$formula" ]] && continue
+    eccho "Force-linking unlinked keg $formula (something on PATH was shadowing it)..."
+    brew link --overwrite "$formula" || errcho "brew link --overwrite $formula failed."
+  done <<< "$unlinked"
+  orphaned="$(awk '
+    /^Warning: Some installed kegs have no formulae!$/ {flag=1; next}
+    flag && /^Warning:/ {flag=0}
+    flag && /^  [A-Za-z0-9_@.+-]+$/ {sub(/^ +/, ""); print}' <<< "$doctor")"
+  while IFS= read -r formula; do
+    [[ -z "$formula" ]] && continue
+    eccho "Uninstalling orphaned keg $formula (no source formula in any tapped tap)..."
+    brew uninstall --ignore-dependencies --force "$formula" || errcho "brew uninstall $formula failed."
+  done <<< "$orphaned"
+}
+
 # Homebrew taps - add those needed and remove obosoleted that can create conflicts (example: java8)
 function checkBrewTaps {
   notaps=(
-    homebrew/cask-drivers
     caskroom/caskroom
     caskroom/versions
-    homebrew/homebrew-cask-fonts
-    homebrew/homebrew-cask-versions
+    homebrew/cask-drivers
     homebrew/cask-fonts
     homebrew/cask-versions
+    homebrew/homebrew-cask-fonts
+    homebrew/homebrew-cask-versions
+    homebrew/homebrew-services # services is built into Homebrew core; standalone tap is deprecated
+    homebrew/services          # same tap, canonical name -- untap to drop the deprecated "master" branch checkout
+    wata727/tflint             # tflint is now in homebrew-core; this tap is dead upstream
   )
   brew_tap_file="$GOOD_MORNING_TEMP_FILE_PREFIX""brew_tap"
   brew tap > "$brew_tap_file"
@@ -555,10 +575,8 @@ function checkBrewTaps {
       brew untap "$tap"
     fi
   done
-  taps=(
-    homebrew/services
-    wata727/tflint # tflint - https://github.com/wata727/tflint#homebrew
-  )
+  # No third-party taps required at the moment; everything good-morning installs is in homebrew-core / homebrew-cask.
+  taps=()
   for tap in "${taps[@]}"; do
     if ! grep -qE "^$tap$" "$brew_tap_file"; then
       brew tap "$tap"
@@ -579,8 +597,9 @@ else
   if brew outdated | grep -q .; then
     brew upgrade
     BREW_CLEANUP_NEEDED=1
-    # If there was any output from the cleanup task, assume a formula changed or was installed.
-    # Homebrew Doctor can take a long time to run, so now running only after formula changes...
+    fixBrewDoctorIssues
+    # If there was any output from the cleanup task, assume a formula changed or was installed. Homebrew Doctor can
+    # take a long time to run, so now running only after formula changes...
     eccho "Running Hombrew Doctor since Homebrew updates were installed..."
     brew doctor
   fi
@@ -595,8 +614,8 @@ else
 fi
 
 # Homebrew cask depends_on fix from: https://github.com/Homebrew/homebrew-cask/issues/58046
-# The wireshark 3.0.0 install was the first cask that started to fail to update, but now succeeds
-# with the following fix applied.
+# The wireshark 3.0.0 install was the first cask that started to fail to update, but now succeeds with the following
+# fix applied.
 if [[ "$(getConfigValue 'applied_cask_depends_on_fix')" != "yes" ]]; then
   eccho "Applying the Homebrew depends_on metadata fix from https://github.com/Homebrew/homebrew-cask/issues/58046..."
   /usr/bin/find "$(brew --prefix)/Caskroom/"*'/.metadata' -type f -name '*.rb' -print0 | /usr/bin/xargs -0 /usr/bin/perl -i -0pe 's/depends_on macos: \[.*?\]//gsm;s/depends_on macos: .*//g'
@@ -638,7 +657,6 @@ casks=(
   # opera
   # parallels
   # postman
-  provisionql # quick-look for iOS provisioning profiles
   # qladdict # Need to check all these quick-look extensions for Big Sur compatibility.
   # qlcolorcode
   # qlmarkdown
@@ -667,6 +685,7 @@ brew list --cask > "$cask_list_temp_file"
 problem_casks=(
   insomniax # remove since this is now unmaintained
   keeweb # upstream looking for new maintainer since 2022, no commits in 2026; security smell for a password manager
+  provisionql # cask deprecated/disabled upstream; no Tahoe-compatible quick-look extension
   skitch # dev stopped at v2.9 in 2020; fails to launch on macOS Tahoe
   virtualbox # deprecated since Docker for Desktop already comes with hyperkit
   wavtap # deprecated
@@ -734,12 +753,10 @@ function ensureFormulaUninstalled {
   changeFormula "$formula_name" uninstall
 }
 
-# Detect Homebrew formulas still linked against openssl@1.1 (now uninstalled)
-# and reinstall them so they relink against the current openssl. Returns
-# early when openssl@1.1 is still present (links resolve fine). Uses
-# `otool -L` against Mach-O files in each keg's bin/sbin/lib/libexec so
-# only real LC_LOAD_DYLIB dependencies are matched (no false positives
-# from header text or docs). Parallelism via `xargs -P` keeps it fast.
+# Detect Homebrew formulas still linked against openssl@1.1 (now uninstalled) and reinstall them so they relink
+# against the current openssl. Returns early when openssl@1.1 is still present (links resolve fine). Uses `otool -L`
+# against Mach-O files in each keg's bin/sbin/lib/libexec so only real LC_LOAD_DYLIB dependencies are matched (no false
+# positives from header text or docs). Parallelism via `xargs -P` keeps it fast.
 function rebuildBrokenOpensslLinks {
   local brew_prefix cellar
   brew_prefix="$(brew --prefix 2> /dev/null)"
@@ -777,6 +794,7 @@ function rebuildBrokenOpensslLinks {
 # previously installed by earlier versions of this script.
 problem_formulas=(
   bash-completion
+  brew-cask-completion # deprecated upstream; built into modern Homebrew's tab-completion already
 )
 for formula in "${problem_formulas[@]}"; do
   ensureFormulaUninstalled "$formula"
@@ -826,6 +844,7 @@ formulas=(
   # pgcli
   # pgtune
   # pgweb
+  pinentry-mac # GUI passphrase prompt for gpg-agent; required for commit signing outside a real TTY
   pip-completion
   # pyenv
   python@3.14
@@ -835,8 +854,6 @@ formulas=(
   # redis
   shellcheck # shell script linting
   # swagger-codegen # requires brew install --cask homebrew/cask-versions/adoptopenjdk8
-  terraform
-  tflint
   tmux
   vegeta
   vim
@@ -862,13 +879,13 @@ if [[ -n "$BREW_CLEANUP_NEEDED" ]]; then
   unset BREW_CLEANUP_NEEDED;
   rebuildBrokenOpensslLinks
   eccho "Cleaning up Homebrew cache..."
-  # The -s option clears even the latest versions of uninstalled formulas and casks.
-  # This does not clear the cache of versions currently installed.
+  # The -s option clears even the latest versions of uninstalled formulas and casks. This does not clear the cache of
+  # versions currently installed.
   brew cleanup -s
 fi
 
-# GPG signing setup. Runs after Homebrew installed gpg-suite (cask) so that
-# both `gpg` and GPG Keychain.app are guaranteed to be present.
+# GPG signing setup. Runs after Homebrew installed gpg-suite (cask) so that both `gpg` and GPG Keychain.app are
+# guaranteed to be present.
 if [[ -n "$gpg_setup_wanted" ]] && type gpg &> /dev/null; then
   unset gpg_setup_wanted
   eccho "Creating a GPG key for you to use when signing commits is an excellent way to guarantee the"
@@ -907,12 +924,31 @@ EOF
     eccho "Enabling auto-signing of all commits and other git actions..."
     git config --global commit.gpgsign true
     git config --global user.signingkey "$gpg_key_id"
-    eccho "Finishing up GPG setup with a test that will complete the setup..."
-    eccho "Please accept the GPG related dialog box if it opens."
-    echo "test" | gpg --clearsign # will prompt with dialog for passphrase to store in keychain
+    eccho "GPG signing is enabled. pinentry-mac will prompt for the passphrase on your first signed commit;"
+    eccho "tick 'Save in Keychain' there if you want it cached for future commits."
   fi
 fi
 unset gpg_setup_wanted
+
+# Configure gpg-agent to use pinentry-mac for passphrase prompts when GPG commit signing is enabled. Required on
+# macOS because gpg-agent spawns pinentry as a detached process with no controlling TTY, where the default curses
+# pinentry cannot prompt and signing fails. Any existing pinentry-program directive in ~/.gnupg/gpg-agent.conf is
+# preserved.
+function ensureGpgPinentry {
+  # Only relevant when GPG signing is configured for git.
+  [[ -n "$(git config --global --get user.signingkey 2> /dev/null)" ]] \
+    || [[ "$(git config --global --get commit.gpgsign 2> /dev/null)" == "true" ]] || return
+  local agent_conf="$HOME/.gnupg/gpg-agent.conf" pinentry_path
+  [[ -f "$agent_conf" ]] && grep -qE '^[[:space:]]*pinentry-program[[:space:]]' "$agent_conf" && return
+  pinentry_path="$(brew --prefix 2> /dev/null)/bin/pinentry-mac"
+  [[ -x "$pinentry_path" ]] || return
+  eccho "Adding pinentry-program to ~/.gnupg/gpg-agent.conf (fixes 'Inappropriate ioctl' on commit signing)..."
+  mkdir -p "$HOME/.gnupg" && chmod 700 "$HOME/.gnupg"
+  printf 'pinentry-program %s\n' "$pinentry_path" >> "$agent_conf"
+  chmod 600 "$agent_conf"
+  gpgconf --kill gpg-agent 2> /dev/null || true
+}
+ensureGpgPinentry
 
 function pickbin {
   local versions="$1"
@@ -955,10 +991,9 @@ fi
 unset localpip
 
 export PYCURL_SSL_LIBRARY=openssl
-# Some macOS Python installs (notably Homebrew's) ship an EXTERNALLY-MANAGED
-# marker that makes pip refuse system-wide installs. Honor the documented
-# escape hatch via env var so all pip invocations in this section (including
-# pip-review, which calls pip internally) can install/upgrade global tools.
+# Some macOS Python installs (notably Homebrew's) ship an EXTERNALLY-MANAGED marker that makes pip refuse system-wide
+# installs. Honor the documented escape hatch via env var so all pip invocations in this section (including pip-review,
+# which calls pip internally) can install/upgrade global tools.
 export PIP_BREAK_SYSTEM_PACKAGES=1
 # Install pips in Python
 piptempfile="$HOME/pipfreeze.temp"
@@ -1003,12 +1038,19 @@ unset pips
 rm -f "$piptempfile"
 unset piptempfile
 
-if ! pip-review | grep -q "Everything up-to-date"; then
-  eccho "Upgrading pip installed packages..."
+# Pin pip-review to the same Python whose pip we drove the installs with, otherwise PATH precedence (e.g. pyenv
+# shims earlier than Homebrew) picks up a different `pip-review` and upgrades packages in some unrelated Python
+# install -- which is how legacy awscli 1.x in a pyenv version keeps rolling forward and clobbering newer deps.
+pip_review_bin="$(findpip)"
+pip_review_bin="${pip_review_bin%/pip}/pip-review"
+[[ -x "$pip_review_bin" ]] || pip_review_bin="$(command -v pip-review 2> /dev/null)"
+if [[ -x "$pip_review_bin" ]] && ! "$pip_review_bin" | grep -q "Everything up-to-date"; then
+  eccho "Upgrading pip installed packages via $pip_review_bin..."
   CFLAGS="-I$pip_openssl_prefix/include -O2" \
   LDFLAGS="-L$pip_openssl_prefix/lib" \
-  pip-review --auto
+  "$pip_review_bin" --auto
 fi
+unset pip_review_bin
 unset pip_openssl_prefix
 
 function upgradeNPM {
@@ -1046,8 +1088,7 @@ function upgradeNode {
     eccho "Clearing Node Version Manager cache..."
     nvm cache clear > /dev/null
     if [[ "$active_version" == "$old_version" ]]; then
-      # In this case, the version that was active will be uninstalled.
-      # Track the new one as the active_version
+        # In this case, the version that was active will be uninstalled. Track the new one as the active_version.
       active_version="$new_version"
     fi
     local reinstall_version
@@ -1180,10 +1221,9 @@ function approveAllApps {
     return
   fi
   eccho "Auto-approving applications for Gatekeeper..."
-  # Prime sudo's cached credential BEFORE the silent loop below. The loop
-  # redirects stderr to /dev/null to hide xattr's SIP/EPERM noise, which would
-  # also hide any password prompt that sudoit emits -- making the script look
-  # hung while it silently waits for input on /dev/tty.
+    # Prime sudo's cached credential BEFORE the silent loop below. The loop redirects stderr to /dev/null to hide
+    # xattr's SIP/EPERM noise, which would also hide any password prompt that sudoit emits -- making the script look
+    # hung while it silently waits for input on /dev/tty.
   sudoit true || true
   local apps=()
   local failed=()
@@ -1196,9 +1236,8 @@ function approveAllApps {
   for app in "${apps[@]}"; do
     app_name="$(echo "$app" | sed -E 's|/Applications/(.*)\.app|\1|')"
     eccho "Approving $app_name..."
-    # On modern macOS some apps' quarantine bit is protected by SIP and
-    # cannot be cleared even via sudo (xattr returns EPERM). Suppress the
-    # noise and surface a single manual-approval hint at the end.
+      # On modern macOS some apps' quarantine bit is protected by SIP and cannot be cleared even via sudo (xattr
+      # returns EPERM). Suppress the noise and surface a single manual-approval hint at the end.
     if ! sudoit xattr -d com.apple.quarantine "$app" 2> /dev/null; then
       failed+=("$app_name")
     fi
@@ -1273,8 +1312,7 @@ if [[ -n "$NEW_BREW_CASK_INSTALLS" ]]; then
   reindexSpotlight
 fi
 approveAllApps
-# Check permissions again since new installs and updates will often undo
-# these important changes.
+  # Check permissions again since new installs and updates will often undo these important changes.
 checkPerms
 checkSpotlightExclusions
 
