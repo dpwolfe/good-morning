@@ -1,6 +1,9 @@
 #!/usr/bin/bash
 export LANG="en_US.UTF-8"
 
+# SIGHUP background jobs on shell exit so closing the terminal tears down child processes.
+shopt -s huponexit
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #Git autocomplete
 # shellcheck source=git-completion.bash
