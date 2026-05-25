@@ -23,7 +23,14 @@ _A fresh install of macOS is ideal, but not required._
 
 > **Security note:** Please feel free to review the script before piping to bash: <https://raw.githubusercontent.com/dpwolfe/good-morning/master/good-morning.sh>
 
-After the first run, you can simply type `good-morning` from any new shell to run it again.
+## Running it daily
+
+After the first run, type `good-morning` from any new shell session. The alias pulls
+the latest version of the script from your local clone, then re-sources it, so you're
+always running the newest version.
+
+A typical daily run takes 1-3 minutes when everything is already up-to-date and it's safe
+to re-run if interrupted.
 
 ## What does it do?
 
@@ -37,16 +44,20 @@ and feel free to open issues for feedback.
 
 1. Xcode and the Command Line Tools.
 2. Homebrew, with an opinionated set of casks and formulas.
-   - Casks include: iTerm2, Visual Studio Code, Docker, Slack, Brave, Charles, Wireshark,
-     Keyboard Maestro, GPG Suite, Handbrake, Fira Code, The Unarchiver, ProvisionQL.
-   - Formulas include: `git`, `git-lfs`, `bash`, `zsh`, `go`, `awscli`, `terraform`,
-     `tflint`, `jq`, `fzf`, `fd`, `httpie`, `direnv`, `tmux`, `vim`, `wget`, `caddy`,
-     `certbot`, `shellcheck`, `pandoc`, `vegeta`, `watchman`, `rbenv`, `ruby-build`,
-     `python@3.14`, `openssl@3`, `coreutils`, `sevenzip`, and more.
-3. Node Version Manager (nvm) with the latest Node.js and the latest LTS of Node.js.
-4. A new SSH key and GPG key, walking you through their creation and the steps to add
+   - Casks include: iTerm2, Visual Studio Code, Docker, Brave Browser, Charles, GPG Suite,
+     Handbrake, Fira Code, The Unarchiver.
+   - Formulas include: `git`, `git-lfs`, `bash`, `zsh`, `go`, `awscli`, `jq`, `fzf`,
+     `fd`, `httpie`, `direnv`, `tmux`, `vim`, `wget`, `caddy`, `certbot`, `shellcheck`,
+     `pandoc`, `vegeta`, `watchman`, `rbenv`, `ruby-build`, `python@3.14`, `openssl@3`,
+     `coreutils`, `sevenzip`, and more.
+3. Ruby via rbenv (currently Ruby 3.4.9) with gems: `cocoapods`, `sqlint`,
+   `terraform_landscape`.
+4. Python packages via pip: `boto`, `gitpython`, `glances`, `lxml`, `packaging`,
+   `pip-review`, `pipdeptree`, `pipenv`, `pycurl`, `requests`, `virtualenv`.
+5. Node Version Manager (nvm) with the latest Node.js and the latest LTS of Node.js.
+6. A new SSH key and GPG key, walking you through their creation and the steps to add
    them to GitHub.
-5. Primes your `.bash_profile` with references to dotfiles containing aliases, git bash
+7. Primes your `.bash_profile` with references to dotfiles containing aliases, git bash
    completion, environment variables, paths, etc.
    - Feel free to bring your own dotfiles after the first run.
 
@@ -63,7 +74,7 @@ and feel free to open issues for feedback.
 4. Keep the active Xcode developer directory pointed at `/Applications/Xcode.app` when
    it's installed, accept the Xcode license on your behalf, and install any bundled
    packages that a fresh Xcode drop ships with.
-5. Update system Ruby gems.
+5. Update Ruby gems and pip packages to their latest versions.
 6. Fix file and directory ownership to be yours where recommended by Homebrew or as
    was discovered through trial and error.
 7. Auto-approve quarantined apps for Gatekeeper where SIP allows it, and surface a
@@ -71,6 +82,32 @@ and feel free to open issues for feedback.
 8. Clean installer file caches, freeing up disk space.
 9. Apply or re-apply workarounds needed to keep the latest tools, apps, or macOS
    version working in harmony.
+
+## Customization
+
+Fork this repo and edit to taste. The most common things to change:
+
+- **Casks and formulas** -- the `casks=()` and `formulas=()` arrays in `good-morning.sh`.
+  Uncomment what you need, comment out what you don't.
+- **Pip packages** -- the `pips=()` array.
+- **Ruby gems** -- the `gems=()` array inside `installGems`.
+- **macOS defaults** -- the long block of `defaults write` commands near the end of the
+  script. Each one is independent; remove or tweak individual settings freely.
+- **Dotfiles** -- on first run, any existing `~/.bash_profile` is backed up to
+  `~/.old_bash_profile_<timestamp>` and replaced with one that sources `dotfiles/`.
+  After that, it's yours; the script won't touch it again.
+
+## Troubleshooting
+
+- **Gatekeeper blocks an app** -- Some casks install apps that macOS quarantines. The
+  script auto-approves what SIP allows, but for others you'll see a short list at the end
+  of the run. Open _System Settings > Privacy & Security_ and click "Open Anyway".
+- **Script hangs waiting for sudo** -- The password prompt reads from `/dev/tty`. If your
+  terminal multiplexer or IDE doesn't expose a real TTY, run in a plain Terminal window.
+- **Something failed but scrollback is gone** -- Check `~/.good-morning-logs/latest.log`
+  for the full ANSI-stripped output of the most recent run.
+- **A Homebrew formula won't build** -- Run `brew doctor` manually; the script runs it
+  after upgrades but skips it when nothing changed.
 
 ## Logs
 

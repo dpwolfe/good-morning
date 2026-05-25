@@ -29,8 +29,7 @@ function parse_git_branch {
 function npm-exec {
     bin="$1"
     shift
-    # shellcheck disable=SC2068
-    "$(npm bin)/$bin" $@
+    "$(npm prefix)/node_modules/.bin/$bin" "$@"
 }
 function kill-function {
     local pid
@@ -165,7 +164,7 @@ alias push='git push'
 alias pushs='git push --set-upstream origin $(parse_git_branch)'
 cm() { if git show-ref -q --verify refs/heads/main; then git checkout main; else git checkout master; fi; }
 alias gco='git checkout'
-alias gbd='askto "delete all local git branches except master" "git branch | grep -Ev master | xargs -n 1 git branch -D"'
+alias gbd='askto "delete all local git branches except master/main" "git branch | grep -Ev \"master|main\" | xargs -n 1 git branch -D"'
 
 alias flushdns='sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache'
 

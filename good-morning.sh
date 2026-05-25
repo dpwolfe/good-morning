@@ -363,7 +363,7 @@ if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL
   UseKeychain yes
   IdentityFile \"$HOME/.ssh/id_rsa\"" >> "$HOME/.ssh/config"
   # add your ssh key to ssh-agent
-  ssh-add -K "$HOME/.ssh/id_rsa"
+  ssh-add --apple-use-keychain "$HOME/.ssh/id_rsa"
   if askto "add your SSH key to GitHub or other source control provider"; then
     # copy public ssh key to clipboard for pasting on GitHub
     pbcopy < "$HOME/.ssh/id_rsa.pub"
@@ -600,7 +600,7 @@ else
     fixBrewDoctorIssues
     # If there was any output from the cleanup task, assume a formula changed or was installed. Homebrew Doctor can
     # take a long time to run, so now running only after formula changes...
-    eccho "Running Hombrew Doctor since Homebrew updates were installed..."
+    eccho "Running Homebrew Doctor since Homebrew updates were installed..."
     brew doctor
   fi
   eccho "Checking for outdated Homebrew Casks..."
@@ -1182,7 +1182,7 @@ unset nvm_latest_lts
 if [[ -n "$FIRST_RUN" ]] && askto "review and install some recommended applications"; then
   eccho "Follow these steps to complete the iTerm setup:"
   eccho "1. In Preferences > Profiles > Colors and select Tango Dark from the Color Presets... drop down."
-  eccho "2. In Prefernces > Profiles > Terminal, set the iTerm buffer scroll back to 100000."
+  eccho "2. In Preferences > Profiles > Terminal, set the iTerm buffer scroll back to 100000."
   eccho "3. Run the Install Shell Integration command from the iTerm2 menu."
   eccho "4. Use iTerm instead of Terminal from now on. Learn more here: https://iterm2.com/"
   prompt "Hit Enter to continue..."
