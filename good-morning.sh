@@ -1217,14 +1217,8 @@ function linkUtil {
 linkUtil "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app"
 
 function approveAllApps {
-  if ! xattr -v -- /Applications/* 2> /dev/null | grep -q "com.apple.quarantine"; then
-    return
-  fi
-  eccho "Auto-approving applications for Gatekeeper..."
-    # Prime sudo's cached credential BEFORE the silent loop below. The loop redirects stderr to /dev/null to hide
-    # xattr's SIP/EPERM noise, which would also hide any password prompt that sudoit emits -- making the script look
-    # hung while it silently waits for input on /dev/tty.
-  sudoit true || true
+    # Listing quarantined apps needs no elevation, so we compute the full worklist up front. If nothing is quarantined
+    # we return before touching sudo at all, guaranteeing no password prompt when there is nothing to approve.
   local apps=()
   local failed=()
   IFS=$'\n'
@@ -1232,12 +1226,19 @@ function approveAllApps {
   apps=($(xattr -v -- /Applications/* 2> /dev/null | grep "com.apple.quarantine" | \
     sed -E 's/^(.*): com.apple.quarantine$/\1/'))
   unset IFS
+  (( ${#apps[@]} == 0 )) && return
+  eccho "Auto-approving applications for Gatekeeper..."
   local app app_name
   for app in "${apps[@]}"; do
     app_name="$(echo "$app" | sed -E 's|/Applications/(.*)\.app|\1|')"
     eccho "Approving $app_name..."
-      # On modern macOS some apps' quarantine bit is protected by SIP and cannot be cleared even via sudo (xattr
-      # returns EPERM). Suppress the noise and surface a single manual-approval hint at the end.
+      # Most user-installed apps can have their quarantine bit cleared as the normal user, so try that first and only
+      # fall back to sudoit (which reuses the cached credential from earlier, so it should not re-prompt) for the ones
+      # that genuinely need elevation. On modern macOS some apps' quarantine bit is protected by SIP and cannot be
+      # cleared even via sudo (xattr returns EPERM); suppress the noise and surface a single manual-approval hint later.
+    if xattr -d com.apple.quarantine "$app" 2> /dev/null; then
+      continue
+    fi
     if ! sudoit xattr -d com.apple.quarantine "$app" 2> /dev/null; then
       failed+=("$app_name")
     fi
