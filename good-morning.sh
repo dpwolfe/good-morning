@@ -121,11 +121,14 @@ function setConfigValue {
   applied_cask_depends_on_fix="$(getConfigValue "applied_cask_depends_on_fix" "no")" # "no" or "yes"
   local last_node_lts_installed
   last_node_lts_installed="$(getConfigValue "last_node_lts_installed")"
+  local spotlight_exclusions_hash
+  spotlight_exclusions_hash="$(getConfigValue "spotlight_exclusions_hash")" # sha256 of the last reconciled exclusion set
   local tempfile="$GOOD_MORNING_CONFIG_FILE""_temp"
   # crude validation
   if [[ "$1" == "keep_pass_for_session" ]] || \
     [[ "$1" == "applied_cask_depends_on_fix" ]] || \
-    [[ "$1" == "last_node_lts_installed" ]]
+    [[ "$1" == "last_node_lts_installed" ]] || \
+    [[ "$1" == "spotlight_exclusions_hash" ]]
   then
     # shellcheck disable=SC2086
     export $1="$2"
@@ -137,6 +140,7 @@ function setConfigValue {
     echo "keep_pass_for_session=$keep_pass_for_session";
     echo "applied_cask_depends_on_fix=$applied_cask_depends_on_fix";
     echo "last_node_lts_installed=$last_node_lts_installed";
+    echo "spotlight_exclusions_hash=$spotlight_exclusions_hash";
   } > "$tempfile"
   mv -f "$tempfile" "$GOOD_MORNING_CONFIG_FILE"
 }
@@ -1270,9 +1274,23 @@ spotlight_exclusion_paths=(
 
 function checkSpotlightExclusions {
   eccho "Checking Spotlight Search Privacy list..."
+  # Reading the plist needs sudo + Full Disk Access, so doing it every run means a password prompt every run. Instead we
+  # hash the desired set (recommended paths that currently exist) and skip the sudo-gated read/write when it matches the
+  # hash from the last reconciliation. It only changes when the list is edited or a path appears/disappears -- i.e. when
+  # a re-check is actually warranted.
+  local desired=() p
+  for p in "${spotlight_exclusion_paths[@]}"; do
+    [[ -e "$p" ]] && desired+=("$p")
+  done
+  local desired_hash
+  desired_hash="$(printf '%s\n' "${desired[@]}" | sort -u | shasum -a 256 | cut -d ' ' -f 1)"
+  if [[ -n "$desired_hash" && "$desired_hash" == "$(getConfigValue "spotlight_exclusions_hash")" ]]; then
+    eccho "Spotlight exclusions unchanged since last reconciliation; skipping."
+    return
+  fi
   # /System/Volumes/Data/.Spotlight-V100/ is TCC-protected; even sudo cannot
   # read it unless the calling terminal has Full Disk Access.
-  local plist_xml current missing=() p
+  local plist_xml current missing=()
   if ! plist_xml="$(sudoit plutil -extract Exclusions xml1 -o - \
       "$SPOTLIGHT_VOLUME_CONFIG" 2> /dev/null)"; then
     local app="${TERM_PROGRAM:-your terminal}"
@@ -1291,10 +1309,15 @@ function checkSpotlightExclusions {
     eccho "Spotlight Search Privacy currently excludes:"
     while IFS= read -r p; do eccho "  $p"; done <<< "$current"
   fi
-  for p in "${spotlight_exclusion_paths[@]}"; do
-    [[ -e "$p" ]] && ! grep -Fxq "$p" <<< "$current" && missing+=("$p")
+  for p in "${desired[@]}"; do
+    ! grep -Fxq "$p" <<< "$current" && missing+=("$p")
   done
-  (( ${#missing[@]} == 0 )) && { eccho "All recommended Spotlight exclusions in place."; return; }
+  if (( ${#missing[@]} == 0 )); then
+    # Everything we recommend is already excluded; remember this set so future runs can skip the sudo-gated read.
+    eccho "All recommended Spotlight exclusions in place."
+    setConfigValue "spotlight_exclusions_hash" "$desired_hash"
+    return
+  fi
   eccho "Recommended exclusions missing from Spotlight Privacy:"
   for p in "${missing[@]}"; do eccho "  $p"; done
   if askto "add these to the Spotlight Search Privacy list"; then
@@ -1303,6 +1326,8 @@ function checkSpotlightExclusions {
         "$SPOTLIGHT_VOLUME_CONFIG"
     done
     sudoit launchctl kickstart -k system/com.apple.metadata.mds > /dev/null 2>&1
+    # Record the reconciled set so we can skip the sudo-gated read on subsequent unchanged runs.
+    setConfigValue "spotlight_exclusions_hash" "$desired_hash"
   fi
 }
 
