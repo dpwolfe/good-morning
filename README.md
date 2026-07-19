@@ -117,10 +117,11 @@ something failed and your terminal scrollback is already gone.
 
 ## Password handling
 
-Steps that need `sudo` are batched through a single prompt. The password is held in
-memory encrypted with a random per-session key and discarded when the run ends. The
-first time you run it, the script will ask whether to keep it cached between runs in
-the same shell session and remember your answer in `~/.good_morning`.
+Steps that need `sudo` are batched through a single prompt. The password is encrypted to a
+`600`-mode temp file under `~` with a random per-session key (passphrase passed to openssl via
+env, not argv) and removed when the run ends — or kept for the same shell session if you opt in.
+Interrupted runs scrub that cache. The first alias-driven run that used sudo will ask whether to
+keep it between runs in the same session and remember your answer in `~/.good_morning`.
 
 ## License
 
