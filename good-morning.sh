@@ -57,11 +57,40 @@ function gm_restore_stdio {
   fi
 }
 
-# Prep for an abort: print where to find the log and tear down the tee.
+# Drop sudo session secrets. Used on abort/interrupt; happy-path cleanup respects keep_pass_for_session.
+function gm_scrub_sudo_secrets {
+  if [[ -n "$GOOD_MORNING_ENCRYPTED_PASS_FILE" && -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
+    rm -f "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
+  fi
+  if [[ -n "$GOOD_MORNING_TEMP_FILE_PREFIX" && "$GOOD_MORNING_TEMP_FILE_PREFIX" == "$HOME/.good_morning_temp_" ]]; then
+    rm -f "$GOOD_MORNING_TEMP_FILE_PREFIX"*
+  fi
+  unset GOOD_MORNING_ENCRYPTED_PASS_FILE
+  unset GOOD_MORNING_PASSPHRASE
+}
+
+# Clear traps installed for this run. Required when sourced so INT/EXIT do not stick on the interactive shell.
+function gm_clear_run_traps {
+  trap - EXIT INT TERM
+}
+
+# Prep for an abort: scrub secrets, print where to find the log, tear down the tee, clear traps.
 function gm_abort_prep {
+  gm_scrub_sudo_secrets
   errcho "good-morning aborted. Full log: $GOOD_MORNING_LOG_FILE"
   gm_restore_stdio
+  gm_clear_run_traps
 }
+
+# EXIT only restores stdio (idempotent). Do not scrub here — that would break keep_pass_for_session on a normal end.
+function gm_on_exit {
+  gm_restore_stdio
+}
+
+# INT/TERM while sourced must restore the user's shell and stop the run.
+# `return` must appear in the trap action itself (not only inside a function) or a sourced run keeps going.
+trap 'gm_on_exit' EXIT
+trap 'gm_abort_prep; return 130' INT TERM
 
 function randstring32 {
   env LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 32 | head -n 1
@@ -70,12 +99,14 @@ function randstring32 {
 if [[ -z "$GOOD_MORNING_PASSPHRASE" ]]; then
   GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
+# Passphrase via env (not -k argv) so it does not show up in ps. chmod 600 — default umask often leaves 0644.
 function encryptToFile {
-  echo "$1" | openssl enc -aes-256-cbc -pbkdf2 -k "$GOOD_MORNING_PASSPHRASE" > "$2"
+  printf '%s\n' "$1" | openssl enc -aes-256-cbc -pbkdf2 -pass env:GOOD_MORNING_PASSPHRASE > "$2"
+  chmod 600 "$2"
 }
 
 function decryptFromFile {
-  openssl enc -aes-256-cbc -pbkdf2 -d -k "$GOOD_MORNING_PASSPHRASE" < "$1"
+  openssl enc -aes-256-cbc -pbkdf2 -d -pass env:GOOD_MORNING_PASSPHRASE < "$1"
 }
 
 function askto {
@@ -83,9 +114,16 @@ function askto {
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
   # shellcheck disable=SC2091
+  # Enter (empty) = Yes per (Y/n). Must still run $2 when provided — falling out of case returned 0 without eval.
   case $yn in
-    y|Y ) eval "$2"; return 0;;
-    n|N ) return 1;;
+    y|Y|"")
+      if [[ -n "$2" ]]; then
+        eval "$2"
+      fi
+      return 0
+      ;;
+    n|N) return 1;;
+    *) return 1;;
   esac
 }
 
@@ -1666,6 +1704,10 @@ function cleanupTempFiles {
 }
 
 function cleanupEnvVars {
+  # Read keep_pass before unsetting GOOD_MORNING_CONFIG_FILE — getConfigValue needs that path.
+  local keep_pass_for_session
+  keep_pass_for_session="$(getConfigValue 'keep_pass_for_session')"
+
   unset FIRST_RUN
   unset GIT_EMAIL
   unset GITHUB_KEYS_URL
@@ -1674,7 +1716,7 @@ function cleanupEnvVars {
   unset GOOD_MORNING_TEMP_FILE_PREFIX
   unset GOOD_MORNING_REPO_ROOT
 
-  if [[ "$(getConfigValue 'keep_pass_for_session')" != "yes" ]]; then
+  if [[ "$keep_pass_for_session" != "yes" ]]; then
     unset GOOD_MORNING_ENCRYPTED_PASS_FILE
     unset GOOD_MORNING_PASSPHRASE
   fi
@@ -1724,3 +1766,4 @@ function greeting {
 greeting
 
 gm_restore_stdio
+gm_clear_run_traps
