@@ -321,10 +321,23 @@ if ! /usr/bin/xcode-select -p &> /dev/null \
   eccho "Installing Xcode Command Line Tools (a GUI prompt will appear)..."
   /usr/bin/xcode-select --install &> /dev/null || true
   eccho "Waiting for Command Line Tools install to finish..."
+  eccho "Dismissing the installer without finishing will time out; Ctrl+C aborts sooner. Re-run after install."
+  # Unbounded wait used to hang forever if the GUI was dismissed. Cap at 60 minutes.
+  gm_clt_wait_secs=0
+  gm_clt_wait_limit=3600
   until /usr/bin/xcode-select -p &> /dev/null \
       && [[ -d "$(/usr/bin/xcode-select -p 2> /dev/null)" ]]; do
+    if (( gm_clt_wait_secs >= gm_clt_wait_limit )); then
+      errcho "Timed out waiting for Command Line Tools after $((gm_clt_wait_limit / 60)) minutes."
+      errcho "Finish the installer (or run: xcode-select --install), then re-run good-morning."
+      unset gm_clt_wait_secs gm_clt_wait_limit
+      gm_abort_prep
+      return 1 2> /dev/null || exit 1
+    fi
     sleep 5
+    gm_clt_wait_secs=$((gm_clt_wait_secs + 5))
   done
+  unset gm_clt_wait_secs gm_clt_wait_limit
   eccho "Xcode Command Line Tools installed."
 fi
 
@@ -1743,10 +1756,20 @@ function cleanupGoodMorning {
     cleanupTempFiles
     cleanupEnvVars
   else
+    # Repo self-update last (intentional). Save the path before cleanupEnvVars unsets it; always popd so a
+    # failed git pull cannot leave a sourced interactive shell stuck inside this repo.
     eccho "Almost done! Pulling latest for good-morning repository..."
     cleanupTempFiles
-    pushd "$GOOD_MORNING_REPO_ROOT" > /dev/null
-    cleanupEnvVars && git pull && popd > /dev/null
+    local repo_root="$GOOD_MORNING_REPO_ROOT"
+    cleanupEnvVars
+    if [[ -z "$repo_root" ]] || ! [[ -d "$repo_root/.git" ]]; then
+      errcho "good-morning repo root missing or not a git checkout: ${repo_root:-"(unset)"}"
+    elif pushd "$repo_root" > /dev/null; then
+      git pull || errcho "git pull in $repo_root failed."
+      popd > /dev/null || errcho "popd failed after updating $repo_root."
+    else
+      errcho "Could not enter good-morning repo at $repo_root; skipping pull."
+    fi
   fi
 }
 cleanupGoodMorning
