@@ -1446,13 +1446,14 @@ approveAllApps
 checkPerms
 checkSpotlightExclusions
 
-if (( FIRST_RUN == 1 )) || ([[ -z "$GOOD_MORNING_RUN" ]] \
-  && askto "set some opinionated starter system settings"); then
+# Opinionated defaults only on first clone, or when GOOD_MORNING_APPLY_DEFAULTS is set.
+# Daily alias sets GOOD_MORNING_RUN and must not re-blast Dock/Finder prefs on every run.
+if [[ -n "$FIRST_RUN" ]] || [[ -n "$GOOD_MORNING_APPLY_DEFAULTS" ]]; then
 
   eccho "Optimizing System Settings"
   eccho "Only show icons of running apps in app bar, using Spotlight to launch"
   defaults write com.apple.dock static-only -bool true
-  eccho "Auto show and hide the menu bar"
+  eccho "Do not auto-hide the menu bar"
   defaults write -g _HIHideMenuBar -bool false
   eccho "Attach the dock to the left side, the definitive optimal location according to the community"
   defaults write com.apple.dock orientation left
@@ -1735,10 +1736,13 @@ if (( FIRST_RUN == 1 )) || ([[ -z "$GOOD_MORNING_RUN" ]] \
 
   eccho "Optimizing Energy Settings"
   eccho "Stay on for 60 minutes with battery and 3 hours when plugged in"
-  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "Display Sleep Timer" -int 60
-  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict "System Sleep Timer" -int 60
-  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "System Sleep Timer" -int 180
-  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict "Display Sleep Timer" -int 180
+  # Each -dict replaces the whole domain key. Set both timers in one write per power source.
+  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "Battery Power" -dict \
+    "Display Sleep Timer" -int 60 \
+    "System Sleep Timer" -int 60
+  sudoit defaults write /Library/Preferences/com.apple.PowerManagement "AC Power" -dict \
+    "Display Sleep Timer" -int 180 \
+    "System Sleep Timer" -int 180
   eccho "Show battery percentage"
   defaults write com.apple.menuextra.battery ShowPercent -string "YES"
   eccho "Turn off the boot sound effect"
@@ -1746,6 +1750,7 @@ if (( FIRST_RUN == 1 )) || ([[ -z "$GOOD_MORNING_RUN" ]] \
 
   eccho "Restart your computer to see all the changes."
 fi
+unset GOOD_MORNING_APPLY_DEFAULTS
 
 if [[ -z "$GOOD_MORNING_RUN" ]]; then
   eccho "Use the command good-morning each day to stay up-to-date!"

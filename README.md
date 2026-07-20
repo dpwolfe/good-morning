@@ -91,8 +91,9 @@ Fork this repo and edit to taste. The most common things to change:
   Uncomment what you need, comment out what you don't.
 - **Pip packages** -- the `pips=()` array.
 - **Ruby gems** -- the `gems=()` array inside `installGems`.
-- **macOS defaults** -- the long block of `defaults write` commands near the end of the
-  script. Each one is independent; remove or tweak individual settings freely.
+- **macOS defaults** -- applied on first run only (not on daily `good-morning`). To re-apply
+  later: `GOOD_MORNING_APPLY_DEFAULTS=1 good-morning`. Edit the `defaults write` block near
+  the end of the script to taste.
 - **Dotfiles** -- on first run, any existing `~/.bash_profile` is backed up to
   `~/.old_bash_profile_<timestamp>` and replaced with one that sources `dotfiles/`.
   After that, it's yours; the script won't touch it again.
