@@ -609,6 +609,8 @@ function fixBrewDoctorIssues {
     eccho "Uninstalling orphaned keg $formula (no source formula in any tapped tap)..."
     brew uninstall --ignore-dependencies --force "$formula" || errcho "brew uninstall $formula failed."
   done <<< "$orphaned"
+  # Print the same report (fixes used to run doctor, then doctor again just to display).
+  printf '%s\n' "$doctor"
 }
 
 # Homebrew taps - add those needed and remove obosoleted that can create conflicts (example: java8)
@@ -654,17 +656,19 @@ else
   if brew outdated | grep -q .; then
     brew upgrade
     BREW_CLEANUP_NEEDED=1
-    fixBrewDoctorIssues
-    # If there was any output from the cleanup task, assume a formula changed or was installed. Homebrew Doctor can
-    # take a long time to run, so now running only after formula changes...
+    # Doctor is slow. Run once after upgrades, fix from that output, then print it.
     eccho "Running Homebrew Doctor since Homebrew updates were installed..."
-    brew doctor
+    fixBrewDoctorIssues
   fi
   eccho "Checking for outdated Homebrew Casks..."
   while IFS= read -r outdatedCask; do
     if [[ -n "$outdatedCask" ]]; then
       eccho "Upgrading $outdatedCask..."
-      brew reinstall "$outdatedCask"
+      # Prefer upgrade. Reinstall is the old reliable path when upgrade fails or is unsupported.
+      if ! brew upgrade --cask "$outdatedCask"; then
+        eccho "brew upgrade --cask failed for $outdatedCask, falling back to reinstall..."
+        brew reinstall "$outdatedCask"
+      fi
       BREW_CLEANUP_NEEDED=1
     fi
   done < <(brew outdated --cask | sed -E 's/^([^ ]*) .*$/\1/')
@@ -755,23 +759,34 @@ for cask in "${problem_casks[@]}"; do
 done
 
 # Install Homebrew casks
+cask_install_log="$GOOD_MORNING_TEMP_FILE_PREFIX""cask_install_log"
 for cask in "${casks[@]}"; do
   if ! grep -qE "(^| )$cask($| )" "$cask_list_temp_file"; then
     eccho "Installing $cask with Homebrew..."
-    brew install --cask "$cask" 2>&1 | grep "Error: It seems there is already an App at '.*'\." | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
+    # Tee keeps install output visible. PIPESTATUS[0] is brew (piping to grep alone used to hide failures).
+    brew install --cask "$cask" 2>&1 | tee "$cask_install_log"
+    cask_install_status=${PIPESTATUS[0]}
+    grep -E "Error: It seems there is already an App at '.*'\." "$cask_install_log" \
+      | sed -E "s/.*'(.*)'.*/\1/" > "$cask_collision_file"
     if [[ -s "$cask_collision_file" ]]; then
       # Remove non-brew installed version of app and retry.
       sudoit rm -rf "$(cat "$cask_collision_file")"
       rm -f "$cask_collision_file"
       brew install --cask "$cask"
+      cask_install_status=$?
     fi
-    NEW_BREW_CASK_INSTALLS=1
-    BREW_CLEANUP_NEEDED=1
+    if (( cask_install_status == 0 )); then
+      NEW_BREW_CASK_INSTALLS=1
+      BREW_CLEANUP_NEEDED=1
+    else
+      errcho "Homebrew cask install failed for $cask."
+    fi
   fi
 done
-rm -f "$cask_collision_file" "$cask_list_temp_file"
+rm -f "$cask_collision_file" "$cask_list_temp_file" "$cask_install_log"
 unset cask_collision_file
-unset brewCasks
+unset cask_install_log
+unset cask_install_status
 
 # Install Homebrew formulas
 formula_list_temp_file="$GOOD_MORNING_TEMP_FILE_PREFIX""formula_list"
