@@ -406,6 +406,8 @@ if [[ -z "$GIT_NAME" ]]; then
   prompt "Enter the full name you use for git commits: " GIT_NAME
   git config --global user.name "$GIT_NAME"
 fi
+# Shared by SSH and GPG setup (GPG-only first runs used to open an empty URL).
+GITHUB_KEYS_URL="https://github.com/settings/keys"
 # Generate a new SSH key for GitHub https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
 
 if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL"; then
@@ -425,7 +427,6 @@ if ! [[ -f "$HOME/.ssh/id_rsa.pub" ]] && askto "create an SSH key for $GIT_EMAIL
     # copy public ssh key to clipboard for pasting on GitHub
     pbcopy < "$HOME/.ssh/id_rsa.pub"
     eccho "The public key is now in your clipboard."
-    GITHUB_KEYS_URL="https://github.com/settings/keys"
     if askto "open up GitHub's settings page for adding SSH keys"; then
       eccho "GitHub will be opened next. Sign-in with $GIT_EMAIL if you have not already."
       eccho "Click 'New SSH key' and paste in the copied key."
@@ -958,16 +959,33 @@ fi
 
 # GPG signing setup. Runs after Homebrew installed gpg-suite (cask) so that both `gpg` and GPG Keychain.app are
 # guaranteed to be present.
-if [[ -n "$gpg_setup_wanted" ]] && type gpg &> /dev/null; then
-  unset gpg_setup_wanted
-  eccho "Creating a GPG key for you to use when signing commits is an excellent way to guarantee the"
-  eccho "integrity of your code changes for others."
-  eccho "Learn more about this here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
-  eccho "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
-  if askto "create a GPG signing key for signing your git commits"; then
-    eccho "Generating a GPG key for signing Git operations..."
-    promptsecret "Enter a passphrase for the GPG key" GPG_PASSPHRASE
-    gpg --batch --gen-key <<EOF
+if [[ -n "$gpg_setup_wanted" ]]; then
+  # gpg-suite may land on PATH only for new shells. Probe common locations in this sourced session.
+  if ! type gpg &> /dev/null; then
+    for gpg_bin in /usr/local/bin/gpg /opt/homebrew/bin/gpg /usr/local/MacGPG2/bin/gpg; do
+      if [[ -x "$gpg_bin" ]]; then
+        PATH="$(dirname "$gpg_bin"):$PATH"
+        break
+      fi
+    done
+    unset gpg_bin
+  fi
+  if ! type gpg &> /dev/null; then
+    errcho "gpg was not found after installing GPG Suite. Open a new terminal or check PATH, then re-run."
+  else
+    eccho "Creating a GPG key for you to use when signing commits is an excellent way to guarantee the"
+    eccho "integrity of your code changes for others."
+    eccho "Learn more about this here: https://git-scm.com/book/tr/v2/Git-Tools-Signing-Your-Work"
+    eccho "Learn about GitHub's use here: https://help.github.com/articles/generating-a-new-gpg-key/"
+    if askto "create a GPG signing key for signing your git commits"; then
+      eccho "Generating a GPG key for signing Git operations..."
+      promptsecret "Enter a passphrase for the GPG key" GPG_PASSPHRASE
+      if [[ -z "$GPG_PASSPHRASE" ]]; then
+        errcho "GPG passphrase cannot be empty. Skipping GPG key setup."
+        unset GPG_PASSPHRASE
+      else
+        gpg_status_file="$GOOD_MORNING_TEMP_FILE_PREFIX""gpg_status"
+        if gpg --batch --status-fd 3 --gen-key 3>"$gpg_status_file" <<EOF
 Key-Type: RSA
 Key-Length: 4096
 Subkey-Type: RSA
@@ -979,25 +997,40 @@ Expire-Date: 2y
 Passphrase: $GPG_PASSPHRASE
 %commit
 EOF
-    unset GPG_PASSPHRASE
-
-    eccho "Signing key created."
-    gpg_todays_date=$(date -u +"%Y-%m-%d")
-    gpg_expr="sec.*4096.*\/([[:xdigit:]]{16}) $gpg_todays_date.*"
-    gpg_key_id=$(gpg --list-secret-keys --keyid-format LONG | grep -E "$gpg_expr" | sed -E "s/$gpg_expr/\1/")
-    gpg --armor --export "$gpg_key_id" | pbcopy
-    eccho "Your new GPG key is copied to the clipboard."
-    if askto "open up GitHub's settings page for adding GPG keys"; then
-      eccho "After GitHub opens, click 'New GPG key' and paste in the copied key."
-      prompt "Hit Enter to open up $GITHUB_KEYS_URL ..."
-      open "$GITHUB_KEYS_URL"
-      prompt "Hit Enter to continue after you have saved the GPG key on GitHub..."
+        then
+          # KEY_CREATED P <fingerprint> from status-fd. Fallback: first fpr for this email.
+          gpg_key_id=$(awk '/KEY_CREATED P / { print $4; exit }' "$gpg_status_file")
+          if [[ -z "$gpg_key_id" ]]; then
+            gpg_key_id=$(gpg --list-secret-keys --with-colons "$GIT_EMAIL" 2> /dev/null \
+              | awk -F: '$1 == "fpr" { print $10; exit }')
+          fi
+          if [[ -z "$gpg_key_id" ]]; then
+            errcho "Could not determine the new GPG key id. Not enabling git commit signing."
+          else
+            eccho "Signing key created."
+            gpg --armor --export "$gpg_key_id" | pbcopy
+            eccho "Your new GPG key is copied to the clipboard."
+            if askto "open up GitHub's settings page for adding GPG keys"; then
+              eccho "After GitHub opens, click 'New GPG key' and paste in the copied key."
+              prompt "Hit Enter to open up $GITHUB_KEYS_URL ..."
+              open "$GITHUB_KEYS_URL"
+              prompt "Hit Enter to continue after you have saved the GPG key on GitHub..."
+            fi
+            eccho "Enabling auto-signing of all commits and other git actions..."
+            git config --global commit.gpgsign true
+            git config --global user.signingkey "$gpg_key_id"
+            eccho "GPG signing is enabled. pinentry-mac will prompt for the passphrase on your first signed commit."
+            eccho "Tick 'Save in Keychain' there if you want it cached for future commits."
+          fi
+          unset gpg_key_id
+        else
+          errcho "gpg --gen-key failed. Not enabling git commit signing."
+        fi
+        unset GPG_PASSPHRASE
+        rm -f "$gpg_status_file"
+        unset gpg_status_file
+      fi
     fi
-    eccho "Enabling auto-signing of all commits and other git actions..."
-    git config --global commit.gpgsign true
-    git config --global user.signingkey "$gpg_key_id"
-    eccho "GPG signing is enabled. pinentry-mac will prompt for the passphrase on your first signed commit;"
-    eccho "tick 'Save in Keychain' there if you want it cached for future commits."
   fi
 fi
 unset gpg_setup_wanted
