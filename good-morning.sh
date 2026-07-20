@@ -57,7 +57,7 @@ function gm_restore_stdio {
   fi
 }
 
-# Drop sudo session secrets. Used on abort/interrupt; happy-path cleanup respects keep_pass_for_session.
+# Drop sudo session secrets on abort/interrupt. Happy path respects keep_pass_for_session.
 function gm_scrub_sudo_secrets {
   if [[ -n "$GOOD_MORNING_ENCRYPTED_PASS_FILE" && -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]]; then
     rm -f "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
@@ -69,12 +69,12 @@ function gm_scrub_sudo_secrets {
   unset GOOD_MORNING_PASSPHRASE
 }
 
-# Clear traps installed for this run. Required when sourced so INT/EXIT do not stick on the interactive shell.
+# Clear this run's traps so they do not stick on a sourced interactive shell.
 function gm_clear_run_traps {
   trap - EXIT INT TERM
 }
 
-# Prep for an abort: scrub secrets, print where to find the log, tear down the tee, clear traps.
+# Abort: scrub secrets, restore stdio, clear traps.
 function gm_abort_prep {
   gm_scrub_sudo_secrets
   # Drop pip environment variables that may have been set
@@ -85,13 +85,12 @@ function gm_abort_prep {
   gm_clear_run_traps
 }
 
-# EXIT only restores stdio (idempotent). Do not scrub here — that would break keep_pass_for_session on a normal end.
+# EXIT only restores stdio. Do not scrub secrets here or keep_pass_for_session breaks.
 function gm_on_exit {
   gm_restore_stdio
 }
 
-# INT/TERM while sourced must restore the user's shell and stop the run.
-# `return` must appear in the trap action itself (not only inside a function) or a sourced run keeps going.
+# INT/TERM while sourced: restore the shell and stop. return must be in the trap action itself.
 trap 'gm_on_exit' EXIT
 trap 'gm_abort_prep; return 130' INT TERM
 
@@ -102,7 +101,7 @@ function randstring32 {
 if [[ -z "$GOOD_MORNING_PASSPHRASE" ]]; then
   GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
-# Passphrase via env (not -k argv) so it does not show up in ps. chmod 600 — default umask often leaves 0644.
+# Passphrase via env (not -k) so it stays out of ps. chmod 600 against a loose umask.
 function encryptToFile {
   printf '%s\n' "$1" | openssl enc -aes-256-cbc -pbkdf2 -pass env:GOOD_MORNING_PASSPHRASE > "$2"
   chmod 600 "$2"
@@ -117,7 +116,7 @@ function askto {
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
   # shellcheck disable=SC2091
-  # Enter (empty) = Yes per (Y/n). Must still run $2 when provided — falling out of case returned 0 without eval.
+  # Enter = Yes. Still run $2 when provided (empty case used to return without eval).
   case $yn in
     y|Y|"")
       if [[ -n "$2" ]]; then
@@ -324,8 +323,8 @@ if ! /usr/bin/xcode-select -p &> /dev/null \
   eccho "Installing Xcode Command Line Tools (a GUI prompt will appear)..."
   /usr/bin/xcode-select --install &> /dev/null || true
   eccho "Waiting for Command Line Tools install to finish..."
-  eccho "Dismissing the installer without finishing will time out; Ctrl+C aborts sooner. Re-run after install."
-  # Unbounded wait used to hang forever if the GUI was dismissed. Cap at 60 minutes.
+  eccho "Dismissing the installer without finishing will time out. Ctrl+C aborts sooner. Re-run after install."
+  # Cap at 60 minutes. Unbounded wait hung forever if the GUI was dismissed.
   gm_clt_wait_secs=0
   gm_clt_wait_limit=3600
   until /usr/bin/xcode-select -p &> /dev/null \
@@ -1723,7 +1722,7 @@ function cleanupTempFiles {
 }
 
 function cleanupEnvVars {
-  # Read keep_pass before unsetting GOOD_MORNING_CONFIG_FILE — getConfigValue needs that path.
+  # Read keep_pass before unsetting GOOD_MORNING_CONFIG_FILE (getConfigValue needs the path).
   local keep_pass_for_session
   keep_pass_for_session="$(getConfigValue 'keep_pass_for_session')"
 
@@ -1765,8 +1764,8 @@ function cleanupGoodMorning {
     cleanupTempFiles
     cleanupEnvVars
   else
-    # Repo self-update last (intentional). Save the path before cleanupEnvVars unsets it; always popd so a
-    # failed git pull cannot leave a sourced interactive shell stuck inside this repo.
+    # Self-update last on purpose. Save path before cleanupEnvVars unsets it, and always popd
+    # so a failed git pull cannot leave a sourced shell stuck in this repo.
     eccho "Almost done! Pulling latest for good-morning repository..."
     cleanupTempFiles
     local repo_root="$GOOD_MORNING_REPO_ROOT"
