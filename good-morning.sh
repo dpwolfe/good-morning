@@ -77,6 +77,9 @@ function gm_clear_run_traps {
 # Prep for an abort: scrub secrets, print where to find the log, tear down the tee, clear traps.
 function gm_abort_prep {
   gm_scrub_sudo_secrets
+  # Drop pip environment variables that may have been set
+  unset PIP_BREAK_SYSTEM_PACKAGES
+  unset PYCURL_SSL_LIBRARY
   errcho "good-morning aborted. Full log: $GOOD_MORNING_LOG_FILE"
   gm_restore_stdio
   gm_clear_run_traps
@@ -1107,6 +1110,9 @@ if [[ -x "$pip_review_bin" ]] && ! "$pip_review_bin" | grep -q "Everything up-to
 fi
 unset pip_review_bin
 unset pip_openssl_prefix
+# Drop pip environment variables that may have been set
+unset PIP_BREAK_SYSTEM_PACKAGES
+unset PYCURL_SSL_LIBRARY
 
 function upgradeNPM {
   eccho "Checking Node.js $(node -v) global npm package versions..."
@@ -1728,6 +1734,9 @@ function cleanupEnvVars {
   unset GOOD_MORNING_CONFIG_FILE
   unset GOOD_MORNING_TEMP_FILE_PREFIX
   unset GOOD_MORNING_REPO_ROOT
+  # Drop pip environment variables that may have been set
+  unset PIP_BREAK_SYSTEM_PACKAGES
+  unset PYCURL_SSL_LIBRARY
 
   if [[ "$keep_pass_for_session" != "yes" ]]; then
     unset GOOD_MORNING_ENCRYPTED_PASS_FILE
