@@ -16,7 +16,19 @@ function contains {
     substring="$(printf '%q' "$2")"
     if test "${string#*$substring}" != "$string"; then return 0; else return 1; fi
 }
-function rgfunction { grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *; }
+# Context grep (~40 chars). Alias is `rgr` only — never `rg` (ripgrep); `rg -n` would search for "-n".
+function rgfunction {
+    if [ $# -eq 0 ]; then
+        echo "usage: rgr PATTERN [EXTENSION]   # searches from \$PWD; EXTENSION is bare, e.g. py" >&2
+        return 2
+    fi
+    if [ -n "$2" ]; then
+        grep -Ers ".{0,40}$1.{0,40}" --color=auto --include="*.$2" -- *
+    else
+        # No extension: all files. Old `--include="*."` matched nothing.
+        grep -Ers ".{0,40}$1.{0,40}" --color=auto -- *
+    fi
+}
 function findfunction { find . -name "$1" 2>/dev/null; }
 function unix2dos {
     sed "s/$/$(printf '\r')/" "$1" > "$1.new";
@@ -76,13 +88,38 @@ EOF
     echo "Provide the name of one of the connections above."
   fi
 }
+# askto [-y|-n] DESCRIPTION [COMMAND] [EXTRA_TEXT]
+# Interactive: always prompt. Non-interactive: never `read < /dev/tty` (hangs); -y/--yes proceed, -n/--no
+# decline (default). ASKTO_NONINTERACTIVE_DEFAULT=yes|no sets the no-flag fallback for scripted runs.
 function askto {
-  echo "Do you want to $1? $3"
+  local noninteractive_default="${ASKTO_NONINTERACTIVE_DEFAULT:-no}"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -y|--yes) noninteractive_default=yes; shift;;
+      -n|--no)  noninteractive_default=no; shift;;
+      --)       shift; break;;
+      *)        break;;
+    esac
+  done
+
+  if [[ $- != *i* ]]; then
+    case "$noninteractive_default" in
+      y|Y|yes|YES|true|1)
+        echo "askto: non-interactive shell, proceeding to $1" >&2
+        if [[ -n "${2-}" ]]; then eval "$2"; fi  # ${2-}: no COMMAND is safe under set -u
+        return 0;;
+      *)
+        echo "askto: non-interactive shell, declining to $1" >&2
+        return 1;;
+    esac
+  fi
+
+  echo "Do you want to $1? ${3-}"
   read -r -n 1 -p "(Y/n) " yn < /dev/tty;
   echo # echo newline after input
-  # shellcheck disable=SC2091
+  # eval: COMMAND is a shell line (pipes/quotes). $($2) word-splits and breaks piped cmds (e.g. gbd).
   case $yn in
-    y|Y ) $($2); return 0;;
+    y|Y ) if [[ -n "${2-}" ]]; then eval "$2"; fi; return 0;;
     n|N ) return 1;;
   esac
 }
@@ -107,7 +144,7 @@ alias .......='cd ../../../../../..'
 alias grep='grep --color=auto'
 alias eg='egrep --color=auto'
 alias fg='fgrep --color=auto'
-alias rg=rgfunction
+alias rgr=rgfunction
 
 alias sha1='openssl sha1'
 alias bc='bc -l'
