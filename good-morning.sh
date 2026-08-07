@@ -101,9 +101,14 @@ function randstring32 {
 if [[ -z "$GOOD_MORNING_PASSPHRASE" ]]; then
   GOOD_MORNING_PASSPHRASE="$(randstring32)"
 fi
+# export required for openssl -pass env: (incl. keep_pass value from a prior sourced run)
+export GOOD_MORNING_PASSPHRASE
 # Passphrase via env (not -k) so it stays out of ps. chmod 600 against a loose umask.
 function encryptToFile {
-  printf '%s\n' "$1" | openssl enc -aes-256-cbc -pbkdf2 -pass env:GOOD_MORNING_PASSPHRASE > "$2"
+  if ! printf '%s\n' "$1" | openssl enc -aes-256-cbc -pbkdf2 -pass env:GOOD_MORNING_PASSPHRASE > "$2"; then
+    rm -f "$2"
+    return 1
+  fi
   chmod 600 "$2"
 }
 
@@ -193,13 +198,18 @@ function sudoit {
     sudoOpt="$1"
     shift
   fi
-  if ! [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]] || ! decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo -S -p "" printf ""; then
+  if ! [[ -e "$GOOD_MORNING_ENCRYPTED_PASS_FILE" ]] || ! decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" 2> /dev/null | sudo -S -p "" printf ""; then
     GOOD_MORNING_ENCRYPTED_PASS_FILE="$GOOD_MORNING_TEMP_FILE_PREFIX$(randstring32)"
     local p=
     while [[ -z "$p" ]] || ! echo "$p" | sudo -S -p "" printf ""; do
       promptsecret "Password" p
     done
-    encryptToFile "$p" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"
+    if ! encryptToFile "$p" "$GOOD_MORNING_ENCRYPTED_PASS_FILE"; then
+      errcho "Failed to cache sudo password for this run."
+      unset p
+      return 1
+    fi
+    unset p
   fi
   # shellcheck disable=SC2086
   decryptFromFile "$GOOD_MORNING_ENCRYPTED_PASS_FILE" | sudo $sudoOpt -S -p "" "$@"
@@ -1425,13 +1435,19 @@ function checkSpotlightExclusions {
   eccho "Recommended exclusions missing from Spotlight Privacy:"
   for p in "${missing[@]}"; do eccho "  $p"; done
   if askto "add these to the Spotlight Search Privacy list"; then
+    local add_failed=
     for p in "${missing[@]}"; do
-      sudoit /usr/libexec/PlistBuddy -c "Add :Exclusions: string \"$p\"" \
-        "$SPOTLIGHT_VOLUME_CONFIG"
+      if ! sudoit /usr/libexec/PlistBuddy -c "Add :Exclusions: string \"$p\"" \
+        "$SPOTLIGHT_VOLUME_CONFIG"; then
+        add_failed=1
+        errcho "Failed to exclude $p from Spotlight Privacy."
+      fi
     done
     sudoit launchctl kickstart -k system/com.apple.metadata.mds > /dev/null 2>&1
-    # Record the reconciled set so we can skip the sudo-gated read on subsequent unchanged runs.
-    setConfigValue "spotlight_exclusions_hash" "$desired_hash"
+    # Only remember the set when every add succeeded, otherwise the next run would skip a still-missing path.
+    if [[ -z "$add_failed" ]]; then
+      setConfigValue "spotlight_exclusions_hash" "$desired_hash"
+    fi
   fi
 }
 
