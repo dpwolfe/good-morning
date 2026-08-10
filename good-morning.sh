@@ -928,7 +928,7 @@ formulas=(
   # pgtune
   # pgweb
   pinentry-mac # GUI passphrase prompt for gpg-agent; required for commit signing outside a real TTY
-  pip-completion
+  # pip-completion
   # pyenv
   python@3.14
   rbenv
