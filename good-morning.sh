@@ -1380,10 +1380,11 @@ function reindexSpotlight {
 SPOTLIGHT_VOLUME_CONFIG="/System/Volumes/Data/.Spotlight-V100/VolumeConfiguration.plist"
 spotlight_exclusion_paths=(
   "/opt/homebrew" "/usr/local/Homebrew" "$HOME/.bundle" "$HOME/.cache" "$HOME/.claude" "$HOME/.codeium" "$HOME/.codex"
-  "$HOME/.cursor" "$HOME/.docker" "$HOME/.dotnet" "$HOME/.gem" "$HOME/.gradle" "$HOME/.k8slens" "$HOME/.mono"
-  "$HOME/.npm" "$HOME/.nuget" "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.rbenv" "$HOME/.terraform.d" "$HOME/.vscode"
-  "$HOME/.vscode-shared" "$HOME/.windsurf" "$HOME/go" "$HOME/Library/Caches" "$HOME/Library/Containers"
-  "$HOME/Library/Developer" "$REPO_ROOT"
+  "$HOME/.cursor" "$HOME/.docker" "$HOME/.dotnet" "$HOME/.gem" "$HOME/.gradle" "$HOME/.k8slens" "$HOME/.local"
+  "$HOME/.mono" "$HOME/.npm" "$HOME/.nuget" "$HOME/.nvm" "$HOME/.pyenv" "$HOME/.rbenv" "$HOME/.terraform.d"
+  "$HOME/.vscode" "$HOME/.vscode-shared" "$HOME/.windsurf" "$HOME/go" "$HOME/Library/Application Support"
+  "$HOME/Library/Caches" "$HOME/Library/Containers" "$HOME/Library/Developer" "$HOME/Library/Group Containers"
+  "$HOME/Parallels" "$REPO_ROOT"
 )
 
 function checkSpotlightExclusions {
