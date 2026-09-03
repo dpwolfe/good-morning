@@ -706,8 +706,7 @@ casks=(
   # dash # https://kapeli.com/dash
   # dbeaver-community
   # discord
-  docker
-  # docker-edge
+  docker-desktop
   # dropbox   dropbox.com returns 403 on install
   # etcher # Flash OS images to SD cards & USB drives, safely and easily.
   # firefox
