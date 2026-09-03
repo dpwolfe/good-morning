@@ -714,7 +714,7 @@ casks=(
   # google-backup-and-sync
   # google-chrome
   gpg-suite
-  handbrake
+  handbrake-app
   iterm2
   # keybase
   # keyboard-maestro # keyboard macros
@@ -904,12 +904,13 @@ formulas=(
   git
   git-lfs
   go
+  helm
   # highlight
-  httpie # https://github.com/jakubroztocil/httpie
+  # httpie # https://github.com/jakubroztocil/httpie
   # isl
   jq
   # kops
-  # kubernetes-cli
+  kubernetes-cli
   # kubernetes-helm
   # launchctl-completion
   # lnav
