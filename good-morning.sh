@@ -314,11 +314,13 @@ checkOSRequirement || { gm_abort_prep; return 1 2> /dev/null || exit 1; }
 checkPerms
 
 function updateGems {
+  # io-wait 1.0.0 only warns. Ruby 3.2+ already includes it, so remove that version and skip updates.
+  gem list -e io-wait --local 2> /dev/null | grep -q '(1.0.0' && gem uninstall io-wait -v 1.0.0 -I -x
   eccho "Checking Ruby system gem versions..."
   gem update --system --force --no-document
   eccho "Checking Ruby gem versions..."
   local outdated
-  outdated="$(gem outdated | grep -Ev 'google-cloud-storage' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
+  outdated="$(gem outdated | grep -Ev 'google-cloud-storage|^io-wait ' | sed -E 's/[ ]*\([^)]*\)[ ]*/ /g')"
   if [[ -n "$outdated" ]]; then
     eccho "Updating these Ruby gems:"
     eccho "$outdated"
