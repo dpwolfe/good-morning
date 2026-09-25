@@ -678,8 +678,11 @@ else
     if [[ -n "$outdatedCask" ]]; then
       eccho "Upgrading $outdatedCask..."
       # Prefer upgrade. Reinstall is the old reliable path when upgrade fails or is unsupported.
+      # Some casks call sudo themselves. Refresh the timestamp so that call does not prompt.
+      sudoit true
       if ! brew upgrade --cask "$outdatedCask"; then
         eccho "brew upgrade --cask failed for $outdatedCask, falling back to reinstall..."
+        sudoit true
         brew reinstall "$outdatedCask"
       fi
       BREW_CLEANUP_NEEDED=1
