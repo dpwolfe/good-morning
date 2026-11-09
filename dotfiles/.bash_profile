@@ -124,6 +124,137 @@ function askto {
   esac
 }
 
+function git-flatten {
+    local prompt status
+    prompt="squash every local branch, tag, stash, and remote-tracking ref into one Initial commit and purge unreachable objects"
+    unset GIT_FLATTEN_STATUS
+    askto "$prompt" "GIT_FLATTEN_CONFIRMED=1 git-flatten-apply; GIT_FLATTEN_STATUS=\$?"
+    status=$?
+    if [ "${GIT_FLATTEN_STATUS+x}" ]; then status=$GIT_FLATTEN_STATUS; fi
+    unset GIT_FLATTEN_STATUS
+    return "$status"
+}
+
+function git-flatten-restore {
+    local top="$1" branch="$2" old_head="$3" was_detached="$4" quiet="${5-}"
+    if [ "$quiet" != quiet ]; then echo "git-flatten: Initial commit failed. Existing history was left in place." >&2; fi
+    if [ "$was_detached" -eq 1 ] && [ -n "$old_head" ]; then git -C "$top" checkout -f --detach "$old_head" > /dev/null 2>&1
+    elif git -C "$top" show-ref --verify --quiet "refs/heads/$branch"; then git -C "$top" checkout -f "$branch" > /dev/null 2>&1
+    elif [ -n "$old_head" ]; then git -C "$top" checkout -f --detach "$old_head" > /dev/null 2>&1
+    fi
+}
+
+function git-flatten-apply {
+    local top branch tmp old_head ref failed git_dir busy was_detached worktrees worktree_list
+    local -a commit_args
+    # A direct call never passed the prompt.
+    if [ "${GIT_FLATTEN_CONFIRMED:-}" != 1 ]; then
+        echo "git-flatten: run git-flatten so it can ask first" >&2
+        return 1
+    fi
+    if [ "$(git rev-parse --is-inside-work-tree 2> /dev/null)" != true ]; then
+        echo "git-flatten: not inside a git work tree" >&2
+        return 1
+    fi
+    top="$(git rev-parse --show-toplevel)"
+    git_dir="$(git -C "$top" rev-parse --absolute-git-dir)" || return 1
+    case "$git_dir" in
+        /*/.git|/*/.git/*) ;;
+        *)
+            echo "git-flatten: unexpected git dir $git_dir" >&2
+            return 1
+            ;;
+    esac
+
+    if ! worktree_list="$(git -C "$top" worktree list --porcelain)"; then worktrees=0
+    else worktrees="$(printf '%s\n' "$worktree_list" | awk '/^worktree / { n++ } END { print n+0 }')"
+    fi
+    if [ "$worktrees" -gt 1 ]; then
+        echo "git-flatten: other worktrees are using this repository" >&2
+        return 1
+    fi
+    if [ "$worktrees" -ne 1 ]; then
+        echo "git-flatten: could not list worktrees" >&2
+        return 1
+    fi
+    busy=
+    [ -d "$git_dir/rebase-merge" ] && busy=rebase
+    [ -d "$git_dir/rebase-apply" ] && busy=rebase
+    [ -f "$git_dir/MERGE_HEAD" ] && busy=merge
+    [ -f "$git_dir/CHERRY_PICK_HEAD" ] && busy=cherry-pick
+    [ -f "$git_dir/REVERT_HEAD" ] && busy=revert
+    [ -f "$git_dir/BISECT_START" ] && busy=bisect
+    if [ -n "$busy" ]; then
+        echo "git-flatten: a $busy is in progress" >&2
+        return 1
+    fi
+
+    was_detached=0
+    if ! branch="$(git -C "$top" symbolic-ref --short HEAD 2> /dev/null)"; then
+        was_detached=1
+        branch=main
+    fi
+    tmp="__git_flatten__"
+    if [ "$branch" = "$tmp" ]; then tmp="__git_flatten_tmp__"; fi
+    if git -C "$top" show-ref --verify --quiet "refs/heads/$tmp"; then
+        echo "git-flatten: temporary branch $tmp already exists" >&2
+        return 1
+    fi
+
+    git -C "$top" add -A || return 1
+    if ! git -C "$top" diff --cached --quiet; then
+        git -C "$top" commit -m "Local edits" || return 1
+    fi
+    old_head="$(git -C "$top" rev-parse --verify HEAD 2> /dev/null)" || old_head=
+
+    if ! git -C "$top" checkout --orphan "$tmp"; then
+        echo "git-flatten: could not start a history-free branch" >&2
+        git-flatten-restore "$top" "$branch" "$old_head" "$was_detached" quiet
+        return 1
+    fi
+    git -C "$top" add -A || { git-flatten-restore "$top" "$branch" "$old_head" "$was_detached"; return 1; }
+    if git -C "$top" diff --cached --quiet; then commit_args=(--allow-empty); fi
+    git -C "$top" commit "${commit_args[@]}" -m "Initial commit" || {
+        git-flatten-restore "$top" "$branch" "$old_head" "$was_detached"
+        return 1
+    }
+    # A shallow list names commits this history no longer contains, and a graft can put parents back on the root.
+    rm -f "$git_dir/shallow" "$git_dir/info/grafts"
+    if git -C "$top" -c core.useReplaceRefs=false rev-parse --verify 'HEAD^' > /dev/null 2>&1; then
+        echo "git-flatten: new commit still has a parent. Existing history was left in place." >&2
+        git-flatten-restore "$top" "$branch" "$old_head" "$was_detached"
+        git -C "$top" branch -D "$tmp" > /dev/null 2>&1
+        return 1
+    fi
+
+    if [ "$branch" != "$tmp" ] && git -C "$top" show-ref --verify --quiet "refs/heads/$branch"; then
+        git -C "$top" branch -D "$branch" || return 1
+    fi
+    git -C "$top" branch -m "$tmp" "$branch" || return 1
+
+    failed=0
+    while IFS= read -r ref; do
+        [ "$ref" = "refs/heads/$branch" ] && continue
+        if ! git -C "$top" update-ref -d "$ref"; then
+            echo "git-flatten: could not delete $ref" >&2
+            failed=1
+        fi
+    done < <(git -C "$top" for-each-ref --format='%(refname)')
+    rm -f "$git_dir/ORIG_HEAD" "$git_dir/FETCH_HEAD"
+
+    # Unreachable reflog entries ignore --expire and keep old commits.
+    git -C "$top" reflog expire --expire=now --expire-unreachable=now --all || failed=1
+    git -C "$top" gc --prune=now || failed=1
+    if [ "$failed" -ne 0 ]; then
+        echo "git-flatten: history was rewritten but some local refs or objects could not be purged" >&2
+        return 1
+    fi
+    echo "git-flatten: $(git -C "$top" rev-parse --short HEAD) Initial commit on $branch"
+    if git -C "$top" remote | grep -q .; then
+        echo "git-flatten: remotes are unchanged. Pushing $branch will be rejected, and a fetch will download the old history again."
+    fi
+}
+
 alias gvim='/Applications/MacVim.app/Contents/MacOS/Vim -g'
 alias ls='ls -G'
 alias ll='ls -la'
