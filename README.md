@@ -50,7 +50,7 @@ and feel free to open issues for feedback.
      `ruby-build`, `python@3.14`, `openssl@3`, `coreutils`, `sevenzip`, and more.
 3. Ruby via rbenv (currently Ruby 3.4.9) with gems: `cocoapods`, `sqlint`,
    `terraform_landscape`.
-4. Python packages via pip: `boto`, `gitpython`, `glances`, `lxml`, `packaging`,
+4. Python packages via pip: `gitpython`, `glances`, `lxml`, `packaging`,
    `pip-review`, `pipdeptree`, `pipenv`, `pycurl`, `requests`, `virtualenv`.
 5. Node Version Manager (nvm) with the latest Node.js and the latest LTS of Node.js.
 6. A new SSH key, walking you through its creation and the steps to add it to GitHub.

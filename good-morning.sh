@@ -1123,6 +1123,7 @@ $(findpip) freeze > "$piptempfile"
 legacy_pips=(
   aws-shell
   awscli
+  boto # unmaintained, boto3 is the current AWS library
 )
 for legacy_pip in "${legacy_pips[@]}"; do
   if grep -qiE "^${legacy_pip}==" "$piptempfile"; then
@@ -1132,7 +1133,6 @@ for legacy_pip in "${legacy_pips[@]}"; do
 done
 unset legacy_pips
 pips=(
-  boto
   gitpython
   glances
   # gsutil # for programmatic access to Google Play Console reports
