@@ -44,19 +44,16 @@ and feel free to open issues for feedback.
 
 1. Xcode and the Command Line Tools.
 2. Homebrew, with an opinionated set of casks and formulas.
-   - Casks include: iTerm2, Visual Studio Code, Docker, Brave Browser, Charles, GPG Suite,
-     Handbrake, Fira Code, The Unarchiver.
+   - Casks include: iTerm2, Docker, Brave Browser, Handbrake, Fira Code.
    - Formulas include: `git`, `git-lfs`, `bash`, `zsh`, `go`, `awscli`, `jq`, `fzf`,
-     `fd`, `httpie`, `direnv`, `tmux`, `vim`, `wget`, `caddy`, `certbot`, `shellcheck`,
-     `pandoc`, `vegeta`, `watchman`, `rbenv`, `ruby-build`, `python@3.14`, `openssl@3`,
-     `coreutils`, `sevenzip`, and more.
+     `fd`, `direnv`, `tmux`, `vim`, `wget`, `shellcheck`, `pandoc`, `rbenv`,
+     `ruby-build`, `python@3.14`, `openssl@3`, `coreutils`, `sevenzip`, and more.
 3. Ruby via rbenv (currently Ruby 3.4.9) with gems: `cocoapods`, `sqlint`,
    `terraform_landscape`.
 4. Python packages via pip: `boto`, `gitpython`, `glances`, `lxml`, `packaging`,
    `pip-review`, `pipdeptree`, `pipenv`, `pycurl`, `requests`, `virtualenv`.
 5. Node Version Manager (nvm) with the latest Node.js and the latest LTS of Node.js.
-6. A new SSH key and GPG key, walking you through their creation and the steps to add
-   them to GitHub.
+6. A new SSH key, walking you through its creation and the steps to add it to GitHub.
 7. Primes your `.bash_profile` with references to dotfiles containing aliases, git bash
    completion, environment variables, paths, etc.
    - Feel free to bring your own dotfiles after the first run.

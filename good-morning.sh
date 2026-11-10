@@ -455,12 +455,12 @@ fi
 
 # Decide up-front whether to offer GPG signing setup. Defer the actual key creation prompt until after Homebrew
 # installs the gpg-suite cask.
-gpg_setup_wanted=
-if ! [[ -d "/Applications/GPG Keychain.app" ]] \
-    && [[ -z "$(git config --global --get user.signingkey 2> /dev/null)" ]] \
-    && askto "set up GPG signing for git commits (installs GPG Suite via Homebrew)"; then
-  gpg_setup_wanted=1
-fi
+# gpg_setup_wanted=
+# if ! [[ -d "/Applications/GPG Keychain.app" ]] \
+#     && [[ -z "$(git config --global --get user.signingkey 2> /dev/null)" ]] \
+#     && askto "set up GPG signing for git commits (installs GPG Suite via Homebrew)"; then
+#   gpg_setup_wanted=1
+# fi
 
 # Track the current Ruby stable line; bump as new patch versions ship.
 # https://www.ruby-lang.org/en/downloads/releases/
@@ -705,7 +705,7 @@ casks=(
   # android-studio # uncomment if you need Android dev tools
   # beyond-compare
   brave-browser
-  charles
+  # charles
   # controlplane # mac automation based on hardware events
   # cord # remote desktop into windows machines from macOS
   # dash # https://kapeli.com/dash
@@ -718,7 +718,7 @@ casks=(
   font-fira-code
   # google-backup-and-sync
   # google-chrome
-  gpg-suite
+  # gpg-suite
   handbrake-app
   iterm2
   # keybase
@@ -743,11 +743,11 @@ casks=(
   # slack
   # sourcetree
   # tableplus
-  the-unarchiver
+  # the-unarchiver
   # transmission # open source BitTorrent client from https://github.com/transmission/transmission
   # tunnelblick # connect to your VPN
   # vanilla # hide menu icons on your mac
-  visual-studio-code
+  # visual-studio-code
   # visual-studio-code-insiders
   # wireshark
   # xmind-zen
@@ -759,6 +759,7 @@ brew list --cask > "$cask_list_temp_file"
 
 # Uninstall specific Homebrew casks that conflict with this script if installed.
 problem_casks=(
+  gpg-suite # removed from the install list
   insomniax # remove since this is now unmaintained
   keeweb # upstream looking for new maintainer since 2022, no commits in 2026; security smell for a password manager
   provisionql # cask deprecated/disabled upstream; no Tahoe-compatible quick-look extension
@@ -895,8 +896,8 @@ formulas=(
   awscli # AWS CLI v2
   bash
   bash-completion@2
-  caddy
-  certbot # For generating SSL certs with Let's Encrypt
+  # caddy
+  # certbot # For generating SSL certs with Let's Encrypt
   coreutils
   # dialog # https://invisible-island.net/dialog/
   # deno
@@ -923,7 +924,7 @@ formulas=(
   # maven-completion
   # minikube
   # neovim
-  nss # needed by caddy for certutil
+  # nss # needed by caddy for certutil
   openssl@3
   sevenzip # provides 7zz command (replacement for unmaintained p7zip)
   # packer
@@ -943,9 +944,9 @@ formulas=(
   shellcheck # shell script linting
   # swagger-codegen # requires brew install --cask homebrew/cask-versions/adoptopenjdk8
   tmux
-  vegeta
+  # vegeta
   vim
-  watchman
+  # watchman
   wget
   xz # for pyenv installs of python
   zlib
