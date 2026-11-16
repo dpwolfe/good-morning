@@ -1113,13 +1113,12 @@ unset localpip
 
 export PYCURL_SSL_LIBRARY=openssl
 # Some macOS Python installs (notably Homebrew's) ship an EXTERNALLY-MANAGED marker that makes pip refuse system-wide
-# installs. Honor the documented escape hatch via env var so all pip invocations in this section (including pip-review,
-# which calls pip internally) can install/upgrade global tools.
+# installs. Honor the documented escape hatch via env var so pip in this section can install and upgrade global tools.
 export PIP_BREAK_SYSTEM_PACKAGES=1
 # Install pips in Python
 piptempfile="$HOME/pipfreeze.temp"
 $(findpip) freeze > "$piptempfile"
-# Drop legacy pip packages that pin obsolete deps and fight pip-review
+# Drop legacy pip packages that pin obsolete deps and fight upgrades
 legacy_pips=(
   aws-shell
   awscli
@@ -1159,19 +1158,22 @@ unset pips
 rm -f "$piptempfile"
 unset piptempfile
 
-# Pin pip-review to the same Python whose pip we drove the installs with, otherwise PATH precedence (e.g. pyenv
-# shims earlier than Homebrew) picks up a different `pip-review` and upgrades packages in some unrelated Python
-# install -- which is how legacy awscli 1.x in a pyenv version keeps rolling forward and clobbering newer deps.
-pip_review_bin="$(findpip)"
-pip_review_bin="${pip_review_bin%/pip}/pip-review"
-[[ -x "$pip_review_bin" ]] || pip_review_bin="$(command -v pip-review 2> /dev/null)"
-if [[ -x "$pip_review_bin" ]] && ! "$pip_review_bin" | grep -q "Everything up-to-date"; then
-  eccho "Upgrading pip installed packages via $pip_review_bin..."
+# Homebrew ships pip with no RECORD, so upgrading it fails with uninstall-no-record-file.
+localpip="$(findpip)"
+outdated_pips=
+if outdated_json="$("$localpip" list --outdated --exclude pip --format=json)"; then
+  outdated_pips="$(printf '%s' "$outdated_json" | jq -r '.[].name')"
+fi
+unset outdated_json
+if [[ -n "$outdated_pips" ]]; then
+  eccho "Upgrading pip installed packages via $localpip..."
+  # shellcheck disable=SC2086
   CFLAGS="-I$pip_openssl_prefix/include -O2" \
   LDFLAGS="-L$pip_openssl_prefix/lib" \
-  "$pip_review_bin" --auto
+  "$localpip" install --upgrade $outdated_pips
 fi
-unset pip_review_bin
+unset localpip
+unset outdated_pips
 unset pip_openssl_prefix
 # Drop pip environment variables that may have been set
 unset PIP_BREAK_SYSTEM_PACKAGES
